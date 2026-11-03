@@ -79,10 +79,10 @@ Stages 1 (foundation) and 2 (safety engine) are done; **stage 3 (first real opti
 of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_BACKLOG.md` (P0–P3) and stages in
 `docs/DEVELOPMENT_ROADMAP.md`. Use those stage and task IDs, not the older "Phase N" labels.
 
-In short (0.2, uncommitted): the UI was redesigned (`docs/DESIGN_SYSTEM.md`, `docs/UI_UX_REDESIGN.md`); eight
-documented tweaks ship (`engine/tweaks/`: HKLM Edge policies and privacy values, two HKCU privacy values) with
-per-tweak undo (`revert_tweak`). Hardware, Startup (read-only), PC Cleaner (read-only scan) and Tools are real pages;
-Gaming has no tweaks yet. A signed Tauri updater with an Update Centre is built (`docs/UPDATE_SYSTEM.md`); the feed URL
+In short (0.2): the UI was redesigned (`docs/DESIGN_SYSTEM.md`, `docs/UI_UX_REDESIGN.md`); 35
+documented tweaks ship (`engine/tweaks/`, table in `docs/optimisation-modules.md`) with per-tweak undo
+(`revert_tweak`), an impact rating, and a `warning` only when a named feature can break. Hardware, Startup (read-only), PC Cleaner (read-only scan) and Tools are real pages;
+Gaming has two tweaks. A signed Tauri updater with an Update Centre is built (`docs/UPDATE_SYSTEM.md`); the feed URL
 is injected only by `.github/workflows/release.yml`, so local builds never update. P0-8b (no updater) is superseded;
 P0-8a/c stand. Still open: the broker's real UAC path on a VM (P0-7), GitHub remote + signing secrets
 (`docs/UPDATE_SETUP_GUIDE.md`), a real update test on a VM. `HKCU\Software\Policies` is admin-only on Windows: never

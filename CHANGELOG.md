@@ -19,6 +19,11 @@ notes come from commit subjects. This file records the larger milestones.
 - Switch a tweak off to undo exactly what 2VX changed (`revert_tweak`), after a confirmation.
 - Four new documented tweaks: Edge shopping assistant, advertising ID, Edge sidebar, Edge
   recommendations.
+- 27 more tweaks from a review of a 375+ line tweak pack: privacy, gaming, performance and one-at-a-time
+  service switches. Only Microsoft-documented settings qualified; the rest, and why, is in
+  `docs/optimisation-modules.md`.
+- Cards show an impact rating, and a red warning only when a tweak can break a named feature.
+- Tweaks can require an edition (Pro and above) or an installed service, and say so when they can't apply.
 - Hardware page: per-thread CPU load, GPU, memory, storage and network tabs (replaces Monitoring).
 - Startup page: read-only inventory of Run/RunOnce values and Startup-folder shortcuts, with Task
   Manager's disabled state.

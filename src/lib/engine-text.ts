@@ -31,8 +31,15 @@ export const COMPATIBILITY: Record<Compatibility, string | null> = {
   compatible: null,
   needsElevation: "Asks for administrator permission",
   unsupportedBuild: "Not supported on this Windows build",
+  unsupportedEdition: "Needs Windows Pro or higher",
   wrongDevice: "Not meant for this kind of PC",
+  notInstalled: "Not installed on this PC",
 };
+
+/** Mirrors `Compatibility::blocks` in the engine. */
+export function isBlocked(compatibility: Compatibility) {
+  return compatibility !== "compatible" && compatibility !== "needsElevation";
+}
 
 export const SNAPSHOT_STATUS: Record<SnapshotStatus, { label: string; tone: Tone }> = {
   inProgress: { label: "In progress", tone: "info" },

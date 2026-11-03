@@ -1,4 +1,14 @@
+pub mod activity_history;
 pub mod advertising_id;
+pub mod app_account_info;
+pub mod app_diagnostics;
 pub mod app_launch_tracking;
+pub mod app_location;
+pub mod app_notifications;
+pub mod background_apps;
+pub mod diagnostic_data;
 pub mod edge_shopping;
+pub mod feedback_requests;
+pub mod inking_typing;
 pub mod language_list_opt_out;
+pub mod online_speech;

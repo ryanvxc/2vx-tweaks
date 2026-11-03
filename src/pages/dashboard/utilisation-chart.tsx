@@ -10,9 +10,9 @@ import {
 import { useState } from "react";
 import { SectionCard } from "@/components/common/section-card";
 import { LoadingRows } from "@/components/common/states";
-import { percentOf } from "@/lib/format";
+import { formatBytes, percentOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { MetricsSample } from "@/types/system";
+import type { MetricsSample, SystemSnapshot } from "@/types/system";
 
 const SERIES = [
   { key: "cpu", label: "CPU", color: "var(--chart-1)" },
@@ -28,7 +28,13 @@ const VIEWS: { value: View; label: string }[] = [
   { value: "ram", label: "Memory" },
 ];
 
-export function UtilisationChart({ samples }: { samples: MetricsSample[] }) {
+export function UtilisationChart({
+  samples,
+  snapshot,
+}: {
+  samples: MetricsSample[];
+  snapshot: SystemSnapshot | undefined;
+}) {
   const [view, setView] = useState<View>("all");
   const shown = SERIES.filter((s) => view === "all" || s.key === view);
   const now = samples.at(-1)?.timestampMs ?? 0;
@@ -41,8 +47,7 @@ export function UtilisationChart({ samples }: { samples: MetricsSample[] }) {
 
   return (
     <SectionCard
-      title="Utilisation"
-      description="Last 5 minutes, sampled every second"
+      title={viewTitle(view, samples.at(-1), snapshot)}
       source="live"
       actions={
         <div role="radiogroup" aria-label="Series" className="flex rounded-md border p-0.5">
@@ -142,6 +147,25 @@ export function UtilisationChart({ samples }: { samples: MetricsSample[] }) {
       )}
     </SectionCard>
   );
+}
+
+/** Names what a single-series view is plotting: the chart follows the first GPU in the samples. */
+function viewTitle(
+  view: View,
+  latest: MetricsSample | undefined,
+  snapshot: SystemSnapshot | undefined,
+) {
+  switch (view) {
+    case "all":
+      return "Utilisation";
+    case "cpu":
+      return snapshot?.cpu.brand.trim() || "CPU";
+    case "gpu":
+      return latest?.gpus[0]?.model || snapshot?.gpus[0]?.model || "GPU";
+    case "ram":
+      // Windows reports no memory module name through the APIs 2VX reads, so show the capacity.
+      return latest ? `${formatBytes(latest.memoryTotalBytes)} memory` : "Memory";
+  }
 }
 
 function round(v: number) {

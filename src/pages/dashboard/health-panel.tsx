@@ -28,7 +28,7 @@ export function HealthPanel({
   const summary = summariseHealth(checks);
 
   return (
-    <SectionCard title="System health" description="Read-only checks" source="derived">
+    <SectionCard title="System health" source="derived">
       {!snapshot ? (
         <LoadingRows rows={5} />
       ) : (

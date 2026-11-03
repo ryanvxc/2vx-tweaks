@@ -33,7 +33,6 @@ export function HardwarePage() {
     <>
       <PageHeader
         title="Hardware"
-        description="Components detected on this PC and their live utilisation"
         actions={
           cpuChip && (
             <span className="flex h-7 items-center gap-1.5 rounded-full border bg-card px-3 text-[12px] text-muted-foreground">
@@ -110,17 +109,13 @@ function CpuTab({ snapshot, samples }: { snapshot: SystemSnapshot; samples: Metr
           ]}
         />
       </SectionCard>
-      <SectionCard title="Usage" description="Last 5 minutes" source="live">
+      <SectionCard title="Usage" source="live">
         <MetricChart
           rows={rows(samples, (s) => ({ cpu: round(s.cpuPercent) }))}
           series={[{ key: "cpu", label: "CPU", color: "var(--chart-1)" }]}
         />
       </SectionCard>
-      <SectionCard
-        title="Per thread"
-        description="Usage of each logical processor now"
-        source="live"
-      >
+      <SectionCard title="Per thread" source="live">
         {cores.length === 0 ? (
           <LoadingRows rows={2} />
         ) : (
@@ -210,7 +205,7 @@ function MemoryTab({ snapshot, samples }: { snapshot: SystemSnapshot; samples: M
           ]}
         />
       </SectionCard>
-      <SectionCard title="Usage" description="Last 5 minutes" source="live">
+      <SectionCard title="Usage" source="live">
         <MetricChart
           rows={rows(samples, (s) => ({
             ram: round(percentOf(s.memoryUsedBytes, s.memoryTotalBytes)),
@@ -289,7 +284,7 @@ function NetworkTab({ samples }: { samples: MetricsSample[] }) {
           ]}
         />
       </SectionCard>
-      <SectionCard title="Throughput" description="Last 5 minutes" source="live">
+      <SectionCard title="Throughput" source="live">
         <MetricChart
           rows={rows(samples, (s) => ({
             rx: Math.round(s.networkRxBytesPerSec / 1024),

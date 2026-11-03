@@ -16,6 +16,7 @@ import { SectionCard } from "@/components/common/section-card";
 import { EmptyState, LoadingRows } from "@/components/common/states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSnapshots, useTweakStatuses } from "@/hooks/use-system";
+import { isBlocked } from "@/lib/engine-text";
 import { tweakIcon } from "@/lib/tweak-presentation";
 import { cn } from "@/lib/utils";
 import type { HealthSummary } from "@/lib/health";
@@ -35,14 +36,13 @@ export function HomeStats({ health }: { health: HealthSummary | null }) {
         icon={SlidersHorizontal}
         label="Optimisations in effect"
         value={applied !== undefined ? `${applied} of ${total}` : undefined}
-        hint="Detected on this PC right now"
       />
       <StatCard
         to="/history"
         icon={History}
         label="Changes recorded"
         value={snapshots.error ? "—" : batches !== undefined ? String(batches) : undefined}
-        hint={snapshots.error ? "Journal unavailable" : "Each one can be undone from History"}
+        hint={snapshots.error ? "Journal unavailable" : undefined}
       />
       <StatCard
         to="/hardware"
@@ -52,13 +52,6 @@ export function HomeStats({ health }: { health: HealthSummary | null }) {
           health
             ? `${health.total - health.attention - health.warnings} of ${health.total}`
             : undefined
-        }
-        hint={
-          health
-            ? health.status === "good"
-              ? "Everything looks healthy"
-              : "Some things are worth a look"
-            : "Reading this PC…"
         }
         tone={health?.status === "good" ? "text-success" : health ? "text-warning" : undefined}
       />
@@ -78,7 +71,7 @@ function StatCard({
   icon: LucideIcon;
   label: string;
   value: string | undefined;
-  hint: string;
+  hint?: string;
   tone?: string;
 }) {
   return (
@@ -96,7 +89,7 @@ function StatCard({
         ) : (
           <div className={cn("text-[19px] leading-tight font-semibold tabular", tone)}>{value}</div>
         )}
-        <div className="truncate text-[11.5px] text-muted-foreground">{hint}</div>
+        {hint && <div className="truncate text-[11.5px] text-muted-foreground">{hint}</div>}
       </div>
       <ChevronRight className="size-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5" />
     </Link>
@@ -105,34 +98,29 @@ function StatCard({
 
 /** Real first steps through the app, ticked off from detected state where possible. */
 export function Quickstart() {
-  const statuses = useTweakStatuses();
   const snapshots = useSnapshots();
   const anyApplied = (snapshots.data ?? []).some((s) => s.kind === "apply");
-  const steps: { to: string; icon: LucideIcon; title: string; text: string; done?: boolean }[] = [
+  const steps: { to: string; icon: LucideIcon; title: string; text?: string; done?: boolean }[] = [
     {
       to: "/hardware",
       icon: Cpu,
       title: "Look at your hardware",
-      text: "Live CPU, GPU, memory and storage",
     },
     {
       to: "/system",
       icon: SlidersHorizontal,
       title: "Apply a tweak",
-      text: `${statuses.data?.length ?? "Documented"} documented settings, each with undo`,
       done: anyApplied,
     },
     {
       to: "/startup",
       icon: Rocket,
       title: "Check what starts with Windows",
-      text: "Every startup entry and where it comes from",
     },
     {
       to: "/cleaner",
       icon: Sparkles,
       title: "See what caches use",
-      text: "Temporary files and caches, measured",
     },
     {
       to: "/history",
@@ -143,7 +131,7 @@ export function Quickstart() {
   ];
 
   return (
-    <SectionCard title="Quickstart" description="Get to know 2VX" className="h-full">
+    <SectionCard title="Quickstart" className="h-full">
       <ul className="-mx-2 flex flex-col">
         {steps.map((s) => (
           <li key={s.to}>
@@ -154,7 +142,9 @@ export function Quickstart() {
               <s.icon className="size-4 shrink-0 text-brand" />
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] leading-snug font-medium">{s.title}</div>
-                <div className="truncate text-[11.5px] text-muted-foreground">{s.text}</div>
+                {s.text && (
+                  <div className="truncate text-[11.5px] text-muted-foreground">{s.text}</div>
+                )}
               </div>
               {s.done ? (
                 <CheckCircle2 className="size-4 text-success" aria-label="Done" />
@@ -178,17 +168,12 @@ export function Quickstart() {
 export function RecommendedTweaks() {
   const { data, loading } = useTweakStatuses();
   const open = (data ?? []).filter(
-    (t) =>
-      t.meta.recommended &&
-      t.state !== "applied" &&
-      t.compatibility !== "unsupportedBuild" &&
-      t.compatibility !== "wrongDevice",
+    (t) => t.meta.recommended && t.state !== "applied" && !isBlocked(t.compatibility),
   );
 
   return (
     <SectionCard
       title="Recommended for this PC"
-      description="Low-risk tweaks not in effect yet"
       source="derived"
       actions={
         open.length > 0 && (

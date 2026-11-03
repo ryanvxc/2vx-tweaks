@@ -2,8 +2,8 @@
 //!
 //! A tweak never touches the OS itself: it declares the [`Setting`]s it wants and the
 //! engine does detection, backup, apply, verification and revert for all tweaks the same
-//! way. Only registry values exist today; power schemes and service start types become
-//! new primitives when the first tweak needs them.
+//! way. Only registry values exist today, service start types included (`Services\<name>\Start`);
+//! power schemes become a new primitive when the first tweak needs them.
 
 use std::borrow::Cow;
 use std::fmt;

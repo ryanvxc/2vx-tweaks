@@ -50,7 +50,6 @@ export function StartupPage() {
     <>
       <PageHeader
         title="Startup"
-        description="Everything Windows starts when you sign in, read from the Run keys and Startup folders"
         actions={
           <Button size="sm" variant="outline" onClick={refetch} disabled={loading}>
             Refresh

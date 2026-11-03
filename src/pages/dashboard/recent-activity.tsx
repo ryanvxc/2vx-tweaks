@@ -16,7 +16,6 @@ export function RecentActivity() {
   return (
     <SectionCard
       title="Recent changes"
-      description="Changes made by 2VX"
       source="live"
       actions={
         recent.length > 0 && (

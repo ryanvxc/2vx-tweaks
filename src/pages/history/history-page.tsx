@@ -36,14 +36,10 @@ export function HistoryPage() {
 
   return (
     <>
-      <PageHeader title="History" description="Every change 2VX has made, with undo" />
+      <PageHeader title="History" />
       <div className="flex flex-col gap-4">
         <EngineBanner showHistoryLink={false} />
-        <SectionCard
-          title="Change history"
-          description="From the change journal on this PC, newest first"
-          source="live"
-        >
+        <SectionCard title="Change history" source="live">
           {error ? (
             <ErrorState message={error.message} onRetry={refetch} />
           ) : loading && !data ? (

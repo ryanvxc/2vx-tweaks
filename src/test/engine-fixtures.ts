@@ -18,9 +18,11 @@ const base: Omit<TweakMeta, "id" | "name" | "permission"> = {
   risk: "low",
   supportedBuilds: { minBuild: 10240, maxBuild: null },
   device: "any",
+  edition: "any",
   recommended: false,
   restart: "none",
   impact: "low",
+  warning: null,
   addedIn: "0.1",
   references: ["https://learn.microsoft.com/test"],
 };

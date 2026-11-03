@@ -120,6 +120,7 @@ type Sample = Pick<TweakMeta, "category" | "permission" | "impact" | "addedIn" |
   state: TweakStatus["state"];
   risk?: TweakMeta["risk"];
   restart?: TweakMeta["restart"];
+  warning?: string;
 };
 
 const SAMPLES: Sample[] = [
@@ -174,6 +175,7 @@ const SAMPLES: Sample[] = [
     recommended: false,
     state: "partial",
     risk: "moderate",
+    warning: "Sample of a warning: names the features this can break.",
   },
   {
     slug: "outside",
@@ -197,9 +199,11 @@ const SAMPLE_TWEAKS: TweakMeta[] = SAMPLES.map((x) => ({
   permission: x.permission,
   supportedBuilds: { minBuild: 10240, maxBuild: null },
   device: "any",
+  edition: "any",
   recommended: x.recommended,
   restart: x.restart ?? "none",
   impact: x.impact,
+  warning: x.warning ?? null,
   addedIn: x.addedIn,
   references: ["https://learn.microsoft.com/"],
 }));

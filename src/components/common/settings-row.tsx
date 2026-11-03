@@ -47,7 +47,13 @@ export function SettingsRow({
 }) {
   const Title = htmlFor ? "label" : "div";
   return (
-    <div className={cn("flex items-start gap-3.5 px-4 py-3.5", className)}>
+    <div
+      className={cn(
+        "flex gap-3.5 px-4 py-3.5",
+        children ? "items-start" : "items-center",
+        className,
+      )}
+    >
       <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand/12 text-brand">
         <Icon className="size-4" aria-hidden />
       </div>

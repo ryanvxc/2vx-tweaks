@@ -17,7 +17,7 @@ export function HardwareCard({
   onRetry: () => void;
 }) {
   return (
-    <SectionCard title="Hardware" description="Detected components" source="live">
+    <SectionCard title="Hardware" source="live">
       {error ? (
         <ErrorState
           title="Couldn't read hardware information"

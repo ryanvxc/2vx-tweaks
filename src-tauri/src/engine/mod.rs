@@ -91,6 +91,14 @@ pub enum DeviceScope {
     LaptopOnly,
 }
 
+/// Which Windows editions honour a tweak. Microsoft lists many policies for Pro and above only.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum EditionScope {
+    Any,
+    ProOrHigher,
+}
+
 /// Inclusive build range a tweak has been verified on.
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -127,10 +135,19 @@ pub struct TweakMeta {
     pub permission: Permission,
     pub supported_builds: BuildRange,
     pub device: DeviceScope,
+    pub edition: EditionScope,
     /// Whether the tweak is part of the default recommended set. Never for `High` risk.
     pub recommended: bool,
     pub restart: RestartRequirement,
     pub impact: Impact,
+    /// The features this can break, shown as a warning on the card. Only for real breakage:
+    /// a tweak that merely changes behaviour has `None`.
+    pub warning: Option<&'static str>,
+    /// A value that must already exist for the tweak to mean anything. Writing `Start` for a
+    /// service that isn't installed would create a broken service key, so those name their
+    /// `ImagePath` here. Checked by the engine, which can read the system; meta cannot.
+    #[serde(skip)]
+    pub requires: Option<RegTarget>,
     /// App version (`major.minor`) that first shipped the tweak; the UI labels recent ones "New".
     pub added_in: &'static str,
     /// Documentation the change is based on (Microsoft Learn etc.). `https://` URLs, at least one.
@@ -174,9 +191,30 @@ pub struct TweakContext {
 pub enum Compatibility {
     Compatible,
     UnsupportedBuild,
+    UnsupportedEdition,
     WrongDevice,
+    /// What the tweak configures isn't on this PC.
+    NotInstalled,
     /// Applicable, but applying will show a UAC prompt.
     NeedsElevation,
+}
+
+impl Compatibility {
+    /// Whether the tweak can't be applied here. `NeedsElevation` only adds a prompt.
+    pub fn blocks(self) -> bool {
+        !matches!(
+            self,
+            Compatibility::Compatible | Compatibility::NeedsElevation
+        )
+    }
+}
+
+/// Home is the `Core` family (`Core`, `CoreN`, `CoreSingleLanguage`, `CoreCountrySpecific`).
+fn is_home_edition(edition_id: Option<&str>) -> bool {
+    edition_id.is_some_and(|e| {
+        e.get(..4)
+            .is_some_and(|head| head.eq_ignore_ascii_case("core"))
+    })
 }
 
 pub fn check_compatibility(meta: &TweakMeta, ctx: &TweakContext) -> Compatibility {
@@ -186,6 +224,10 @@ pub fn check_compatibility(meta: &TweakMeta, ctx: &TweakContext) -> Compatibilit
     );
     if !meta.supported_builds.contains(ctx.os.build) {
         Compatibility::UnsupportedBuild
+    } else if meta.edition == EditionScope::ProOrHigher
+        && is_home_edition(ctx.os.edition_id.as_deref())
+    {
+        Compatibility::UnsupportedEdition
     } else if !device_ok {
         Compatibility::WrongDevice
     } else if meta.permission == Permission::Administrator && !ctx.is_elevated {
@@ -298,6 +340,12 @@ fn validate(tweak: &dyn Tweak) -> AppResult<()> {
     if meta.description.chars().count() > 160 {
         return fail("description is longer than 160 characters".into());
     }
+    if meta
+        .warning
+        .is_some_and(|w| w.trim().is_empty() || w.chars().count() > 160)
+    {
+        return fail("warning must be 1 to 160 characters".into());
+    }
     if meta.references.is_empty() {
         return fail("has no documentation references".into());
     }
@@ -314,6 +362,10 @@ fn validate(tweak: &dyn Tweak) -> AppResult<()> {
     }
     if meta.risk == RiskLevel::High && meta.recommended {
         return fail("High-risk tweaks cannot be recommended".into());
+    }
+    // Cards only flag warnings, so a High-risk tweak has to carry one.
+    if meta.risk == RiskLevel::High && meta.warning.is_none() {
+        return fail("High-risk tweaks need a warning".into());
     }
 
     let settings = tweak.settings();
@@ -370,9 +422,12 @@ pub(crate) mod tests {
                 max_build: None,
             },
             device: DeviceScope::Any,
+            edition: EditionScope::Any,
             recommended: false,
             restart: RestartRequirement::None,
             impact: Impact::Low,
+            warning: None,
+            requires: None,
             added_in: "0.1",
             references: &["https://learn.microsoft.com/"],
         }

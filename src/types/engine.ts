@@ -6,6 +6,7 @@ export type TweakCategory =
 export type Permission = "user" | "administrator";
 export type RestartRequirement = "none" | "signOut" | "reboot";
 export type DeviceScope = "any" | "desktopOnly" | "laptopOnly";
+export type EditionScope = "any" | "proOrHigher";
 /** Documented estimate of how noticeable a tweak is. Never a measurement. */
 export type Impact = "low" | "medium" | "high";
 
@@ -24,16 +25,25 @@ export interface TweakMeta {
   permission: Permission;
   supportedBuilds: BuildRange;
   device: DeviceScope;
+  edition: EditionScope;
   recommended: boolean;
   restart: RestartRequirement;
   impact: Impact;
+  /** The features this can break. `null` when it breaks nothing. */
+  warning: string | null;
   /** `major.minor` app version that first shipped the tweak. */
   addedIn: string;
   references: string[];
 }
 
 /** `needsElevation` is informational: applying shows a UAC prompt, it is not blocked. */
-export type Compatibility = "compatible" | "unsupportedBuild" | "wrongDevice" | "needsElevation";
+export type Compatibility =
+  | "compatible"
+  | "unsupportedBuild"
+  | "unsupportedEdition"
+  | "wrongDevice"
+  | "notInstalled"
+  | "needsElevation";
 
 export type Hive = "currentUser" | "localMachine";
 

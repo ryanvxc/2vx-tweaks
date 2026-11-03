@@ -47,15 +47,11 @@ export function ToolsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Tools"
-        description="System report and shortcuts to Windows' own diagnostics"
-      />
+      <PageHeader title="Tools" />
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-7">
           <SectionCard
             title="System report"
-            description="Hardware, Windows version and tweak states as plain text, for support requests"
             source="live"
             actions={
               <Button size="xs" disabled={!report} onClick={() => report && copy(report, "Report")}>

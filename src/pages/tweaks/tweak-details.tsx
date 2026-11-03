@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { AlertTriangle, ArrowRight, ExternalLink } from "lucide-react";
 import { StatusPill } from "@/components/common/notice";
 import { RiskBadge } from "@/components/common/risk-badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { COMPATIBILITY, RESTART_HINT, TWEAK_STATE } from "@/lib/engine-text";
+import { COMPATIBILITY, isBlocked, RESTART_HINT, TWEAK_STATE } from "@/lib/engine-text";
 import { CATEGORY_LABEL, tweakIcon } from "@/lib/tweak-presentation";
 import type { Impact, TweakStatus } from "@/types/engine";
 
@@ -38,9 +38,10 @@ export function TweakDetails({
   if (!tweak) return null;
   const { meta, state, compatibility } = tweak;
   const stateInfo = TWEAK_STATE[state];
-  const note = COMPATIBILITY[compatibility];
+  // The administrator pill below already says this.
+  const note = compatibility === "needsElevation" ? null : COMPATIBILITY[compatibility];
   const restart = RESTART_HINT[meta.restart];
-  const blocked = compatibility === "unsupportedBuild" || compatibility === "wrongDevice";
+  const blocked = isBlocked(compatibility);
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
@@ -72,6 +73,12 @@ export function TweakDetails({
             {meta.recommended && <StatusPill tone="success">Recommended</StatusPill>}
           </div>
           {note && <p className="text-[12.5px] text-muted-foreground">{note}</p>}
+          {meta.warning && (
+            <p className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/8 px-3 py-2 text-[12.5px] leading-snug">
+              <AlertTriangle className="mt-px size-3.5 shrink-0 text-destructive" />
+              {meta.warning}
+            </p>
+          )}
 
           <p data-selectable className="text-[13px] leading-relaxed text-muted-foreground">
             {meta.details}

@@ -31,10 +31,8 @@ export function UpdateNotice() {
         <span className="font-medium">2VX Tweaks {info.version} is available</span>
         <span className="text-muted-foreground">
           {" "}
-          · you have {info.currentVersion}.{" "}
-          {state.kind === "ready"
-            ? "Downloaded and ready to install."
-            : "Nothing downloads until you say so."}
+          · you have {info.currentVersion}.
+          {state.kind === "ready" && " Downloaded and ready to install."}
         </span>
       </div>
       <Button asChild size="xs">

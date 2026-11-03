@@ -230,13 +230,28 @@ impl Engine {
                 };
                 TweakStatus {
                     meta: tweak.meta().clone(),
-                    compatibility: check_compatibility(tweak.meta(), &ctx),
+                    compatibility: self.compatibility(tweak.meta(), &ctx),
                     state,
                     settings,
                     undoable: undoable.contains(tweak.meta().id),
                 }
             })
             .collect()
+    }
+
+    /// [`check_compatibility`] plus what only the store can answer. An unreadable requirement
+    /// doesn't block: its setting reports the read error instead.
+    fn compatibility(&self, meta: &TweakMeta, ctx: &TweakContext) -> Compatibility {
+        let compat = check_compatibility(meta, ctx);
+        let missing = meta
+            .requires
+            .as_ref()
+            .is_some_and(|t| matches!(self.store.read(t), Ok(None)));
+        if !compat.blocks() && missing {
+            Compatibility::NotInstalled
+        } else {
+            compat
+        }
     }
 
     /// Dry run. Reads the system, changes nothing.
@@ -272,11 +287,8 @@ impl Engine {
             .filter(|t| tweak_ids.iter().any(|id| id == t.meta().id))
         {
             let meta = tweak.meta();
-            let compat = check_compatibility(meta, &ctx);
-            if matches!(
-                compat,
-                Compatibility::UnsupportedBuild | Compatibility::WrongDevice
-            ) {
+            let compat = self.compatibility(meta, &ctx);
+            if compat.blocks() {
                 plan.skipped.push(SkippedTweak {
                     tweak_id: meta.id.into(),
                     reason: compat,

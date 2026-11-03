@@ -1,6 +1,6 @@
 use crate::engine::{
-    BuildRange, DeviceScope, Hive, Impact, Permission, RestartRequirement, RiskLevel, Setting,
-    SettingsTweak, TweakCategory, TweakMeta,
+    BuildRange, DeviceScope, EditionScope, Hive, Impact, Permission, RestartRequirement, RiskLevel,
+    Setting, SettingsTweak, TweakCategory, TweakMeta,
 };
 
 pub const TWEAK: SettingsTweak = SettingsTweak {
@@ -14,9 +14,12 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         permission: Permission::Administrator,
         supported_builds: BuildRange::ALL,
         device: DeviceScope::Any,
+        edition: EditionScope::Any,
         recommended: true,
         restart: RestartRequirement::None,
         impact: Impact::Low,
+        warning: None,
+        requires: None,
         added_in: "0.2",
         references: &[
             "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/edgeshoppingassistantenabled",

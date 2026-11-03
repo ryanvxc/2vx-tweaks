@@ -69,6 +69,16 @@ describe("TweakGrid", () => {
     expect(screen.getAllByText("New")).toHaveLength(3);
   });
 
+  it("flags tweaks that can break a feature and blocks ones that can't apply", async () => {
+    const warned = { ...STATUSES[0]!, meta: { ...STATUSES[0]!.meta, warning: "Printing stops." } };
+    const missing = { ...STATUSES[1]!, compatibility: "notInstalled" as const };
+    mock.getTweakStatuses.mockResolvedValue([warned, missing, ...STATUSES.slice(2)]);
+    renderGrid();
+    expect(await screen.findAllByLabelText("Can break features")).toHaveLength(1);
+    expect(screen.getByRole("switch", { name: `Turn on ${missing.meta.name}` })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: `Turn on ${warned.meta.name}` })).toBeEnabled();
+  });
+
   it("stages a switch-on and applies only after review", async () => {
     mock.applyPlan.mockResolvedValue(outcome());
     const user = userEvent.setup();

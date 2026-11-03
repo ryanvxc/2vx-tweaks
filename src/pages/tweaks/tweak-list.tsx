@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { ArrowRight, ChevronDown, PackageOpen, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, ChevronDown, PackageOpen, ShieldCheck } from "lucide-react";
 import { StatusPill } from "@/components/common/notice";
 import { RiskBadge } from "@/components/common/risk-badge";
 import { SectionCard } from "@/components/common/section-card";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
 import { useEngineStatus, useTweakStatuses } from "@/hooks/use-system";
-import { COMPATIBILITY, RESTART_HINT, TWEAK_STATE } from "@/lib/engine-text";
+import { COMPATIBILITY, isBlocked, RESTART_HINT, TWEAK_STATE } from "@/lib/engine-text";
 import { cn } from "@/lib/utils";
 import { isDesktop } from "@/services/backend";
 import type { TweakCategory, TweakStatus } from "@/types/engine";
@@ -93,7 +93,7 @@ function TweakRow({
 }) {
   const [expanded, setExpanded] = useState(false);
   const { meta, state, compatibility } = tweak;
-  const blocked = compatibility === "unsupportedBuild" || compatibility === "wrongDevice";
+  const blocked = isBlocked(compatibility);
   // Already-applied tweaks are undone from History, where the exact before-values live.
   const selectable = !blocked && state !== "applied";
   const stateInfo = TWEAK_STATE[state];
@@ -123,6 +123,12 @@ function TweakRow({
             )}
           </div>
           <div className="text-[12px] leading-snug text-muted-foreground">{meta.description}</div>
+          {meta.warning && (
+            <div className="mt-0.5 flex items-start gap-1.5 text-[12px] leading-snug text-destructive">
+              <AlertTriangle className="mt-px size-3.5 shrink-0" />
+              {meta.warning}
+            </div>
+          )}
           {(note || restart) && (
             <div className="mt-1 text-[11.5px] text-muted-foreground">
               {[note, restart].filter(Boolean).join(" · ")}

@@ -31,7 +31,13 @@ import {
   useTweakStatuses,
   refreshEngineState,
 } from "@/hooks/use-system";
-import { COMPATIBILITY, describeError, describeOutcome, RESTART_HINT } from "@/lib/engine-text";
+import {
+  COMPATIBILITY,
+  describeError,
+  describeOutcome,
+  isBlocked,
+  RESTART_HINT,
+} from "@/lib/engine-text";
 import { CATEGORY_LABEL, isNewTweak, tweakIcon } from "@/lib/tweak-presentation";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
 import type { Impact, RiskLevel, TweakCategory, TweakStatus } from "@/types/engine";
@@ -163,10 +169,7 @@ export function TweakGrid({ categories }: { categories: TweakCategory[] }) {
     },
   ];
 
-  const stageable = (t: TweakStatus) =>
-    t.state !== "applied" &&
-    t.compatibility !== "unsupportedBuild" &&
-    t.compatibility !== "wrongDevice";
+  const stageable = (t: TweakStatus) => t.state !== "applied" && !isBlocked(t.compatibility);
   const recommendedOpen = all.filter((t) => t.meta.recommended && stageable(t));
 
   const onSwitch = (t: TweakStatus, on: boolean) => {
@@ -259,12 +262,7 @@ export function TweakGrid({ categories }: { categories: TweakCategory[] }) {
           className="rounded-xl border bg-card"
         />
       ) : shown.length === 0 ? (
-        <EmptyState
-          icon={SearchX}
-          title="No tweaks match"
-          description="Try another search or clear the filters."
-          className="rounded-xl border bg-card"
-        />
+        <EmptyState icon={SearchX} title="No tweaks match" className="rounded-xl border bg-card" />
       ) : (
         <CardGrid>
           {shown.map((t) => (
@@ -352,7 +350,7 @@ function TweakCard({
   onOpen: () => void;
 }) {
   const { meta, state, compatibility } = tweak;
-  const blocked = compatibility === "unsupportedBuild" || compatibility === "wrongDevice";
+  const blocked = isBlocked(compatibility);
   const applied = state === "applied";
   // Applied by something other than 2VX: there is no recorded before-value to restore.
   const lockedOn = applied && !tweak.undoable;
@@ -381,13 +379,9 @@ function TweakCard({
       indicators={
         <>
           <ImpactMeter impact={meta.impact} />
-          {meta.risk !== "low" && (
-            <Indicator
-              icon={AlertTriangle}
-              tone={meta.risk === "high" ? "destructive" : "warning"}
-              title={meta.risk === "high" ? "High risk" : "Moderate risk"}
-            >
-              Can change how Windows behaves. Read the details before applying.
+          {meta.warning && (
+            <Indicator icon={AlertTriangle} tone="destructive" title="Can break features">
+              {meta.warning}
             </Indicator>
           )}
           {meta.category === "privacy" && (
@@ -402,7 +396,9 @@ function TweakCard({
           )}
           {restart && (
             <Indicator icon={LogOut} tone="neutral" title={restart}>
-              Windows reads this value when you next sign in.
+              {meta.restart === "reboot"
+                ? "Windows reads this value when it next starts."
+                : "Windows reads this value when you next sign in."}
             </Indicator>
           )}
           {blocked && (

@@ -89,9 +89,11 @@ function StatusLine({
       />
       <div className="min-w-0 flex-1">
         <div className="text-card-title">{title}</div>
-        <div data-selectable className="text-[12.5px] leading-snug text-muted-foreground">
-          {text}
-        </div>
+        {text && (
+          <div data-selectable className="text-[12.5px] leading-snug text-muted-foreground">
+            {text}
+          </div>
+        )}
       </div>
       <div className="flex shrink-0 items-center gap-2">{children}</div>
     </div>
@@ -116,7 +118,7 @@ function describe(state: UpdaterState, current: string | undefined, lastChecked:
         icon: RefreshCw,
         tone: "text-muted-foreground",
         title: "Not checked yet",
-        text: `${version} Check now, or turn on automatic checks below.`,
+        text: version,
       };
     case "checking":
       return { icon: Loader2, tone: "text-brand", title: "Checking for updates…", text: version };
@@ -132,14 +134,14 @@ function describe(state: UpdaterState, current: string | undefined, lastChecked:
         icon: ArrowUpCircle,
         tone: "text-primary",
         title: `Version ${state.info.version} is available`,
-        text: `${version} Read what changed below, then download when you're ready.`,
+        text: version,
       };
     case "downloading":
       return {
         icon: Download,
         tone: "text-brand",
         title: `Downloading ${state.info.version}…`,
-        text: "The download is checked against 2VX's signing key before it can be installed.",
+        text: "",
       };
     case "ready":
       return {

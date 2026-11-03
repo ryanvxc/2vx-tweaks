@@ -43,7 +43,7 @@ export function CleanerPage() {
     <>
       <PageHeader
         title="PC Cleaner"
-        description="How much space temporary files and caches use on this PC. Measuring only: nothing is deleted."
+        description="Measuring only: nothing is deleted."
         actions={
           <Button size="sm" variant="outline" onClick={refetch} disabled={loading}>
             <RefreshCw className={loading ? "animate-spin" : undefined} /> Scan again

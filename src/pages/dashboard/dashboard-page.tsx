@@ -42,7 +42,7 @@ export function DashboardPage() {
 
         <div className="grid grid-cols-12 gap-4">
           <div className={showQuickstart ? "col-span-8" : "col-span-12"}>
-            <UtilisationChart samples={metrics.samples} />
+            <UtilisationChart samples={metrics.samples} snapshot={snapshot.data} />
           </div>
           {showQuickstart && (
             <div className="col-span-4">

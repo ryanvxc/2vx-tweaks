@@ -61,10 +61,7 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Settings"
-        description="Preferences, updates and how 2VX keeps changes safe"
-      />
+      <PageHeader title="Settings" />
       <div className="grid grid-cols-[160px_minmax(0,1fr)] gap-6">
         <nav aria-label="Settings sections" className="sticky top-0 flex h-fit flex-col gap-px">
           {SECTIONS.map(([id, label]) => (
@@ -131,13 +128,12 @@ export function SettingsPage() {
             <SettingsRow
               icon={Palette}
               title="Theme"
-              description="Dark. A light theme isn't available yet."
+              description="A light theme isn't available yet."
               control={<StatusPill tone="neutral">Dark</StatusPill>}
             />
             <SettingsRow
               icon={PanelLeft}
               title="Compact sidebar"
-              description="Show only icons in the sidebar."
               htmlFor="pref-sidebar"
               control={
                 <Switch
@@ -150,7 +146,7 @@ export function SettingsPage() {
             <SettingsRow
               icon={Move}
               title="Reduce motion"
-              description="Turn off animations and transitions. 2VX also follows the Windows animation setting."
+              description="2VX also follows the Windows animation setting."
               htmlFor="pref-motion"
               control={
                 <Switch
@@ -166,7 +162,6 @@ export function SettingsPage() {
             <SettingsRow
               icon={Bell}
               title="Update notice on Home"
-              description="Show a small notice on Home when a new version is available."
               htmlFor="pref-update-notice"
               control={
                 <Switch
@@ -189,7 +184,7 @@ export function SettingsPage() {
             <SettingsRow
               icon={RefreshCw}
               title="Check for updates automatically"
-              description="Once each time 2VX starts. The check asks GitHub for the release feed; it sends no data about this PC beyond a normal web request."
+              description="Once each time 2VX starts. It sends no data about this PC beyond a normal web request."
               htmlFor="pref-auto-update"
               control={
                 <Switch
@@ -211,7 +206,6 @@ export function SettingsPage() {
             <SettingsRow
               icon={LayoutList}
               title="Quickstart on Home"
-              description="Show the list of first steps on Home."
               htmlFor="pref-quickstart"
               control={
                 <Switch
@@ -246,7 +240,6 @@ export function SettingsPage() {
             <SettingsRow
               icon={ScrollText}
               title="Change history"
-              description="Every change 2VX has made, with the exact old and new values."
               control={
                 <Button asChild size="sm" variant="outline">
                   <Link to="/history">Open History</Link>
