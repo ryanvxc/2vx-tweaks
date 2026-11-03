@@ -1,5 +1,13 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import type { TweakMeta } from "@/types/engine";
+import type {
+  ChangeRecord,
+  EngineStatus,
+  OperationOutcome,
+  Plan,
+  SnapshotRecord,
+  TweakMeta,
+  TweakStatus,
+} from "@/types/engine";
 import type { AppInfo, BackendError, MetricsSample, SystemSnapshot } from "@/types/system";
 import { preview } from "./preview";
 
@@ -41,6 +49,31 @@ export const backend = {
       : Promise.resolve(preview.metricsSince(sinceMs)),
 
   listTweaks: (): Promise<TweakMeta[]> => (isDesktop ? call("list_tweaks") : Promise.resolve([])),
+
+  getEngineStatus: (): Promise<EngineStatus> =>
+    isDesktop ? call("get_engine_status") : Promise.resolve(preview.engineStatus()),
+
+  /** Reads every target of every tweak; can take a moment, runs on a backend worker thread. */
+  getTweakStatuses: (): Promise<TweakStatus[]> =>
+    isDesktop ? call("get_tweak_statuses") : Promise.resolve([]),
+
+  /** Dry run: writes nothing. Unknown IDs are rejected with `invalid_input`. */
+  planTweaks: (tweakIds: string[]): Promise<Plan> =>
+    isDesktop ? call("plan_tweaks", { tweakIds }) : preview.refuse(),
+
+  /** Consumes the plan. Fails with `conflict` if it expired or a target changed since planning. */
+  applyPlan: (planId: string): Promise<OperationOutcome> =>
+    isDesktop ? call("apply_plan", { planId }) : preview.refuse(),
+
+  revertSnapshot: (snapshotId: number): Promise<OperationOutcome> =>
+    isDesktop ? call("revert_snapshot", { snapshotId }) : preview.refuse(),
+
+  /** Newest first; the backend defaults to 50. */
+  listSnapshots: (limit?: number): Promise<SnapshotRecord[]> =>
+    isDesktop ? call("list_snapshots", { limit: limit ?? null }) : Promise.resolve([]),
+
+  getSnapshotChanges: (snapshotId: number): Promise<ChangeRecord[]> =>
+    isDesktop ? call("get_snapshot_changes", { snapshotId }) : Promise.resolve([]),
 
   logEvent: (level: LogLevel, message: string, source?: string): Promise<void> =>
     isDesktop

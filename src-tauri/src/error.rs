@@ -21,8 +21,26 @@ pub enum AppError {
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
 
+    /// The change journal could not be read or written. Applying is disabled until it recovers.
+    #[error("change journal error: {0}")]
+    Storage(String),
+
+    /// The system no longer matches what the user confirmed (e.g. a value changed after planning).
+    #[error("conflict: {0}")]
+    Conflict(String),
+
+    /// The operation was refused by the safety policy (protected target, unknown tweak…).
+    #[error("refused by safety policy: {0}")]
+    Policy(String),
+
     #[error("internal error: {0}")]
     Internal(String),
+}
+
+impl From<rusqlite::Error> for AppError {
+    fn from(err: rusqlite::Error) -> Self {
+        AppError::Storage(err.to_string())
+    }
 }
 
 impl AppError {
@@ -33,6 +51,9 @@ impl AppError {
             AppError::ElevationRequired(_) => "elevation_required",
             AppError::System(_) => "system",
             AppError::Io(_) => "io",
+            AppError::Storage(_) => "storage",
+            AppError::Conflict(_) => "conflict",
+            AppError::Policy(_) => "policy",
             AppError::Internal(_) => "internal",
         }
     }

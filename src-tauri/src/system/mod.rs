@@ -3,4 +3,5 @@
 pub mod hardware;
 pub mod metrics;
 pub mod os;
+pub mod power;
 pub mod privilege;

@@ -19,17 +19,64 @@ against.
 
 ## Privilege
 
-- The app runs unelevated by default and shows its privilege level in the title bar.
-- Phase 2 decision pending: (a) relaunch elevated on demand, or (b) a small elevated helper with a fixed IPC
-  vocabulary. (b) keeps the UI process unprivileged and is the current preference.
-- Note: when launched from an elevated terminal, dev builds inherit elevation (the title bar shows "Administrator").
+- The app runs unelevated (`asInvoker`) and shows its privilege level in the title bar.
+- A batch that touches HKLM uses the **elevation broker** (`engine/broker.rs`): the app relaunches its own executable
+  with `ShellExecuteExW("runas")` and `--2vx-broker <pipe> <parent-pid>`, which shows **one UAC prompt per batch**.
+  The elevated copy connects back, performs individual writes and exits when the batch ends.
+  - Pipe: `\\.\pipe\2vx-broker-<128 random bits>`, `FILE_FLAG_FIRST_PIPE_INSTANCE` (can't be pre-created or
+    squatted), `PIPE_REJECT_REMOTE_CLIENTS`, one instance.
+  - The app accepts exactly one client and checks its PID is the process it launched. The broker checks the pipe
+    server's PID is the parent it was told about.
+  - The broker opens the pipe at `SECURITY_IDENTIFICATION`, so the unelevated app can't impersonate the admin token.
+  - The broker's vocabulary is `Write { target, value }` and `Done`. It writes a target only if it passes the policy
+    denylist **and** is declared by a built-in tweak. It accepts no commands, paths or code, holds no state and keeps
+    no journal (the app journals every change).
+  - A declined UAC prompt returns `elevation_required`; nothing is changed.
+  - Residual risk: another process running as the same user could start the broker itself, but that still needs the
+    user to accept a UAC prompt, and it can only touch targets that 2VX tweaks declare.
+- Never SYSTEM, never TrustedInstaller, no Windows service, no scheduled task.
+- Note: when launched from an elevated terminal, dev builds inherit elevation (the title bar shows "Administrator"),
+  and HKLM writes then happen in-process.
+
+## Change safety (engine)
+
+- **Declarative tweaks**: tweaks list settings; only `engine/service.rs` writes, through `SettingStore`.
+- **Write-ahead journal**: every before-value is committed to SQLite before the write, so a crash never loses the
+  information needed to undo. Interrupted snapshots are flagged on the next start and can be reverted.
+- **Read-back verification**: a write counts only if reading the value back gives the expected result (catches
+  policy overrides). Any failure rolls the whole batch back in reverse order.
+- **Stale-plan refusal**: apply refuses if any target changed since the plan was shown.
+- **Non-clobbering revert**: values changed by something else since 2VX set them are left alone and reported.
+- **Policy denylist** (`engine/policy.rs`), checked at registration, planning and in the broker: Defender, Firewall,
+  Windows Update, UAC/system policies, VBS/HVCI/Device Guard, LSA, Secure Boot, SmartScreen, Windows Security,
+  SAM/SECURITY/BCD hives, and the configuration of protected services (WinDefend, mpssvc, BFE, wuauserv,
+  WaaSMedicSvc, UsoSvc, BITS, TrustedInstaller, EventLog and others).
+
+## Commitments (enforced by `src-tauri/tests/policy.rs`)
+
+2VX does not and will not include:
+
+| Commitment | Enforcement |
+| --- | --- |
+| No telemetry, analytics or crash upload | No network, analytics or crash-reporting crates in `Cargo.toml`; CSP allows only the IPC bridge |
+| No hardware fingerprinting or device IDs | No machine-ID crates; nothing leaves the machine |
+| No remote kill switch or remote content | No network clients; tweaks are compiled in, never downloaded |
+| No background persistence | No service or scheduled task is created; nothing runs when the app is closed |
+| No kernel drivers | None bundled; not in scope |
+| No unrestricted command execution | The backend source may not spawn processes or shells (`Command::new`, PowerShell, cmd, reg, sc, schtasks, bcdedit, wmic…). The only process launch is the broker's self-relaunch. |
+| No unnecessary privilege | `asInvoker`, per-batch broker, never SYSTEM or TrustedInstaller |
+| No undocumented or protected changes | Metadata gate (https references) and the policy denylist |
+| Every IPC command is deliberate | `build.rs` manifest, capability grants and `generate_handler!` must list the same commands; no plugin permissions beyond window chrome |
+
+Changing any of these requires updating this document and the guard test in the same change, with a reason.
 
 ## Rules for system changes
 
 1. Never disable Defender, Firewall, Windows Update, UAC, SmartScreen, VBS/HVCI, Secure Boot or similar protections.
 2. Never bulk-disable services. Service changes are individual, explained and reversible.
 3. Only documented settings, with references in `TweakMeta.references`.
-4. Back up before every change. If any step fails, roll back the earlier steps, then report the error.
+4. Back up before every change. If any step fails, roll back the earlier steps, then report the error (implemented
+   once in the engine, see § Change safety).
 5. Deletion only inside a fixed allowlist of locations (temp, caches). Scan first, show results, delete on confirmation.
 6. Boot configuration (`bcdedit`) and security settings need a `High` risk confirmation with explicit acknowledgement.
 7. Never apply anything silently. Presets show the full list of changes before applying.
@@ -37,5 +84,7 @@ against.
 
 ## Logging and privacy
 
-- Logs stay local (`%LOCALAPPDATA%\com.twovx.tweaks\logs`). No telemetry.
+- Logs and the change journal stay local (`%LOCALAPPDATA%\com.twovx.tweaks\`, per-user ACLs). No telemetry.
+- The journal stores registry targets and values that 2VX changed, plus an audit log of apply/revert events. It
+  stores no personal data or hardware identifiers.
 - Frontend log messages are stripped of control characters and capped at 2,000 chars, which prevents log injection.

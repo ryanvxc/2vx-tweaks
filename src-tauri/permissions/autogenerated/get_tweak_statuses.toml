@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-tweak-statuses"
+description = "Enables the get_tweak_statuses command without any pre-configured scope."
+commands.allow = ["get_tweak_statuses"]
+
+[[permission]]
+identifier = "deny-get-tweak-statuses"
+description = "Denies the get_tweak_statuses command without any pre-configured scope."
+commands.deny = ["get_tweak_statuses"]

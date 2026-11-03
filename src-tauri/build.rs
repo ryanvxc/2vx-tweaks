@@ -8,6 +8,13 @@ fn main() {
             "get_system_snapshot",
             "get_metrics",
             "list_tweaks",
+            "get_engine_status",
+            "get_tweak_statuses",
+            "plan_tweaks",
+            "apply_plan",
+            "revert_snapshot",
+            "list_snapshots",
+            "get_snapshot_changes",
         ]),
     ))
     .expect("failed to run tauri-build");

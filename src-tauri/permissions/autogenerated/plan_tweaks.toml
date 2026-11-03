@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-plan-tweaks"
+description = "Enables the plan_tweaks command without any pre-configured scope."
+commands.allow = ["plan_tweaks"]
+
+[[permission]]
+identifier = "deny-plan-tweaks"
+description = "Denies the plan_tweaks command without any pre-configured scope."
+commands.deny = ["plan_tweaks"]

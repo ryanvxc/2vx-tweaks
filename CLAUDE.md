@@ -40,7 +40,7 @@ src/                         React frontend
 src-tauri/src/
   commands/                  Tauri command handlers: thin, validated
   system/                    read-only system info (os, hardware, metrics sampler, privilege)
-  engine/                    Tweak trait, metadata types, registry (empty in Phase 1)
+  engine/                    declarative tweaks, policy, journal, plan/apply/revert, elevation broker
   logging.rs, error.rs
 docs/                        architecture, modules, Windows APIs, security, testing, release
 ```
@@ -70,9 +70,14 @@ Full rationale in `docs/security.md`. In short:
   informed confirmation (`ConfirmDialog` with `risk="high"`).
 - Request elevation only for operations that need it. Never claim FPS gains without measurement.
 
-## Status (end of Phase 1)
+## Status (end of Phase 2a / P0)
 
 Implemented: shell, navigation, design system, logging (file + frontend forwarding), system snapshot, live metrics
-sampler, engine contracts + empty registry, dashboard. Sample: dashboard Recommendations. Planned: everything else;
-see the Phase table in `docs/architecture.md`.
+sampler, dashboard. Engine (P0): typed registry primitive + policy denylist, metadata gate, SQLite write-ahead journal,
+plan → apply → verify → rollback → revert, elevation broker, policy guard tests (`src-tauri/tests/policy.rs`).
+Engine commands are wrapped in `services/backend.ts` but no UI uses them yet, and no tweaks are registered (P1.3).
+Sample: dashboard Recommendations. Planned: see the Phase table in `docs/architecture.md` and
+`docs/research/2VX_IMPROVEMENT_ROADMAP.md`.
 Known limitations: GPU usage is sysinfo's sum over all engines (clamped 100); used VRAM not available system-wide yet.
+The broker's real UAC launch has not been exercised end to end (its pipe protocol is tested).
+Build: cargo can run out of memory at default parallelism here; set `CARGO_BUILD_JOBS=2`.

@@ -93,6 +93,9 @@ export interface BackendError {
     | "system"
     | "io"
     | "internal"
+    | "storage"
+    | "conflict"
+    | "policy"
     | "preview";
   message: string;
 }

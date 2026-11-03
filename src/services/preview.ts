@@ -1,4 +1,5 @@
-import type { AppInfo, MetricsSample, SystemSnapshot } from "@/types/system";
+import type { EngineStatus } from "@/types/engine";
+import type { AppInfo, BackendError, MetricsSample, SystemSnapshot } from "@/types/system";
 
 /**
  * Simulated backend used when the UI runs outside the desktop shell (browser dev
@@ -104,4 +105,19 @@ function metricsSince(sinceMs?: number): MetricsSample[] {
   return out;
 }
 
-export const preview = { appInfo, snapshot, metricsSince };
+function engineStatus(): EngineStatus {
+  return {
+    tweakCount: 0,
+    journalAvailable: false,
+    journalError: "No change journal in browser preview",
+    interruptedSnapshots: 0,
+  };
+}
+
+/** Anything that would change the system is refused outright, never simulated. */
+function refuse(): Promise<never> {
+  const err: BackendError = { code: "preview", message: "Not available in browser preview" };
+  return Promise.reject(err);
+}
+
+export const preview = { appInfo, snapshot, metricsSince, engineStatus, refuse };
