@@ -5,7 +5,7 @@ import { MemoryRouter } from "react-router";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { clearQueryCache } from "@/hooks/use-backend-query";
 import { HEALTHY, SNAPSHOT, USER_TWEAK, change, outcome } from "@/test/engine-fixtures";
-import { HistoryPage } from "./history-page";
+import { RestorePage } from "./restore-page";
 
 const mock = vi.hoisted(() => ({
   getEngineStatus: vi.fn(),
@@ -28,7 +28,7 @@ function renderPage() {
   render(
     <MemoryRouter>
       <TooltipProvider>
-        <HistoryPage />
+        <RestorePage />
       </TooltipProvider>
     </MemoryRouter>,
   );
@@ -44,7 +44,7 @@ beforeEach(() => {
   mock.getSnapshotChanges.mockResolvedValue([change()]);
 });
 
-describe("HistoryPage", () => {
+describe("RestorePage", () => {
   it("shows an empty journal honestly", async () => {
     mock.listSnapshots.mockResolvedValue([]);
     renderPage();

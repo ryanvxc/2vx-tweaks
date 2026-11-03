@@ -8,10 +8,18 @@ import { Notice } from "./notice";
  * Engine health above every screen that can change the system. Silent when all is well;
  * a broken journal or an interrupted batch must never be invisible.
  */
-export function EngineBanner({ showHistoryLink = true }: { showHistoryLink?: boolean }) {
+export function EngineBanner({
+  showHistoryLink = true,
+  previewNotice = true,
+}: {
+  showHistoryLink?: boolean;
+  /** Home has no tweaks to caveat, and the title bar already says it's a preview. */
+  previewNotice?: boolean;
+}) {
   const { data: status, error } = useEngineStatus();
 
   if (!isDesktop) {
+    if (!previewNotice) return null;
     return (
       <Notice tone="info" title="Browser preview">
         The optimisation engine runs only in the desktop app. Tweaks shown here are samples, and
@@ -44,13 +52,13 @@ export function EngineBanner({ showHistoryLink = true }: { showHistoryLink?: boo
         action={
           showHistoryLink && (
             <Button asChild size="xs" variant="outline">
-              <Link to="/history">Open History</Link>
+              <Link to="/restore">Open Restore Centre</Link>
             </Button>
           )
         }
       >
         The app closed while applying changes. Some values may have been changed; review and revert
-        them in History.
+        them in the Restore Centre.
       </Notice>
     );
   }

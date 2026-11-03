@@ -1,4 +1,5 @@
 import { ClipboardCopy, MonitorCog, Terminal } from "lucide-react";
+import { pageDescription } from "@/app/navigation";
 import { toast } from "sonner";
 import { PlannedFeatures } from "@/components/common/planned-features";
 import { SectionCard } from "@/components/common/section-card";
@@ -47,8 +48,8 @@ export function ToolsPage() {
 
   return (
     <>
-      <PageHeader title="Tools" />
-      <div className="grid grid-cols-12 gap-4">
+      <PageHeader title="Tools" description={pageDescription("/tools")} />
+      <div className="grid grid-cols-12 gap-3">
         <div className="col-span-7">
           <SectionCard
             title="System report"
@@ -64,7 +65,7 @@ export function ToolsPage() {
             ) : (
               <pre
                 data-selectable
-                className="max-h-[420px] overflow-auto rounded-lg border bg-background/50 p-3 font-mono text-[11.5px] leading-relaxed text-muted-foreground"
+                className="max-h-[400px] overflow-auto rounded-lg border bg-background/50 p-3 font-mono text-[11.5px] leading-relaxed text-muted-foreground"
               >
                 {report}
               </pre>
@@ -75,7 +76,7 @@ export function ToolsPage() {
             </p>
           </SectionCard>
         </div>
-        <div className="col-span-5 flex flex-col gap-4">
+        <div className="col-span-5">
           <SectionCard title="Windows tools" description="Press Win+R, paste, Enter">
             <ul className="-mx-2 flex flex-col">
               {WINDOWS_TOOLS.map((t) => (
@@ -101,6 +102,8 @@ export function ToolsPage() {
               ))}
             </ul>
           </SectionCard>
+        </div>
+        <div className="col-span-12">
           <PlannedFeatures
             features={[
               "Ping and latency test to a server you choose",

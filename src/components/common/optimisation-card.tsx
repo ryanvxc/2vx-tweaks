@@ -3,9 +3,9 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * The card used for anything the user can switch or act on: tweaks, presets, cleaner
- * locations. Icon and title on top, a two-line description, then indicators on the left
- * and the control on the right. Clicking the body (not the control) opens details.
+ * The card for anything the user can switch: icon and title on top, a two-line description,
+ * a hairline, then indicators on the left and the control on the right. Clicking the body
+ * (not the control) opens details.
  */
 export function OptimisationCard({
   icon: Icon,
@@ -29,7 +29,7 @@ export function OptimisationCard({
   control?: ReactNode;
   onOpen?: () => void;
   openLabel?: string;
-  /** Selected or switched on. */
+  /** Selected for review. Applied tweaks stay neutral: the switch already says so. */
   highlighted?: boolean;
   /** Not applicable on this PC. */
   muted?: boolean;
@@ -38,9 +38,9 @@ export function OptimisationCard({
   return (
     <div
       className={cn(
-        "group relative flex min-h-[132px] flex-col rounded-xl border bg-card p-4 transition-colors",
+        "group relative flex min-h-[136px] flex-col rounded-xl border bg-card px-4 pt-3.5 pb-3 transition-colors",
         "hover:border-white/12 hover:bg-raised",
-        highlighted && "border-primary/35",
+        highlighted && "border-primary/50",
         muted && "opacity-60",
         className,
       )}
@@ -63,12 +63,12 @@ export function OptimisationCard({
         </div>
         {badge && <div className="relative shrink-0">{badge}</div>}
       </div>
-      <p className="mt-1.5 line-clamp-2 text-[12.5px] leading-snug text-muted-foreground">
+      <p className="mt-1.5 line-clamp-2 text-[13px] leading-snug text-muted-foreground">
         {description}
       </p>
-      <div className="mt-auto flex items-center justify-between gap-2 pt-3">
+      <div className="mt-auto flex items-center justify-between gap-2 border-t border-dashed pt-2.5">
         {/* Raised above the stretched open-button so tooltips and the control stay usable. */}
-        <div className="relative flex min-w-0 flex-wrap items-center gap-0.5">{indicators}</div>
+        <div className="relative flex min-w-0 flex-wrap items-center gap-1">{indicators}</div>
         {control && <div className="relative shrink-0">{control}</div>}
       </div>
     </div>

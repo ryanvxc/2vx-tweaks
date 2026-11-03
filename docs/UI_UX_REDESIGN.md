@@ -1,5 +1,9 @@
 # UI/UX redesign (0.2)
 
+> Historical record of the first 0.2 redesign. The page structure described here was replaced by the
+> makeover: see `INFORMATION_ARCHITECTURE.md`, `NAVIGATION_STRUCTURE.md` and `REDESIGN_ROADMAP.md`.
+> System Tweaks is now Tweaks, History is now the Restore Centre, and "stage" is now "select".
+
 The 0.2 redesign moves 2VX from a list-and-panel layout to a card-based optimisation app, in the visual
 family of the EXM reference board (dark charcoal, violet icons, magenta toggles) without copying EXM's
 code, assets, copy or layout pixel for pixel. Tokens and components are in `DESIGN_SYSTEM.md`.

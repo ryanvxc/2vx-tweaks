@@ -131,7 +131,7 @@ export function TweakDetails({
           </Button>
           {state !== "applied" && !blocked && (
             <Button disabled={disabled} onClick={() => onStage(!staged)}>
-              {staged ? "Unstage" : "Stage for review"}
+              {staged ? "Deselect" : "Select for review"}
             </Button>
           )}
           {state === "applied" && tweak.undoable && (

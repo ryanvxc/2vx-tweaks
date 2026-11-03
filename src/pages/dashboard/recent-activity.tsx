@@ -3,7 +3,6 @@ import { History } from "lucide-react";
 import { StatusPill } from "@/components/common/notice";
 import { SectionCard } from "@/components/common/section-card";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
-import { Button } from "@/components/ui/button";
 import { useSnapshots, useTweaks } from "@/hooks/use-system";
 import { SNAPSHOT_STATUS, formatTimestamp } from "@/lib/engine-text";
 
@@ -11,17 +10,18 @@ export function RecentActivity() {
   const { data, error, loading, refetch } = useSnapshots();
   const { data: tweaks } = useTweaks();
   const names = Object.fromEntries((tweaks ?? []).map((t) => [t.id, t.name]));
-  const recent = (data ?? []).slice(0, 4);
+  const recent = (data ?? []).slice(0, 3);
 
   return (
     <SectionCard
       title="Recent changes"
       source="live"
+      className="h-full"
       actions={
         recent.length > 0 && (
-          <Button asChild size="xs" variant="ghost">
-            <Link to="/history">View all</Link>
-          </Button>
+          <Link to="/restore" className="text-[12px] font-medium text-brand hover:underline">
+            All
+          </Link>
         )
       }
     >
@@ -30,12 +30,7 @@ export function RecentActivity() {
       ) : loading && !data ? (
         <LoadingRows rows={2} />
       ) : recent.length === 0 ? (
-        <EmptyState
-          icon={History}
-          title="No changes yet"
-          description="Every change 2VX makes is listed here and in History, with an undo."
-          className="py-6"
-        />
+        <EmptyState icon={History} title="No changes yet" className="py-2" />
       ) : (
         <ul className="-mx-2 flex flex-col">
           {recent.map((s) => {
@@ -51,7 +46,9 @@ export function RecentActivity() {
                     {formatTimestamp(s.createdAtMs)}
                   </div>
                 </div>
-                <StatusPill tone={status.tone}>{status.label}</StatusPill>
+                {s.status !== "completed" && (
+                  <StatusPill tone={status.tone}>{status.label}</StatusPill>
+                )}
               </li>
             );
           })}

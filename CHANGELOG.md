@@ -5,6 +5,23 @@ notes come from commit subjects. This file records the larger milestones.
 
 ## 0.2.0 (unreleased)
 
+### Makeover
+- New structure, one primary location per feature: Overview (Home, Monitoring, Hardware), Optimise
+  (Tweaks, Gaming), Maintain (Startup, PC Cleaner, Restore Centre, Tools). See
+  `docs/INFORMATION_ARCHITECTURE.md`. `/system` and `/history` redirect, and old Settings links still work.
+- Home is an overview that fits the default window: alerts, tweaks in effect, gaming profile, chart, health,
+  recommendations, this PC, recent changes.
+- Monitoring holds live data; its four tiles choose the graph. Hardware is now a specification sheet.
+- Tweaks are grouped by topic: Windows, Privacy, Apps and Services, with sections and a search across
+  all of them. Each tweak has its own icon, and review lists what a selection can break.
+- Gaming profiles (Responsive, Quiet background, Everything) are named lists of existing tweaks: each shows
+  what it changes, anything can be left out, and everything goes through the normal review. A profile counts
+  as active only when its tweaks are detected in effect. No FPS claims.
+- Settings has tabs. Restore Centre replaces History and opens with a summary. PC Cleaner shows a total and a
+  ranked list. Planned lists are collapsed.
+- Ctrl K searches pages, tabs and tweaks. The title bar shows where you are.
+- Darker surfaces, a stronger magenta and Manrope headings.
+
 ### Redesign
 - New visual identity: charcoal surfaces, violet icons and focus, magenta primary actions and toggles;
   Inter typography scale; reduced-motion support. See `docs/DESIGN_SYSTEM.md`.

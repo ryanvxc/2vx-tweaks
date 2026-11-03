@@ -1,20 +1,26 @@
 import type { ReactNode } from "react";
+import type { MonitoringTab } from "@/app/navigation";
 import { ArrowDown, ArrowUp, Cpu, Gpu, MemoryStick, Network, type LucideIcon } from "lucide-react";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { Sparkline } from "@/components/common/sparkline";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatBytes, formatPercent, formatRate, percentOf } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { MetricsSample, SystemSnapshot } from "@/types/system";
 
 const SPARK_POINTS = 60;
 
+/** Four live numbers that also choose the graph below them, like a tab row with data. */
 export function LiveStats({
   samples,
   snapshot,
+  selected,
+  onSelect,
 }: {
   samples: MetricsSample[];
   snapshot: SystemSnapshot | undefined;
+  selected: MonitoringTab;
+  onSelect: (tab: MonitoringTab) => void;
 }) {
   const recent = samples.slice(-SPARK_POINTS);
   const latest = recent.at(-1);
@@ -22,8 +28,10 @@ export function LiveStats({
   const physical = snapshot?.cpu.physicalCores;
 
   return (
-    <div className="grid grid-cols-4 gap-4">
+    <div role="tablist" aria-label="Metric" className="grid grid-cols-4 gap-3">
       <StatTile
+        selected={selected === "cpu"}
+        onSelect={() => onSelect("cpu")}
         icon={Cpu}
         label="CPU"
         value={latest ? formatPercent(latest.cpuPercent) : undefined}
@@ -34,6 +42,8 @@ export function LiveStats({
         series={recent.map((s) => s.cpuPercent)}
       />
       <StatTile
+        selected={selected === "memory"}
+        onSelect={() => onSelect("memory")}
         icon={MemoryStick}
         label="Memory"
         value={
@@ -50,6 +60,8 @@ export function LiveStats({
         series={recent.map((s) => percentOf(s.memoryUsedBytes, s.memoryTotalBytes))}
       />
       <StatTile
+        selected={selected === "gpu"}
+        onSelect={() => onSelect("gpu")}
         icon={Gpu}
         label="GPU"
         value={
@@ -66,6 +78,8 @@ export function LiveStats({
         series={recent.map((s) => s.gpus[0]?.usagePercent ?? 0)}
       />
       <StatTile
+        selected={selected === "network"}
+        onSelect={() => onSelect("network")}
         icon={Network}
         label="Network"
         value={latest ? formatRate(latest.networkRxBytesPerSec) : undefined}
@@ -86,6 +100,8 @@ export function LiveStats({
 }
 
 function StatTile({
+  selected,
+  onSelect,
   icon: Icon,
   label,
   value,
@@ -95,6 +111,8 @@ function StatTile({
   series,
   max = 100,
 }: {
+  selected: boolean;
+  onSelect: () => void;
   icon: LucideIcon;
   label: string;
   value: string | undefined;
@@ -105,15 +123,24 @@ function StatTile({
   max?: number | "auto";
 }) {
   return (
-    <Card className="gap-0 overflow-hidden pt-4 pb-0">
-      <div className="flex items-center justify-between px-4">
+    <button
+      type="button"
+      role="tab"
+      aria-selected={selected}
+      onClick={onSelect}
+      className={cn(
+        "flex flex-col overflow-hidden rounded-xl border bg-card pt-3.5 text-left transition-colors outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring",
+        selected && "border-primary/50 bg-raised",
+      )}
+    >
+      <div className="flex w-full items-center justify-between px-4">
         <div className="flex items-center gap-2 text-[12.5px] font-medium text-muted-foreground">
           <Icon className="size-4" style={{ color }} />
           {label}
         </div>
         <DataSourceBadge source="live" />
       </div>
-      <div className="mt-3 px-4">
+      <div className="mt-2.5 px-4">
         {value === undefined ? (
           <Skeleton className="h-7 w-20" />
         ) : (
@@ -128,9 +155,9 @@ function StatTile({
           {sub ?? <Skeleton className="h-3 w-28" />}
         </div>
       </div>
-      <div className="mt-2">
-        <Sparkline data={series} color={color} max={max} height={40} />
+      <div className="mt-1.5 w-full">
+        <Sparkline data={series} color={color} max={max} height={32} />
       </div>
-    </Card>
+    </button>
   );
 }

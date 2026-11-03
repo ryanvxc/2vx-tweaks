@@ -1,18 +1,25 @@
 import { useEffect } from "react";
-import { HashRouter, Navigate, Route, Routes } from "react-router";
+import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router";
 import { AppShell } from "@/components/layout/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CleanerPage } from "@/pages/cleaner/cleaner-page";
 import { DashboardPage } from "@/pages/dashboard/dashboard-page";
+import { GamingPage } from "@/pages/gaming/gaming-page";
 import { HardwarePage } from "@/pages/hardware/hardware-page";
-import { HistoryPage } from "@/pages/history/history-page";
-import { GamingPage } from "@/pages/placeholder-pages";
+import { MonitoringPage } from "@/pages/monitoring/monitoring-page";
+import { RestorePage } from "@/pages/restore/restore-page";
 import { SettingsPage } from "@/pages/settings/settings-page";
 import { StartupPage } from "@/pages/startup/startup-page";
 import { ToolsPage } from "@/pages/tools/tools-page";
-import { SystemTweaksPage } from "@/pages/tweaks/system-tweaks-page";
+import { TweaksPage } from "@/pages/tweaks/tweaks-page";
 import { useUiStore } from "@/stores/ui-store";
+
+/** Old addresses keep working, including a tweak named in the query. */
+function Moved({ to }: { to: string }) {
+  const { search } = useLocation();
+  return <Navigate to={`${to}${search}`} replace />;
+}
 
 // Hash routing: the app is served from a custom protocol in production, so there is
 // no server to rewrite deep links.
@@ -28,14 +35,15 @@ export function App() {
         <Routes>
           <Route element={<AppShell />}>
             <Route index element={<DashboardPage />} />
+            <Route path="monitoring" element={<MonitoringPage />} />
             <Route path="hardware" element={<HardwarePage />} />
-            {/* Old link target from 0.1. */}
-            <Route path="monitoring" element={<Navigate to="/hardware" replace />} />
-            <Route path="history" element={<HistoryPage />} />
+            <Route path="tweaks" element={<TweaksPage />} />
+            <Route path="system" element={<Moved to="/tweaks" />} />
             <Route path="gaming" element={<GamingPage />} />
-            <Route path="system" element={<SystemTweaksPage />} />
             <Route path="startup" element={<StartupPage />} />
             <Route path="cleaner" element={<CleanerPage />} />
+            <Route path="restore" element={<RestorePage />} />
+            <Route path="history" element={<Moved to="/restore" />} />
             <Route path="tools" element={<ToolsPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />

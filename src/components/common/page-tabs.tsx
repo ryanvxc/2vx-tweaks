@@ -36,11 +36,11 @@ export function PageTabs<T extends string>({
             aria-selected={active}
             onClick={() => onChange(t.value)}
             className={cn(
-              "relative -mb-px flex h-9 items-center gap-1.5 rounded-t-md px-3 text-[13px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "relative -mb-px flex h-10 items-center gap-2 rounded-t-md px-3 text-[13.5px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
               active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {Icon && <Icon className={cn("size-3.5", active && "text-brand")} aria-hidden />}
+            {Icon && <Icon className={cn("size-4", active && "text-brand")} aria-hidden />}
             {t.label}
             {t.count !== undefined && (
               <span className="text-[11px] text-muted-foreground tabular">{t.count}</span>

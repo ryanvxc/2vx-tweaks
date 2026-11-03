@@ -116,7 +116,7 @@ export function describeOutcome(outcome: OperationOutcome, kind: SnapshotKind): 
         tone: "success",
         title: "Applied and verified",
         description: withRestart(
-          `${values} changed and read back. You can undo this from History at any time.`,
+          `${values} changed and read back. You can undo this from the Restore Centre at any time.`,
         ),
       };
     case "rolledBack":
@@ -130,7 +130,7 @@ export function describeOutcome(outcome: OperationOutcome, kind: SnapshotKind): 
       return {
         tone: "destructive",
         title: "Failed, and the rollback was incomplete",
-        description: `${outcome.error ?? "A change failed."} Some values could not be restored automatically; revert this batch from History.`,
+        description: `${outcome.error ?? "A change failed."} Some values could not be restored automatically; revert this batch from the Restore Centre.`,
       };
   }
 }

@@ -31,11 +31,11 @@ vi.mock("@/services/backend", async (importOriginal) => ({
   backend: mock,
 }));
 
-function renderGrid(initial = "/system") {
+function renderGrid(initial = "/tweaks", browse = false) {
   render(
     <MemoryRouter initialEntries={[initial]}>
       <TooltipProvider>
-        <TweakGrid categories={["privacy", "performance"]} />
+        <TweakGrid categories={["privacy", "performance"]} browse={browse} />
       </TooltipProvider>
     </MemoryRouter>,
   );
@@ -64,9 +64,21 @@ describe("TweakGrid", () => {
       await screen.findByRole("switch", { name: `Turn on ${USER_TWEAK.name}` }),
     ).not.toBeChecked();
     expect(screen.getByRole("switch", { name: `Undo ${APPLIED_TWEAK.name}` })).toBeChecked();
-    expect(screen.getAllByLabelText("Asks for administrator permission")).toHaveLength(1);
-    // Fixtures are added in 0.1, so on 0.1.x they are new.
-    expect(screen.getAllByText("New")).toHaveLength(3);
+  });
+
+  it("drops the New badge when most tweaks are new", async () => {
+    // Fixtures are added in 0.1, so on 0.1.x all of them are new.
+    renderGrid();
+    await screen.findByRole("switch", { name: `Turn on ${USER_TWEAK.name}` });
+    expect(screen.queryByText("New")).not.toBeInTheDocument();
+  });
+
+  it("marks new tweaks when they are the minority", async () => {
+    const [newest, ...rest] = STATUSES;
+    const older = rest.map((t) => ({ ...t, meta: { ...t.meta, addedIn: "0.0" } }));
+    mock.getTweakStatuses.mockResolvedValue([newest!, ...older]);
+    renderGrid();
+    expect(await screen.findAllByText("New")).toHaveLength(1);
   });
 
   it("flags tweaks that can break a feature and blocks ones that can't apply", async () => {
@@ -79,13 +91,13 @@ describe("TweakGrid", () => {
     expect(screen.getByRole("switch", { name: `Turn on ${warned.meta.name}` })).toBeEnabled();
   });
 
-  it("stages a switch-on and applies only after review", async () => {
+  it("selects a switch-on and applies only after review", async () => {
     mock.applyPlan.mockResolvedValue(outcome());
     const user = userEvent.setup();
     renderGrid();
     await user.click(await screen.findByRole("switch", { name: `Turn on ${USER_TWEAK.name}` }));
     expect(mock.planTweaks).not.toHaveBeenCalled();
-    expect(screen.getByText(/staged/)).toBeInTheDocument();
+    expect(screen.getByText(/selected/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Review 1 change" }));
     const dialog = await screen.findByRole("dialog");
@@ -115,19 +127,34 @@ describe("TweakGrid", () => {
     ).toBeDisabled();
   });
 
-  it("filters by search and tab", async () => {
+  it("shows one topic at a time, and searches across all of them", async () => {
     const user = userEvent.setup();
-    renderGrid();
-    await screen.findByText(USER_TWEAK.name);
+    renderGrid("/tweaks?tab=privacy", true);
+    expect(await screen.findByText(USER_TWEAK.name)).toBeInTheDocument();
+    expect(screen.queryByText(ADMIN_TWEAK.name)).not.toBeInTheDocument();
+
     await user.type(screen.getByRole("searchbox", { name: "Search tweaks" }), "admin");
     expect(screen.queryByText(USER_TWEAK.name)).not.toBeInTheDocument();
     expect(screen.getByText(ADMIN_TWEAK.name)).toBeInTheDocument();
-    await user.click(screen.getByRole("tab", { name: /Privacy/ }));
+
+    await user.clear(screen.getByRole("searchbox", { name: "Search tweaks" }));
+    await user.click(screen.getByRole("tab", { name: /Services/ }));
     expect(screen.getByText("No tweaks match")).toBeInTheDocument();
   });
 
+  it("names what a selected tweak can break in the review", async () => {
+    const warned = { ...STATUSES[0]!, meta: { ...STATUSES[0]!.meta, warning: "Printing stops." } };
+    mock.getTweakStatuses.mockResolvedValue([warned, ...STATUSES.slice(1)]);
+    const user = userEvent.setup();
+    renderGrid();
+    await user.click(await screen.findByRole("switch", { name: `Turn on ${warned.meta.name}` }));
+    await user.click(screen.getByRole("button", { name: "Review 1 change" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(await within(dialog).findByText("Printing stops.")).toBeInTheDocument();
+  });
+
   it("opens details from the URL", async () => {
-    renderGrid(`/system?tweak=${USER_TWEAK.id}`);
+    renderGrid(`/tweaks?tweak=${USER_TWEAK.id}`);
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("https://learn.microsoft.com/test")).toBeInTheDocument();
     expect(within(dialog).getByText("Now (not set)")).toBeInTheDocument();

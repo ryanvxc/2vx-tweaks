@@ -113,8 +113,10 @@ function metricsSince(sinceMs?: number): MetricsSample[] {
 }
 
 // Invented tweaks so the card grid can be laid out in a browser. They are not the real
-// catalogue (that lives in Rust) and their names say so.
+// catalogue (that lives in Rust) and their names say so. They borrow real IDs only so that
+// tabs, sections and gaming profiles have something to place.
 type Sample = Pick<TweakMeta, "category" | "permission" | "impact" | "addedIn" | "recommended"> & {
+  id: string;
   slug: string;
   title: string;
   state: TweakStatus["state"];
@@ -125,6 +127,7 @@ type Sample = Pick<TweakMeta, "category" | "permission" | "impact" | "addedIn" |
 
 const SAMPLES: Sample[] = [
   {
+    id: "performance.foreground-boost",
     slug: "machine-wide",
     title: "machine-wide setting",
     category: "performance",
@@ -135,6 +138,7 @@ const SAMPLES: Sample[] = [
     state: "notApplied",
   },
   {
+    id: "privacy.app-launch-tracking-off",
     slug: "per-user",
     title: "per-user setting",
     category: "privacy",
@@ -146,6 +150,7 @@ const SAMPLES: Sample[] = [
     restart: "signOut",
   },
   {
+    id: "privacy.advertising-id-off",
     slug: "new-privacy",
     title: "new privacy setting",
     category: "privacy",
@@ -156,6 +161,7 @@ const SAMPLES: Sample[] = [
     state: "notApplied",
   },
   {
+    id: "windows.edge-sidebar-off",
     slug: "browser",
     title: "browser setting",
     category: "windows",
@@ -166,9 +172,10 @@ const SAMPLES: Sample[] = [
     state: "notApplied",
   },
   {
+    id: "gaming.mmcss-games-priority",
     slug: "moderate",
     title: "moderate-risk setting",
-    category: "performance",
+    category: "gaming",
     permission: "user",
     impact: "high",
     addedIn: "0.2",
@@ -178,6 +185,7 @@ const SAMPLES: Sample[] = [
     warning: "Sample of a warning: names the features this can break.",
   },
   {
+    id: "windows.storage-sense-off",
     slug: "outside",
     title: "value set outside 2VX",
     category: "windows",
@@ -187,10 +195,34 @@ const SAMPLES: Sample[] = [
     recommended: false,
     state: "applied",
   },
+  {
+    id: "services.print-spooler-off",
+    slug: "service",
+    title: "service switch",
+    category: "services",
+    permission: "administrator",
+    impact: "medium",
+    addedIn: "0.2",
+    recommended: false,
+    state: "notApplied",
+    restart: "reboot",
+    warning: "Sample of a warning: names the features this can break.",
+  },
+  {
+    id: "gaming.game-dvr-off",
+    slug: "gaming",
+    title: "gaming setting",
+    category: "gaming",
+    permission: "administrator",
+    impact: "medium",
+    addedIn: "0.2",
+    recommended: false,
+    state: "notApplied",
+  },
 ];
 
 const SAMPLE_TWEAKS: TweakMeta[] = SAMPLES.map((x) => ({
-  id: `${x.category}.preview-sample-${x.slug}`,
+  id: x.id,
   name: `Preview sample: ${x.title}`,
   description: "Stands in for a real tweak in browser preview. Applying is disabled here.",
   details: "Preview only. The desktop app lists the real, documented tweaks from its engine.",

@@ -49,6 +49,7 @@ export function UtilisationChart({
     <SectionCard
       title={viewTitle(view, samples.at(-1), snapshot)}
       source="live"
+      className="h-full"
       actions={
         <div role="radiogroup" aria-label="Series" className="flex rounded-md border p-0.5">
           {VIEWS.map((v) => {
@@ -76,14 +77,13 @@ export function UtilisationChart({
           })}
         </div>
       }
-      contentClassName="pl-2"
+      contentClassName="relative min-h-[212px]"
     >
       {samples.length < 2 ? (
-        <div className="px-3">
-          <LoadingRows rows={5} />
-        </div>
+        <LoadingRows rows={5} />
       ) : (
-        <div className="h-60">
+        // Absolute so the graph takes whatever height the health panel beside it needs.
+        <div className="absolute inset-y-0 right-5 left-2">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
               <defs>

@@ -7,6 +7,7 @@ paid assets are used, and no third-party brand logos are bundled.
 | --- | --- | --- | --- |
 | Icons | [Lucide](https://lucide.dev) via `lucide-react` (npm) | ISC | Tree-shaken; only used icons are bundled |
 | UI font | [Inter](https://rsms.me/inter/) via `@fontsource-variable/inter` (npm) | SIL Open Font License 1.1 | Bundled into the app; nothing is fetched from Google Fonts or any CDN |
+| Heading font | [Manrope](https://github.com/sharanda/manrope) via `@fontsource-variable/manrope` (npm) | SIL Open Font License 1.1 | Bundled into the app; nothing is fetched from Google Fonts or any CDN |
 | Monospace font | Cascadia Mono / Consolas | Windows system fonts | Not bundled; used if installed |
 | 2VX logo (`src/assets/logo.svg`, `public/favicon.svg`) | Made for this project | Project's own | Violet→magenta gradient mark |
 | App icons (`src-tauri/icons/`) | Generated from `logo.svg` with `npx tauri icon` | Project's own | Regenerate whenever the logo changes |

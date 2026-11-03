@@ -1,24 +1,21 @@
+import { EngineBanner } from "@/components/common/engine-banner";
 import { PageHeader } from "@/components/layout/page-header";
 import { ErrorState } from "@/components/common/states";
 import { UpdateNotice } from "@/components/common/update-notice";
 import { useLiveMetrics } from "@/hooks/use-live-metrics";
 import { useSystemSnapshot } from "@/hooks/use-system";
-import { evaluateHealth, summariseHealth } from "@/lib/health";
 import { useUiStore } from "@/stores/ui-store";
 import { HardwareCard } from "./hardware-card";
 import { HealthPanel } from "./health-panel";
 import { HomeStats, Quickstart, RecommendedTweaks } from "./home-panels";
-import { LiveStats } from "./live-stats";
 import { RecentActivity } from "./recent-activity";
 import { UtilisationChart } from "./utilisation-chart";
 
+/** Summaries only, each linking to its primary location. Sized to fit the default window. */
 export function DashboardPage() {
   const snapshot = useSystemSnapshot();
   const metrics = useLiveMetrics();
   const showQuickstart = useUiStore((s) => s.showQuickstart);
-  const health = snapshot.data
-    ? summariseHealth(evaluateHealth(snapshot.data, metrics.latest))
-    : null;
   const os = snapshot.data?.os;
 
   return (
@@ -32,41 +29,41 @@ export function DashboardPage() {
         }
       />
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
+        <EngineBanner previewNotice={false} />
         <UpdateNotice />
-        <HomeStats health={health} />
+        <HomeStats />
 
         {metrics.error && metrics.samples.length === 0 && (
           <ErrorState title="Live metrics unavailable" message={metrics.error.message} />
         )}
 
-        <div className="grid grid-cols-12 gap-4">
-          <div className={showQuickstart ? "col-span-8" : "col-span-12"}>
+        <div className="grid grid-cols-12 gap-3">
+          <div className="col-span-8">
             <UtilisationChart samples={metrics.samples} snapshot={snapshot.data} />
           </div>
-          {showQuickstart && (
-            <div className="col-span-4">
-              <Quickstart />
-            </div>
-          )}
+          <div className="col-span-4">
+            <HealthPanel snapshot={snapshot.data} latest={metrics.latest} />
+          </div>
         </div>
 
-        <LiveStats samples={metrics.samples} snapshot={snapshot.data} />
-
-        <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-7 flex flex-col gap-4">
+        <div className="grid grid-cols-12 gap-3">
+          <div className="col-span-4">
             <RecommendedTweaks />
+          </div>
+          <div className="col-span-4">
             <HardwareCard
               snapshot={snapshot.data}
               error={snapshot.error}
               onRetry={snapshot.refetch}
             />
           </div>
-          <div className="col-span-5 flex flex-col gap-4">
-            <HealthPanel snapshot={snapshot.data} latest={metrics.latest} />
+          <div className="col-span-4">
             <RecentActivity />
           </div>
         </div>
+
+        {showQuickstart && <Quickstart />}
       </div>
     </>
   );

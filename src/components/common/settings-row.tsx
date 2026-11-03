@@ -2,24 +2,26 @@ import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** A titled group of settings rows. */
+/** A group of settings rows, titled when a tab holds more than one. */
 export function SettingsGroup({
   title,
   description,
   children,
   id,
 }: {
-  title: string;
+  title?: string;
   description?: string;
   children: ReactNode;
   id?: string;
 }) {
   return (
     <section id={id} className="scroll-mt-4">
-      <div className="mb-2 px-1">
-        <h2 className="text-section-title">{title}</h2>
-        {description && <p className="mt-0.5 text-[12.5px] text-muted-foreground">{description}</p>}
-      </div>
+      {(title || description) && (
+        <div className="mb-2 px-1">
+          {title && <h2 className="text-section-title">{title}</h2>}
+          {description && <p className="mt-0.5 text-[13px] text-muted-foreground">{description}</p>}
+        </div>
+      )}
       <div className="divide-y overflow-hidden rounded-xl border bg-card">{children}</div>
     </section>
   );
@@ -62,9 +64,7 @@ export function SettingsRow({
           {title}
         </Title>
         {description && (
-          <div className="mt-0.5 text-[12.5px] leading-snug text-muted-foreground">
-            {description}
-          </div>
+          <div className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{description}</div>
         )}
         {children && <div className="mt-2.5">{children}</div>}
       </div>

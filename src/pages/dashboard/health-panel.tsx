@@ -17,6 +17,9 @@ const HEADLINE: Record<HealthStatus, string> = {
   warning: "Needs attention",
 };
 
+// Worst first, so a problem is never below the fold of the panel.
+const ORDER: Record<HealthStatus, number> = { warning: 0, attention: 1, good: 2 };
+
 export function HealthPanel({
   snapshot,
   latest,
@@ -26,38 +29,39 @@ export function HealthPanel({
 }) {
   const checks = snapshot ? evaluateHealth(snapshot, latest) : [];
   const summary = summariseHealth(checks);
+  const sorted = [...checks].sort((a, b) => ORDER[a.status] - ORDER[b.status]);
 
   return (
-    <SectionCard title="System health" source="derived">
+    <SectionCard title="System health" source="derived" className="h-full">
       {!snapshot ? (
         <LoadingRows rows={5} />
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           <div
             className={cn(
-              "rounded-md border px-3 py-2 text-[12.5px] font-medium",
-              summary.status === "good" && "border-success/20 bg-success/6 text-success",
-              summary.status === "attention" && "border-warning/25 bg-warning/6 text-warning",
-              summary.status === "warning" &&
-                "border-destructive/25 bg-destructive/8 text-destructive",
+              "text-[13.5px] font-semibold",
+              summary.status === "good" && "text-success",
+              summary.status === "attention" && "text-warning",
+              summary.status === "warning" && "text-destructive",
             )}
           >
             {HEADLINE[summary.status]}
-            <span className="font-normal text-muted-foreground">
-              {" "}
-              · {summary.total - summary.attention - summary.warnings} of {summary.total} checks
-              passed
+            <span className="ml-1.5 font-normal text-muted-foreground tabular">
+              {summary.total - summary.attention - summary.warnings} of {summary.total}
             </span>
           </div>
-          <ul className="flex flex-col gap-2.5">
-            {checks.map((c) => {
+          <ul className="flex flex-col gap-2">
+            {sorted.map((c) => {
               const { icon: Icon, className } = ICON[c.status];
               return (
                 <li key={c.id} className="flex items-start gap-2.5">
                   <Icon className={cn("mt-0.5 size-4 shrink-0", className)} />
                   <div className="min-w-0">
-                    <div className="text-[13px] font-medium">{c.label}</div>
-                    <div className="truncate text-[12px] text-muted-foreground tabular">
+                    <div className="text-[13px] leading-tight font-medium">{c.label}</div>
+                    <div
+                      className="truncate text-[12px] text-muted-foreground tabular"
+                      title={c.detail}
+                    >
                       {c.detail}
                     </div>
                   </div>

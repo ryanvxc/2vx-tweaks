@@ -3,23 +3,20 @@ import { useSearchParams } from "react-router";
 import {
   AlertTriangle,
   CircleDashed,
-  Layers,
   LogOut,
   PackageOpen,
-  RotateCcw,
   SearchX,
-  ShieldCheck,
-  ShieldUser,
   Sparkles,
   Wand2,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { TWEAK_TABS, type TweakTab } from "@/app/navigation";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { FilterBar, type FilterGroup } from "@/components/common/filter-bar";
 import { ImpactMeter, Indicator } from "@/components/common/indicator";
 import { CardGrid, NewBadge, OptimisationCard } from "@/components/common/optimisation-card";
-import { PageTabs, type PageTab } from "@/components/common/page-tabs";
+import { PageTabs } from "@/components/common/page-tabs";
 import { EmptyState, ErrorState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +28,7 @@ import {
   useTweakStatuses,
   refreshEngineState,
 } from "@/hooks/use-system";
+import { useTabParam } from "@/hooks/use-tab-param";
 import {
   COMPATIBILITY,
   describeError,
@@ -38,7 +36,13 @@ import {
   isBlocked,
   RESTART_HINT,
 } from "@/lib/engine-text";
-import { CATEGORY_LABEL, isNewTweak, tweakIcon } from "@/lib/tweak-presentation";
+import {
+  isNewTweak,
+  MORE_SECTION,
+  TWEAK_SECTIONS,
+  tweakIcon,
+  tweakPlacement,
+} from "@/lib/tweak-presentation";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
 import type { Impact, RiskLevel, TweakCategory, TweakStatus } from "@/types/engine";
 import { ChangeInspector } from "./change-inspector";
@@ -52,16 +56,25 @@ const IMPACT_ORDER: Record<Impact, number> = { low: 0, medium: 1, high: 2 };
 
 /**
  * Tweaks as a card grid. The switch shows the state detected on this PC, never a stored
- * flag. Switching on stages a tweak for review (the dry-run plan in ChangeInspector);
+ * flag. Switching on selects a tweak for review (the dry-run plan in ChangeInspector);
  * switching off undoes exactly what 2VX recorded, after a confirmation.
+ *
+ * `browse` adds the topic tabs, search and filters a full catalogue needs. A search looks
+ * through every tab, because its point is not having to know the tab.
  */
-export function TweakGrid({ categories }: { categories: TweakCategory[] }) {
+export function TweakGrid({
+  categories,
+  browse = false,
+}: {
+  categories: TweakCategory[];
+  browse?: boolean;
+}) {
   const { data, error, loading, refetch } = useTweakStatuses();
   const engine = useEngineStatus();
   const app = useAppInfo();
   const [params, setParams] = useSearchParams();
 
-  const [tab, setTab] = useState<TweakCategory | "all">("all");
+  const [tab, setTab] = useTabParam(TWEAK_TABS, "windows");
   const [search, setSearch] = useState("");
   const [stateFilter, setStateFilter] = useState<StateFilter[]>([]);
   const [impactFilter, setImpactFilter] = useState<Impact[]>([]);
@@ -79,26 +92,20 @@ export function TweakGrid({ categories }: { categories: TweakCategory[] }) {
     [data, categories],
   );
   const names = Object.fromEntries((data ?? []).map((t) => [t.meta.id, t.meta.name]));
+  const warnings = Object.fromEntries((data ?? []).map((t) => [t.meta.id, t.meta.warning]));
   // In preview the journal is absent by design; planning is refused with its own message.
   const changesDisabled = isDesktop && engine.data?.journalAvailable === false;
   const detailsId = params.get("tweak");
   const details = all.find((t) => t.meta.id === detailsId) ?? null;
 
-  const tabs: PageTab<TweakCategory | "all">[] = [
-    { value: "all", label: "All", icon: Layers, count: all.length },
-    ...categories
-      .filter((c) => all.some((t) => t.meta.category === c))
-      .map((c) => ({
-        value: c,
-        label: CATEGORY_LABEL[c],
-        icon: tweakIcon({ id: "", category: c }),
-        count: all.filter((t) => t.meta.category === c).length,
-      })),
-  ];
+  const tabs = TWEAK_TABS.map((t) => ({
+    ...t,
+    count: all.filter((s) => tweakPlacement(s.meta).tab === t.value).length,
+  }));
 
   const q = search.trim().toLowerCase();
   const shown = all
-    .filter((t) => tab === "all" || t.meta.category === tab)
+    .filter((t) => !browse || q !== "" || tweakPlacement(t.meta).tab === tab)
     .filter(
       (t) =>
         !q || t.meta.name.toLowerCase().includes(q) || t.meta.description.toLowerCase().includes(q),
@@ -212,46 +219,70 @@ export function TweakGrid({ categories }: { categories: TweakCategory[] }) {
       { replace: true },
     );
 
+  // When most of the catalogue is new the badge is on every card and says nothing.
+  const newCount = (data ?? []).filter((t) => isNewTweak(t.meta, app.data?.version)).length;
+  const markNew = newCount * 2 < (data?.length ?? 0);
+
+  const card = (t: TweakStatus) => (
+    <TweakCard
+      key={t.meta.id}
+      tweak={t}
+      staged={staged.includes(t.meta.id)}
+      busy={busy === t.meta.id}
+      disabled={changesDisabled}
+      isNew={markNew && isNewTweak(t.meta, app.data?.version)}
+      onSwitch={(on) => onSwitch(t, on)}
+      onOpen={() => openDetails(t.meta.id)}
+    />
+  );
+
+  // Sections only make sense in catalogue order, in one tab.
+  const sectioned = browse && q === "" && sort === "recommended";
+
   return (
     <div className="flex flex-col gap-4">
-      <PageTabs label="Categories" tabs={tabs} value={tab} onChange={setTab} />
-      <FilterBar
-        search={search}
-        onSearch={setSearch}
-        placeholder="Search tweaks"
-        filters={filters}
-        sort={{
-          value: sort,
-          onChange: (v) => setSort(v as Sort),
-          options: [
-            { value: "recommended", label: "Recommended first" },
-            { value: "name", label: "Name" },
-            { value: "impact", label: "Expected effect" },
-            { value: "newest", label: "Newest" },
-          ],
-        }}
-        end={
-          recommendedOpen.length > 0 && (
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={changesDisabled}
-              onClick={() =>
-                setStaged((s) => [...new Set([...s, ...recommendedOpen.map((t) => t.meta.id)])])
-              }
-            >
-              <Wand2 /> Stage recommended ({recommendedOpen.length})
-            </Button>
-          )
-        }
-      />
+      {browse && (
+        <>
+          <PageTabs label="Topics" tabs={tabs} value={tab} onChange={setTab} />
+          <FilterBar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search tweaks"
+            filters={filters}
+            sort={{
+              value: sort,
+              onChange: (v) => setSort(v as Sort),
+              options: [
+                { value: "recommended", label: "Recommended first" },
+                { value: "name", label: "Name" },
+                { value: "impact", label: "Expected effect" },
+                { value: "newest", label: "Newest" },
+              ],
+            }}
+            end={
+              recommendedOpen.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={changesDisabled}
+                  onClick={() =>
+                    setStaged((s) => [...new Set([...s, ...recommendedOpen.map((t) => t.meta.id)])])
+                  }
+                >
+                  <Wand2 /> Select recommended ({recommendedOpen.length})
+                </Button>
+              )
+            }
+          />
+        </>
+      )}
 
       {error ? (
         <ErrorState message={error.message} onRetry={refetch} />
       ) : loading && !data ? (
         <CardGrid>
           {Array.from({ length: 6 }, (_, i) => (
-            <Skeleton key={i} className="h-[132px] rounded-xl" />
+            <Skeleton key={i} className="h-[136px] rounded-xl" />
           ))}
         </CardGrid>
       ) : all.length === 0 ? (
@@ -263,21 +294,15 @@ export function TweakGrid({ categories }: { categories: TweakCategory[] }) {
         />
       ) : shown.length === 0 ? (
         <EmptyState icon={SearchX} title="No tweaks match" className="rounded-xl border bg-card" />
+      ) : sectioned ? (
+        sections(tab, shown).map(([title, tweaks]) => (
+          <section key={title} className="flex flex-col gap-2.5">
+            <h2 className="text-section-title">{title}</h2>
+            <CardGrid>{tweaks.map(card)}</CardGrid>
+          </section>
+        ))
       ) : (
-        <CardGrid>
-          {shown.map((t) => (
-            <TweakCard
-              key={t.meta.id}
-              tweak={t}
-              staged={staged.includes(t.meta.id)}
-              busy={busy === t.meta.id}
-              disabled={changesDisabled}
-              isNew={isNewTweak(t.meta, app.data?.version)}
-              onSwitch={(on) => onSwitch(t, on)}
-              onOpen={() => openDetails(t.meta.id)}
-            />
-          ))}
-        </CardGrid>
+        <CardGrid>{shown.map(card)}</CardGrid>
       )}
 
       {staged.length > 0 && (
@@ -285,7 +310,7 @@ export function TweakGrid({ categories }: { categories: TweakCategory[] }) {
           <Sparkles className="size-4 text-primary" />
           <span className="text-[13px]">
             <b className="font-semibold tabular">{staged.length}</b> tweak
-            {staged.length === 1 ? "" : "s"} staged. Nothing changes until you review.
+            {staged.length === 1 ? "" : "s"} selected. Nothing changes until you review.
           </span>
           <Button size="sm" variant="ghost" onClick={() => setStaged([])}>
             <X /> Clear
@@ -304,6 +329,7 @@ export function TweakGrid({ categories }: { categories: TweakCategory[] }) {
         }}
         tweakIds={staged}
         names={names}
+        warnings={warnings}
       />
       <TweakDetails
         tweak={details}
@@ -330,6 +356,20 @@ export function TweakGrid({ categories }: { categories: TweakCategory[] }) {
       )}
     </div>
   );
+}
+
+/** A tab's tweaks under their headings, in catalogue order; anything unplaced goes last. */
+function sections(tab: TweakTab, tweaks: TweakStatus[]) {
+  const titles = [...TWEAK_SECTIONS[tab].map((s) => s.title), MORE_SECTION];
+  const order = TWEAK_SECTIONS[tab].flatMap((s) => s.ids);
+  return titles
+    .map((title): [string, TweakStatus[]] => [
+      title,
+      tweaks
+        .filter((t) => tweakPlacement(t.meta).section === title)
+        .sort((a, b) => order.indexOf(a.meta.id) - order.indexOf(b.meta.id)),
+    ])
+    .filter(([, list]) => list.length > 0);
 }
 
 function TweakCard({
@@ -361,7 +401,7 @@ function TweakCard({
       checked={applied || staged}
       disabled={disabled || blocked || lockedOn || busy}
       onCheckedChange={onSwitch}
-      aria-label={`${applied ? "Undo" : staged ? "Unstage" : "Turn on"} ${meta.name}`}
+      aria-label={`${applied ? "Undo" : staged ? "Deselect" : "Turn on"} ${meta.name}`}
       className={staged ? "ring-2 ring-primary/30 ring-offset-2 ring-offset-card" : undefined}
     />
   );
@@ -371,7 +411,7 @@ function TweakCard({
       icon={tweakIcon(meta)}
       title={meta.name}
       description={meta.description}
-      highlighted={applied || staged}
+      highlighted={staged}
       muted={blocked}
       onOpen={onOpen}
       openLabel={`Details for ${meta.name}`}
@@ -382,16 +422,6 @@ function TweakCard({
           {meta.warning && (
             <Indicator icon={AlertTriangle} tone="destructive" title="Can break features">
               {meta.warning}
-            </Indicator>
-          )}
-          {meta.category === "privacy" && (
-            <Indicator icon={ShieldCheck} tone="success" title="Privacy">
-              Sends less data to Microsoft or websites.
-            </Indicator>
-          )}
-          {meta.permission === "administrator" && (
-            <Indicator icon={ShieldUser} tone="info" title="Asks for administrator permission">
-              A machine-wide value. Windows shows one prompt when you apply or undo it.
             </Indicator>
           )}
           {restart && (
@@ -409,11 +439,6 @@ function TweakCard({
           {state === "partial" && (
             <Indicator icon={CircleDashed} tone="warning" title="Partly in effect">
               Some of its values match. Applying completes it.
-            </Indicator>
-          )}
-          {applied && tweak.undoable && (
-            <Indicator icon={RotateCcw} tone="brand" title="2VX can undo this">
-              Switch it off to restore the values recorded before 2VX changed them.
             </Indicator>
           )}
         </>

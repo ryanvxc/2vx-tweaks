@@ -6,20 +6,20 @@ import {
   HardDrive,
   Lock,
   RefreshCw,
-  Sparkles,
   Trash2,
   type LucideIcon,
 } from "lucide-react";
-import { Indicator } from "@/components/common/indicator";
-import { CardGrid, OptimisationCard } from "@/components/common/optimisation-card";
-import { PlannedFeatures } from "@/components/common/planned-features";
+import { pageDescription } from "@/app/navigation";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
-import { ErrorState } from "@/components/common/states";
+import { Indicator } from "@/components/common/indicator";
+import { PlannedFeatures } from "@/components/common/planned-features";
+import { ErrorState, LoadingRows } from "@/components/common/states";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCleanupScan } from "@/hooks/use-system";
 import { formatBytes } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { CleanupLocation } from "@/types/system";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -36,55 +36,58 @@ const ICONS: Record<string, LucideIcon> = {
 
 export function CleanerPage() {
   const { data, error, loading, refetch } = useCleanupScan();
-  const found = (data ?? []).filter((l) => l.status !== "missing");
+  const locations = [...(data ?? [])].sort(
+    (a, b) => Number(a.status === "missing") - Number(b.status === "missing") || b.bytes - a.bytes,
+  );
+  const found = locations.filter((l) => l.status !== "missing");
   const total = found.reduce((n, l) => n + l.bytes, 0);
+  const largest = locations[0]?.bytes ?? 0;
 
   return (
     <>
       <PageHeader
         title="PC Cleaner"
-        description="Measuring only: nothing is deleted."
+        description={pageDescription("/cleaner")}
         actions={
           <Button size="sm" variant="outline" onClick={refetch} disabled={loading}>
             <RefreshCw className={loading ? "animate-spin" : undefined} /> Scan again
           </Button>
         }
       />
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-4 rounded-xl border bg-card px-5 py-4">
-          <div className="flex size-11 items-center justify-center rounded-lg bg-brand/12 text-brand">
-            <Sparkles className="size-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-[12px] text-muted-foreground">
-              Space used by the locations below
-            </div>
-            {loading && !data ? (
-              <Skeleton className="mt-1 h-6 w-28" />
-            ) : (
-              <div className="text-[22px] leading-tight font-semibold tabular">
-                {formatBytes(total)}
+      <div className="flex flex-col gap-3">
+        <div className="overflow-hidden rounded-xl border bg-card">
+          <div className="flex items-center gap-4 border-b px-4 py-3">
+            <div className="min-w-0 flex-1">
+              {loading && !data ? (
+                <Skeleton className="h-7 w-28" />
+              ) : (
+                <div className="font-heading text-[22px] leading-tight font-bold tabular">
+                  {formatBytes(total)}
+                </div>
+              )}
+              <div className="text-[12.5px] text-muted-foreground">
+                in {found.length} locations. Measuring only: 2VX can't delete anything yet.
               </div>
-            )}
+            </div>
+            <DataSourceBadge source="live" />
           </div>
-          <DataSourceBadge source="live" />
-        </div>
 
-        {error ? (
-          <ErrorState message={error.message} onRetry={refetch} />
-        ) : loading && !data ? (
-          <CardGrid>
-            {Array.from({ length: 6 }, (_, i) => (
-              <Skeleton key={i} className="h-[132px] rounded-xl" />
-            ))}
-          </CardGrid>
-        ) : (
-          <CardGrid>
-            {(data ?? []).map((l) => (
-              <LocationCard key={l.id} location={l} />
-            ))}
-          </CardGrid>
-        )}
+          {error ? (
+            <div className="p-4">
+              <ErrorState message={error.message} onRetry={refetch} />
+            </div>
+          ) : loading && !data ? (
+            <div className="p-4">
+              <LoadingRows rows={6} />
+            </div>
+          ) : (
+            <ul className="divide-y">
+              {locations.map((l) => (
+                <LocationRow key={l.id} location={l} largest={largest} />
+              ))}
+            </ul>
+          )}
+        </div>
 
         <PlannedFeatures
           features={[
@@ -99,51 +102,51 @@ export function CleanerPage() {
   );
 }
 
-function LocationCard({ location: l }: { location: CleanupLocation }) {
-  const status =
-    l.status === "missing" ? (
-      <span className="text-[12px] text-muted-foreground">Not on this PC</span>
-    ) : l.status === "denied" ? (
-      <span className="text-[12px] text-muted-foreground">Needs administrator</span>
-    ) : (
-      <span className="text-right">
-        <span className="block text-[15px] leading-tight font-semibold tabular">
-          {l.status === "partial" ? "≥ " : ""}
-          {formatBytes(l.bytes)}
-        </span>
-        <span className="text-[11px] text-muted-foreground tabular">
-          {l.files.toLocaleString()} {l.id === "recycle-bin" ? "items" : "files"}
-        </span>
-      </span>
-    );
+function LocationRow({ location: l, largest }: { location: CleanupLocation; largest: number }) {
+  const Icon = ICONS[l.id] ?? HardDrive;
+  const missing = l.status === "missing";
+  const share = largest > 0 ? (l.bytes / largest) * 100 : 0;
   return (
-    <OptimisationCard
-      icon={ICONS[l.id] ?? HardDrive}
-      title={l.label}
-      description={l.description}
-      muted={l.status === "missing"}
-      indicators={
-        <>
-          {l.status === "denied" && (
-            <Indicator icon={Lock} tone="warning" title="Couldn't read this folder">
-              Windows only lets administrators read it. Run 2VX as administrator to measure it.
-            </Indicator>
-          )}
-          {l.status === "partial" && (
-            <Indicator icon={FileWarning} tone="info" title="Very large">
-              The scan stopped after 250,000 entries, so the size shown is a lower bound.
-            </Indicator>
-          )}
-          <span
-            data-selectable
-            title={l.path}
-            className="max-w-[16rem] truncate text-[11px] text-muted-foreground/70"
-          >
-            {l.path}
-          </span>
-        </>
-      }
-      control={status}
-    />
+    <li className={cn("flex items-center gap-3.5 px-4 py-2.5", missing && "opacity-50")}>
+      <Icon className="size-[18px] shrink-0 text-brand" aria-hidden />
+      <div className="w-72 min-w-0 shrink-0">
+        <div className="truncate text-[13px] font-medium" title={l.path}>
+          {l.label}
+        </div>
+        <div className="truncate text-[12px] text-muted-foreground" title={l.description}>
+          {l.description}
+        </div>
+      </div>
+      <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted" aria-hidden>
+        <div className="h-full rounded-full bg-brand" style={{ width: `${share}%` }} />
+      </div>
+      {l.status === "denied" && (
+        <Indicator icon={Lock} tone="warning" title="Couldn't read this folder">
+          Windows only lets administrators read it. Run 2VX as administrator to measure it.
+        </Indicator>
+      )}
+      {l.status === "partial" && (
+        <Indicator icon={FileWarning} tone="info" title="Very large">
+          The scan stopped after 250,000 entries, so the size shown is a lower bound.
+        </Indicator>
+      )}
+      <div className="w-24 shrink-0 text-right">
+        {missing ? (
+          <span className="text-[12.5px] text-muted-foreground">Not on this PC</span>
+        ) : l.status === "denied" ? (
+          <span className="text-[12.5px] text-muted-foreground">Needs admin</span>
+        ) : (
+          <>
+            <div className="text-[13.5px] leading-tight font-semibold tabular">
+              {l.status === "partial" ? "≥ " : ""}
+              {formatBytes(l.bytes)}
+            </div>
+            <div className="text-[11.5px] text-muted-foreground tabular">
+              {l.files.toLocaleString()} {l.id === "recycle-bin" ? "items" : "files"}
+            </div>
+          </>
+        )}
+      </div>
+    </li>
   );
 }

@@ -31,7 +31,7 @@ export function SectionCard({
   return (
     <Card className={cn("gap-4", className)}>
       <CardHeader>
-        <CardTitle className="text-[13.5px] font-semibold">{title}</CardTitle>
+        <CardTitle className="text-section-title">{title}</CardTitle>
         {description && <CardDescription className="text-[12.5px]">{description}</CardDescription>}
         {(source || actions) && (
           <CardAction className="flex items-center gap-2">

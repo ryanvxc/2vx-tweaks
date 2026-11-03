@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Loader2, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import { MessageNotice, Notice, StatusPill } from "@/components/common/notice";
 import { RiskBadge } from "@/components/common/risk-badge";
 import { LoadingRows } from "@/components/common/states";
@@ -40,12 +40,15 @@ export function ChangeInspector({
   onOpenChange,
   tweakIds,
   names,
+  warnings = {},
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tweakIds: string[];
   /** Tweak ID → display name. */
   names: Record<string, string>;
+  /** Tweak ID → the features it can break. */
+  warnings?: Record<string, string | null>;
 }) {
   const [step, setStep] = useState<Step>({ kind: "planning" });
   const [acknowledged, setAcknowledged] = useState(false);
@@ -115,7 +118,7 @@ export function ChangeInspector({
         <div className="-mx-6 min-h-0 overflow-y-auto px-6">
           {step.kind === "planning" && <LoadingRows rows={4} />}
           {(step.kind === "planned" || step.kind === "applying") && (
-            <PlanView plan={step.plan} names={names} />
+            <PlanView plan={step.plan} names={names} warnings={warnings} />
           )}
           {step.kind === "done" && <OutcomeView outcome={step.outcome} names={names} />}
           {step.kind === "error" && <MessageNotice {...describeError(step.error)} />}
@@ -179,7 +182,15 @@ function applyLabel(plan: Plan) {
   return `Apply ${n} change${n === 1 ? "" : "s"}`;
 }
 
-function PlanView({ plan, names }: { plan: Plan; names: Record<string, string> }) {
+function PlanView({
+  plan,
+  names,
+  warnings,
+}: {
+  plan: Plan;
+  names: Record<string, string>;
+  warnings: Record<string, string | null>;
+}) {
   const restart = restartNote(plan.restart);
   return (
     <div className="flex flex-col gap-3">
@@ -202,6 +213,12 @@ function PlanView({ plan, names }: { plan: Plan; names: Record<string, string> }
           {plan.tweakIds.map((id) => (
             <section key={id} className="rounded-md border">
               <h3 className="border-b px-3 py-2 text-[13px] font-medium">{names[id] ?? id}</h3>
+              {warnings[id] && (
+                <p className="flex items-start gap-2 border-b px-3 py-2 text-[12.5px] leading-snug">
+                  <AlertTriangle className="mt-px size-3.5 shrink-0 text-destructive" />
+                  {warnings[id]}
+                </p>
+              )}
               <ul className="divide-y">
                 {plan.changes
                   .filter((c) => c.tweakId === id)

@@ -1,12 +1,11 @@
-import type { ReactNode } from "react";
-import { CircuitBoard, Cpu, Gpu, HardDrive, MemoryStick, type LucideIcon } from "lucide-react";
+import { Link } from "react-router";
+import { Cpu, Gpu, HardDrive, MemoryStick, type LucideIcon } from "lucide-react";
 import { SectionCard } from "@/components/common/section-card";
 import { ErrorState, LoadingRows } from "@/components/common/states";
-import { Progress } from "@/components/ui/progress";
-import { formatBytes, formatFrequency, percentOf } from "@/lib/format";
-import { cn } from "@/lib/utils";
-import type { BackendError, DiskInfo, SystemSnapshot } from "@/types/system";
+import { formatBytes, percentOf } from "@/lib/format";
+import type { BackendError, SystemSnapshot } from "@/types/system";
 
+/** Four lines on Home; the full sheet is the Hardware page. */
 export function HardwareCard({
   snapshot,
   error,
@@ -16,8 +15,18 @@ export function HardwareCard({
   error: BackendError | undefined;
   onRetry: () => void;
 }) {
+  const drive = snapshot?.disks.find((d) => /^c:/i.test(d.mountPoint)) ?? snapshot?.disks[0];
   return (
-    <SectionCard title="Hardware" source="live">
+    <SectionCard
+      title="This PC"
+      source="live"
+      className="h-full"
+      actions={
+        <Link to="/hardware" className="text-[12px] font-medium text-brand hover:underline">
+          Details
+        </Link>
+      }
+    >
       {error ? (
         <ErrorState
           title="Couldn't read hardware information"
@@ -25,112 +34,33 @@ export function HardwareCard({
           onRetry={onRetry}
         />
       ) : !snapshot ? (
-        <LoadingRows rows={6} />
+        <LoadingRows rows={4} />
       ) : (
-        <div className="flex flex-col">
-          <Row icon={Cpu} label="Processor">
-            <Primary>{snapshot.cpu.brand || "Unknown CPU"}</Primary>
-            <Secondary>
-              {snapshot.cpu.physicalCores ?? "?"} cores · {snapshot.cpu.logicalCores} threads ·{" "}
-              {formatFrequency(snapshot.cpu.frequencyMhz)} base
-            </Secondary>
-          </Row>
-          <Row icon={Gpu} label="Graphics">
-            {snapshot.gpus.length === 0 ? (
-              <Secondary>No GPU reported</Secondary>
-            ) : (
-              snapshot.gpus.map((g, i) => (
-                <div key={i}>
-                  <Primary>{g.model ?? "Unknown GPU"}</Primary>
-                  <Secondary>
-                    {g.dedicatedMemoryBytes
-                      ? `${formatBytes(g.dedicatedMemoryBytes, 0)} dedicated`
-                      : "—"}
-                  </Secondary>
-                </div>
-              ))
-            )}
-          </Row>
-          <Row icon={MemoryStick} label="Memory">
-            <Primary>{formatBytes(snapshot.memory.totalBytes, 0)}</Primary>
-            <Secondary>Page file {formatBytes(snapshot.memory.swapTotalBytes, 0)}</Secondary>
-          </Row>
-          {snapshot.motherboard && (snapshot.motherboard.name || snapshot.motherboard.vendor) && (
-            <Row icon={CircuitBoard} label="Motherboard">
-              <Primary>{snapshot.motherboard.name ?? "Unknown"}</Primary>
-              <Secondary>{snapshot.motherboard.vendor ?? ""}</Secondary>
-            </Row>
+        <ul className="flex flex-col gap-2">
+          <Row icon={Cpu} text={snapshot.cpu.brand.trim() || "Unknown CPU"} />
+          <Row icon={Gpu} text={snapshot.gpus[0]?.model ?? "No GPU reported"} />
+          <Row icon={MemoryStick} text={`${formatBytes(snapshot.memory.totalBytes, 0)} memory`} />
+          {drive && (
+            <Row
+              icon={HardDrive}
+              text={`${formatBytes(drive.availableBytes)} free on ${drive.mountPoint.replace(/\\$/, "")}`}
+              hint={`${Math.round(percentOf(drive.availableBytes, drive.totalBytes))}%`}
+            />
           )}
-          <Row icon={HardDrive} label="Storage" last>
-            <div className="flex flex-col gap-3">
-              {snapshot.disks.map((d) => (
-                <DiskRow key={d.mountPoint} disk={d} />
-              ))}
-            </div>
-          </Row>
-        </div>
+        </ul>
       )}
     </SectionCard>
   );
 }
 
-function Row({
-  icon: Icon,
-  label,
-  children,
-  last,
-}: {
-  icon: LucideIcon;
-  label: string;
-  children: ReactNode;
-  last?: boolean;
-}) {
+function Row({ icon: Icon, text, hint }: { icon: LucideIcon; text: string; hint?: string }) {
   return (
-    <div className={cn("grid grid-cols-[132px_1fr] gap-4 py-3", !last && "border-b")}>
-      <div className="flex items-center gap-2 self-start pt-px text-[12.5px] text-muted-foreground">
-        <Icon className="size-4" />
-        {label}
-      </div>
-      <div data-selectable className="min-w-0">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-const Primary = ({ children }: { children: ReactNode }) => (
-  <div className="truncate text-[13px] font-medium">{children}</div>
-);
-const Secondary = ({ children }: { children: ReactNode }) => (
-  <div className="truncate text-[12px] text-muted-foreground tabular">{children}</div>
-);
-
-function DiskRow({ disk }: { disk: DiskInfo }) {
-  const usedPct = percentOf(disk.totalBytes - disk.availableBytes, disk.totalBytes);
-  const kind = disk.kind === "ssd" ? "SSD" : disk.kind === "hdd" ? "HDD" : null;
-  return (
-    <div>
-      <div className="flex items-baseline justify-between gap-3">
-        <div className="truncate text-[13px] font-medium">
-          {disk.mountPoint.replace(/\\$/, "")}
-          {disk.name && <span className="font-normal text-muted-foreground"> {disk.name}</span>}
-          {kind && (
-            <span className="ml-2 rounded border border-border px-1 py-px text-[10px] font-medium text-muted-foreground">
-              {kind}
-            </span>
-          )}
-        </div>
-        <div className="shrink-0 text-[12px] text-muted-foreground tabular">
-          {formatBytes(disk.availableBytes)} free of {formatBytes(disk.totalBytes)}
-        </div>
-      </div>
-      <Progress
-        value={usedPct}
-        className="mt-1.5"
-        indicatorClassName={cn(
-          usedPct > 90 ? "bg-destructive" : usedPct > 80 ? "bg-warning" : "bg-brand",
-        )}
-      />
-    </div>
+    <li className="flex items-center gap-2.5 text-[13px]">
+      <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+      <span data-selectable className="min-w-0 flex-1 truncate font-medium" title={text}>
+        {text}
+      </span>
+      {hint && <span className="text-[12px] text-muted-foreground tabular">{hint}</span>}
+    </li>
   );
 }

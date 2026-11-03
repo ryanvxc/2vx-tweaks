@@ -34,9 +34,9 @@ src/                         React frontend
   services/backend.ts        THE ONLY place that calls invoke(); typed wrappers per command
   services/preview.ts        simulated backend for browser preview/tests
   services/logger.ts         frontend → backend log forwarding
-  stores/                    zustand, UI preferences only
+  stores/                    zustand, UI preferences only (keep `2vx-ui` fields compatible)
   types/                     TS mirrors of Rust serde types
-  lib/                       pure helpers (format, health) with unit tests
+  lib/                       pure helpers (format, health, profiles, tweak-presentation) with unit tests
 src-tauri/src/
   commands/                  Tauri command handlers: thin, validated
   system/                    read-only system info (os, hardware, metrics sampler, privilege)
@@ -79,10 +79,15 @@ Stages 1 (foundation) and 2 (safety engine) are done; **stage 3 (first real opti
 of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_BACKLOG.md` (P0–P3) and stages in
 `docs/DEVELOPMENT_ROADMAP.md`. Use those stage and task IDs, not the older "Phase N" labels.
 
-In short (0.2): the UI was redesigned (`docs/DESIGN_SYSTEM.md`, `docs/UI_UX_REDESIGN.md`); 35
-documented tweaks ship (`engine/tweaks/`, table in `docs/optimisation-modules.md`) with per-tweak undo
-(`revert_tweak`), an impact rating, and a `warning` only when a named feature can break. Hardware, Startup (read-only), PC Cleaner (read-only scan) and Tools are real pages;
-Gaming has two tweaks. A signed Tauri updater with an Update Centre is built (`docs/UPDATE_SYSTEM.md`); the feed URL
+In short (0.2): the app was restructured (`docs/INFORMATION_ARCHITECTURE.md`, `docs/NAVIGATION_STRUCTURE.md`,
+`docs/DESIGN_SYSTEM.md`). Every feature has one primary location; pages and tabs live in `src/app/navigation.ts`, and
+`/system` and `/history` redirect. 35 documented tweaks ship (`engine/tweaks/`, table in `docs/optimisation-modules.md`)
+with per-tweak undo (`revert_tweak`), an impact rating, and a `warning` only when a named feature can break. A new tweak
+needs an icon and a section in `lib/tweak-presentation.ts`; a test reads the Rust catalogue to enforce it. Gaming
+profiles (`lib/profiles.ts`) are named lists of existing tweaks: "active" is derived from detected state, never stored,
+and they make no FPS claims. Monitoring, Hardware, Startup (read-only), PC Cleaner (read-only scan), the Restore Centre
+and Tools are real pages.
+A signed Tauri updater with an Update Centre is built (`docs/UPDATE_SYSTEM.md`); the feed URL
 is injected only by `.github/workflows/release.yml`, so local builds never update. P0-8b (no updater) is superseded;
 P0-8a/c stand. Still open: the broker's real UAC path on a VM (P0-7), GitHub remote + signing secrets
 (`docs/UPDATE_SETUP_GUIDE.md`), a real update test on a VM. `HKCU\Software\Policies` is admin-only on Windows: never

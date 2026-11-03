@@ -36,7 +36,9 @@ export function UpdateNotice() {
         </span>
       </div>
       <Button asChild size="xs">
-        <Link to="/settings#updates">{state.kind === "ready" ? "Install" : "See what's new"}</Link>
+        <Link to="/settings?tab=updates">
+          {state.kind === "ready" ? "Install" : "See what's new"}
+        </Link>
       </Button>
       <Button
         size="icon-xs"

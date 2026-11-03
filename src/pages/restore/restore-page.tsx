@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, History, SlidersHorizontal, Undo2 } from "lucide-react";
+import { pageDescription } from "@/app/navigation";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { EngineBanner } from "@/components/common/engine-banner";
@@ -22,7 +23,7 @@ import { backend, toBackendError } from "@/services/backend";
 import type { ChangeRecord, RiskLevel, SnapshotRecord } from "@/types/engine";
 import type { BackendError } from "@/types/system";
 
-export function HistoryPage() {
+export function RestorePage() {
   const { data, error, loading, refetch } = useSnapshots();
   const { data: tweaks } = useTweaks();
   const meta = Object.fromEntries((tweaks ?? []).map((t) => [t.id, t]));
@@ -36,10 +37,11 @@ export function HistoryPage() {
 
   return (
     <>
-      <PageHeader title="History" />
-      <div className="flex flex-col gap-4">
+      <PageHeader title="Restore Centre" description={pageDescription("/restore")} />
+      <div className="flex flex-col gap-3">
         <EngineBanner showHistoryLink={false} />
-        <SectionCard title="Change history" source="live">
+        {data && data.length > 0 && <Summary snapshots={data} />}
+        <SectionCard title="Changes" source="live">
           {error ? (
             <ErrorState message={error.message} onRetry={refetch} />
           ) : loading && !data ? (
@@ -48,7 +50,7 @@ export function HistoryPage() {
             <EmptyState
               icon={History}
               title="No changes yet"
-              description="Every change 2VX makes is recorded here with its previous value, so it can be undone."
+              description="Every change 2VX makes is recorded here with its old value, so it can be undone."
             />
           ) : (
             <ul className="-mx-2 flex flex-col">
@@ -66,6 +68,27 @@ export function HistoryPage() {
         </SectionCard>
       </div>
     </>
+  );
+}
+
+function Summary({ snapshots }: { snapshots: SnapshotRecord[] }) {
+  const undoable = snapshots.filter((s) => canRevert(s.kind, s.status)).length;
+  const last = snapshots[0]!;
+  return (
+    <dl className="grid grid-cols-3 gap-3">
+      <Figure label="Batches recorded" value={String(snapshots.length)} />
+      <Figure label="Can be undone" value={String(undoable)} />
+      <Figure label="Last change" value={formatTimestamp(last.createdAtMs)} />
+    </dl>
+  );
+}
+
+function Figure({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border bg-card px-4 py-2.5">
+      <dt className="text-[12.5px] text-muted-foreground">{label}</dt>
+      <dd className="truncate font-heading text-[18px] leading-tight font-bold tabular">{value}</dd>
+    </div>
   );
 }
 

@@ -5,9 +5,12 @@ Reviewed at commit `a961def` (2026-11-03); rows are updated for stage 3 and the 
 plans. Priorities point to [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md); stages to
 [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md).
 
-**Verification (0.2, 2026-11-03):** `npm run check:all` passes: typecheck, lint, Prettier, 60 Vitest tests in 12 files
-(including the updater state machine and the release scripts), `cargo fmt`, clippy with `-D warnings`, 65 Rust unit
-tests (1 ignored real-registry test) and 7 policy guard tests. The GitHub workflows have not run (no remote).
+**Verification (0.2, 2026-11-03):** `npm run check:all` passes: typecheck, lint, Prettier, 85 Vitest tests in 16 files
+(including the updater state machine and the release scripts), `cargo fmt`, clippy with `-D warnings`, 68 Rust unit
+tests (1 ignored real-registry test) and 7 policy guard tests. The GitHub workflows have not run (no remote). The
+makeover was also toured on the desktop debug build with the real catalogue: every page, every Tweaks tab, a tweak review
+and a gaming profile review, with no console errors. Nothing was applied, so applying through the new screens is
+covered by unit tests only.
 
 **Status legend**
 
@@ -22,8 +25,10 @@ tests (1 ignored real-registry test) and 7 policy guard tests. The GitHub workfl
 
 ## Summary
 
-Version 0.2: the whole UI was redesigned (`UI_UX_REDESIGN.md`, `DESIGN_SYSTEM.md`), 35 documented
-tweaks ship with per-tweak undo, Hardware, Startup (read-only), PC Cleaner (read-only scan) and Tools are real pages,
+Version 0.2: the app was restructured and restyled (`INFORMATION_ARCHITECTURE.md`, `REDESIGN_ROADMAP.md`,
+`DESIGN_SYSTEM.md`). 35 documented tweaks ship with per-tweak undo, grouped under Tweaks and Gaming, with gaming
+profiles built from those same tweaks. Monitoring, Hardware, Startup (read-only), PC Cleaner (read-only scan), the
+Restore Centre and Tools are real pages,
 and a signed Tauri updater with an Update Centre is built (`UPDATE_SYSTEM.md`). The release pipeline is written but
 has never run: there is no GitHub remote and the signing secrets aren't configured (`UPDATE_SETUP_GUIDE.md`). The
 broker's real UAC path (P0-7) and a real update install still need a VM.
@@ -32,16 +37,16 @@ broker's real UAC path (P0-7) and a real update install still need a VM.
 
 | Area                                                                                                              | Current status                                                       | Problems                                                                                                                                                                            | Recommended action                                          | Priority    |
 | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------- |
-| App shell (title bar, window controls, sidebar, routing) | **Implemented** (0.2 redesign) | Grouped sidebar with privilege footer and update dot; page scroll resets on navigation. | Keep | – |
+| App shell (title bar, window controls, sidebar, routing) | **Implemented** (0.2 makeover) | Grouped sidebar with search, privilege footer and update dot; title bar shows where you are; `/system`, `/history` and old Settings links redirect. | Keep | – |
 | Design system (tokens, shadcn primitives, `SectionCard`, `DataSourceBadge`, states, `ConfirmDialog`, `RiskBadge`) | **Implemented** (0.2 redesign, `DESIGN_SYSTEM.md`) | Charcoal/violet/magenta tokens, typography scale, reduced motion, card/indicator/filter/tab/settings-row components. Light theme not built. | Light theme | P3 |
-| Dashboard: system summary and quick actions | **Implemented** (Home, 0.2) | Greeting, stat tiles, Quickstart; `system-summary.tsx` is unused and kept until deletion is confirmed. | Keep | – |
+| Dashboard: system summary and quick actions | **Implemented** (Home, 0.2) | Overview that fits the default window; `system-summary.tsx` is unused and kept until deletion is confirmed. | Keep | – |
 | Dashboard: live stats and utilisation chart                                                                       | **Implemented**                                                      | GPU % is sysinfo's sum over all engines, clamped to 100. No used VRAM.                                                                                                              | Per-engine GPU counters                                     | P1-3        |
 | Dashboard: system health                                                                                          | **Implemented** (read-only heuristics, unit-tested)                  | Detail lines truncate at minimum width                                                                                                                                              | Layout fix                                                  | P1-1        |
 | Dashboard: Recommendations | **Implemented** (derived) | Replaced by recommended tweaks derived from detected state; no sample data left on Home. | Keep | – |
 | Dashboard: Recently applied                                                                                       | **Implemented** (last 4 journal batches)                             | –                                                                                                                                                                                   | Keep                                                        | –           |
 | Monitoring page | **Implemented** (Hardware page, 0.2) | `/monitoring` redirects to `/hardware`. Per-thread CPU, GPU, memory, storage, network tabs from the existing sampler. No disk throughput or persisted history. | Extend sampler | P1-3 |
 | Gaming page                                                                                                       | **Implemented** (2 tweaks: MMCSS Games priority, Game DVR policy)    | Few gaming values are documented; the rest of the pack review is in `optimisation-modules.md`                                                                                       | More gaming tweaks once documented                          | P2          |
-| System Tweaks page | **Implemented** (33 tweaks, card grid, filters, switch-off undo, break warnings) | Desktop flow not yet run on a VM | VM checklist | P0-7 |
+| Tweaks page | **Implemented** (topic tabs, 33 tweaks, card grid, filters, switch-off undo, break warnings) | Desktop flow not yet run on a VM | VM checklist | P0-7 |
 | Startup page | **Partial** (read-only inventory) | Lists Run/RunOnce values and Startup-folder shortcuts with Task Manager state. Disabling (journaled Run-value removal, P0-8a) not built. | Build disable/undo | P1-5 |
 | PC Cleaner page | **Partial** (read-only scan) | Measures allowlisted locations and the Recycle Bin. Cleaning not built. | Build journaled deletion | P1-6 |
 | Tools page | **Partial** | Copyable system report and Windows tool commands to copy; nothing is launched (no process spawning). | SFC/DISM per P0-8c | P2-8 |
@@ -55,7 +60,7 @@ broker's real UAC path (P0-7) and a real update install still need a VM.
 | Registry primitive (`engine/setting.rs`, `store.rs`)                                                              | **Implemented**                                                      | Only DWORD, QWORD, SZ and EXPAND_SZ, by design                                                                                                                                      | Keep                                                        | –           |
 | Other primitives (power, services, AppX, QoS, files)                                                              | **Not started**                                                      | The journal's `changes.target` column stores a JSON `RegTarget`, so a second primitive needs a schema migration and a generalised target type                                       | Generalise the target before adding power plans             | P1-4        |
 | Policy denylist (`engine/policy.rs`)                                                                              | **Implemented**, checked at registration, planning and in the broker | –                                                                                                                                                                                   | Keep                                                        | –           |
-| Change journal (`engine/journal.rs`, SQLite)                                                                      | **Implemented** (History page; labelled change records)              | –                                                                                                                                                                                   | Export                                                      | P1-10       |
+| Change journal (`engine/journal.rs`, SQLite)                                                                      | **Implemented** (Restore Centre; labelled change records)              | –                                                                                                                                                                                   | Export                                                      | P1-10       |
 | Plan → apply → verify → rollback → revert (`engine/service.rs`, `plan.rs`) | **Implemented** (change inspector, per-batch and per-tweak undo) | Per-tweak undo restores the newest record per value, non-clobbering | Keep | – |
 | Elevation broker (`engine/broker.rs`)                                                                             | **Wired, not verified** (pipe protocol tested over real pipes)       | **The real UAC launch and an elevated write have never run.** No SID-restricted DACL or replay protection (documented residual risk).                                               | Run the VM checklist in `docs/testing.md`                   | P0-7        |
 | Engine IPC commands and TS wrappers                                                                               | **Implemented**, all used by the UI                                  | –                                                                                                                                                                                   | Keep                                                        | –           |
@@ -89,7 +94,7 @@ Fixed in the UI in stage 3 (P0-1); kept for the record:
 - `pages/dashboard/recommendations.tsx`: "once the backup engine lands"; "Phase 2+" comment.
 - `pages/settings-page.tsx`: "Phase 2" planned list including restore history, which the backend now provides.
 - `stores/ui-store.ts`: comment refers to the SQLite store as "Phase 2".
-- Gaming and System Tweaks empty state: "The engine is connected…" is also shown in browser preview, where no engine
+- Gaming and Tweaks empty state: "The engine is connected…" is also shown in browser preview, where no engine
   is connected.
 
 ## Risks

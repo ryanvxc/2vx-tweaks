@@ -83,7 +83,7 @@ const MOCK_NOTES = `## What's new
 - Startup and PC Cleaner show what is on this PC (read-only)
 
 ## Fixes
-- History shows per-tweak undo batches`;
+- The Restore Centre shows per-tweak undo batches`;
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

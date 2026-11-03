@@ -40,7 +40,7 @@ export function Indicator({
           tabIndex={0}
           aria-label={title}
           className={cn(
-            "inline-flex size-6 cursor-default items-center justify-center rounded-md outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+            "inline-flex size-7 cursor-default items-center justify-center rounded-md border bg-background/40 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
             TONE_TEXT[tone],
             className,
           )}
@@ -104,7 +104,7 @@ export function ImpactMeter({ impact }: { impact: Impact }) {
         <span
           tabIndex={0}
           aria-label={`${info.title} (estimate)`}
-          className="inline-flex h-6 cursor-default items-end gap-[3px] rounded-md px-1.5 pb-[7px] outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex size-7 cursor-default items-end justify-center gap-[3px] rounded-md border bg-background/40 pb-[7px] outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
         >
           {[1, 2, 3].map((n) => (
             <span
@@ -113,7 +113,7 @@ export function ImpactMeter({ impact }: { impact: Impact }) {
                 "w-[3px] rounded-full",
                 n <= info.bars ? "bg-brand" : "bg-muted-foreground/25",
               )}
-              style={{ height: 4 + n * 3 }}
+              style={{ height: 3 + n * 3 }}
             />
           ))}
         </span>
