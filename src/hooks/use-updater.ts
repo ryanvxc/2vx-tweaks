@@ -11,7 +11,7 @@ import { useUiStore } from "@/stores/ui-store";
 
 /**
  * Update Centre state machine. Every step after "available" waits for the user: nothing
- * downloads or installs on its own.
+ * downloads or installs on its own. `checkAndDownload` is that click for the sidebar button.
  *
  *   unsupported                       (dev build or no channel)
  *   idle → checking → upToDate | available | error(check)
@@ -38,6 +38,7 @@ interface UpdaterStore {
   lastCheckedAt: number | null;
   init: () => Promise<void>;
   check: () => Promise<void>;
+  checkAndDownload: () => Promise<void>;
   download: () => Promise<void>;
   install: () => Promise<void>;
   restart: () => Promise<void>;
@@ -92,6 +93,11 @@ export const useUpdaterStore = create<UpdaterStore>()((set, get) => ({
       logger.warn(`update check failed: ${message(err)}`, "updater");
       set({ state: { kind: "error", phase: "check", message: message(err) } });
     }
+  },
+
+  checkAndDownload: async () => {
+    await get().check();
+    if (get().state.kind === "available") await get().download();
   },
 
   download: async () => {

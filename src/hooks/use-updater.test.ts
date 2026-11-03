@@ -86,6 +86,23 @@ describe("updater state machine", () => {
     expect(state().kind).toBe("restartRequired");
   });
 
+  it("downloads straight after a check only when the button asks for it", async () => {
+    const p = pending();
+    plugin.check.mockResolvedValue(p);
+    useUiStore.setState({ autoCheckUpdates: false });
+    await useUpdaterStore.getState().init();
+
+    await useUpdaterStore.getState().checkAndDownload();
+    expect(state()).toEqual({ kind: "ready", info: INFO });
+    expect(p.install).not.toHaveBeenCalled();
+
+    plugin.check.mockResolvedValue(null);
+    resetUpdater();
+    await useUpdaterStore.getState().init();
+    await useUpdaterStore.getState().checkAndDownload();
+    expect(state().kind).toBe("upToDate");
+  });
+
   it("offers a retry after a failed check, download or install", async () => {
     plugin.check.mockRejectedValueOnce(new Error("offline"));
     await useUpdaterStore.getState().init();

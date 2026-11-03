@@ -4,16 +4,14 @@ import logo from "@/assets/logo.svg";
 import { NAV_GROUPS, SETTINGS_ITEM, type NavItem } from "@/app/navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAppInfo } from "@/hooks/use-system";
-import { useUpdater } from "@/hooks/use-updater";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
+import { UpdateButton } from "./update-button";
 
 export function Sidebar() {
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
   const toggle = useUiStore((s) => s.toggleSidebar);
   const { data: app } = useAppInfo();
-  const updater = useUpdater();
-  const updateReady = updater.state.kind === "available" || updater.state.kind === "ready";
 
   return (
     <aside
@@ -53,7 +51,8 @@ export function Sidebar() {
       </nav>
 
       <div className="flex flex-col gap-px border-t border-sidebar-border px-2.5 py-2.5">
-        <SidebarLink item={SETTINGS_ITEM} collapsed={collapsed} dot={updateReady} />
+        <UpdateButton collapsed={collapsed} />
+        <SidebarLink item={SETTINGS_ITEM} collapsed={collapsed} />
         {app && !collapsed && (
           <div className="mt-1.5 flex items-center gap-2.5 rounded-lg bg-sidebar-accent/50 px-2.5 py-2">
             {app.isElevated ? (
@@ -86,16 +85,7 @@ export function Sidebar() {
   );
 }
 
-function SidebarLink({
-  item,
-  collapsed,
-  dot,
-}: {
-  item: NavItem;
-  collapsed: boolean;
-  /** Small marker for something waiting there, e.g. an update. */
-  dot?: boolean;
-}) {
+function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const Icon = item.icon;
   const link = (
     <NavLink
@@ -119,15 +109,6 @@ function SidebarLink({
             )}
           />
           {!collapsed && <span className="truncate">{item.label}</span>}
-          {dot && (
-            <span
-              aria-label="Update available"
-              className={cn(
-                "size-1.5 rounded-full bg-primary",
-                collapsed ? "absolute top-1.5 right-2.5" : "ml-auto",
-              )}
-            />
-          )}
         </>
       )}
     </NavLink>

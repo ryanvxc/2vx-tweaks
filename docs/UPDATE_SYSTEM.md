@@ -35,18 +35,21 @@ Settings › Updates (Update Centre)                       GitHub
 
 ## Which builds can update
 
-| Build | Updates | Why |
-| --- | --- | --- |
-| Development (`npm run app:dev`, debug) | No: "Updates aren't available for this build" | `get_update_support` returns unavailable for debug builds |
-| Local release (`npm run app:build`) | No: no update channel | The committed config has `endpoints: []` and builds no updater artifacts |
-| CI main-channel build (`release.yml`) | Yes | The workflow injects the feed URL and `createUpdaterArtifacts` with `--config` |
-| Browser preview (`npm run dev`) | Simulated | `services/updater.ts` mock feeds, no network |
+| Build                                  | Updates                                       | Why                                                                            |
+| -------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------ |
+| Development (`npm run app:dev`, debug) | No: "Updates aren't available for this build" | `get_update_support` returns unavailable for debug builds                      |
+| Local release (`npm run app:build`)    | No: no update channel                         | The committed config has `endpoints: []` and builds no updater artifacts       |
+| CI main-channel build (`release.yml`)  | Yes                                           | The workflow injects the feed URL and `createUpdaterArtifacts` with `--config` |
+| Browser preview (`npm run dev`)        | Simulated                                     | `services/updater.ts` mock feeds, no network                                   |
 
 `get_update_support` (Rust, `commands/app.rs`) reads the endpoint list from the app's own config, so the UI
 always shows the real channel and URL.
 
 ## User-facing behaviour
 
+- **Check for updates** (sidebar, above Settings) walks the same steps from one button: a click checks and, if
+  there is a newer version, downloads it; the label then reads "Restart to update", and a second click installs
+  and reopens the app. A check at startup never downloads: it changes the label to "Update available" and waits.
 - **Update Centre** (Settings › Updates) shows one state at a time with one action:
   loading, unsupported (with the reason), not checked, checking, up to date (with last check time),
   available (with release notes), downloading (progress bar and bytes), ready (downloaded and verified),
@@ -55,21 +58,21 @@ always shows the real channel and URL.
 - **Automatic check**: once per app start, on by default, turned off in Settings › Updates. It only
   checks; it never downloads.
 - **Home notice**: a small banner when an update is available or downloaded, dismissible per version,
-  switchable in Settings › Notifications. The sidebar Settings item shows a dot.
+  switchable in Settings › Notifications. The sidebar button shows a dot.
 - Nothing is downloaded or installed without a click. `use-updater.test.ts` asserts this.
 
 ## Code map
 
-| File | Role |
-| --- | --- |
-| `src-tauri/src/lib.rs` | Registers `tauri_plugin_updater` and `tauri_plugin_process` |
-| `src-tauri/capabilities/default.json` | Grants `updater:default` and `process:allow-restart` only |
-| `src-tauri/src/commands/app.rs` | `get_update_support`: available, reason, endpoint, channel |
-| `src/services/updater.ts` | Wraps the plugins (desktop) or mock feeds (preview) behind `UpdaterService` |
-| `src/hooks/use-updater.ts` | State machine (zustand) and `useUpdater()` |
-| `src/pages/settings/update-centre.tsx` | Update Centre UI |
-| `src/components/common/update-notice.tsx` | Home banner |
-| `src-tauri/tests/policy.rs` | Guards: pubkey present, no private key, no endpoint committed, HTTPS GitHub endpoint in CI, no `latest/download` |
+| File                                      | Role                                                                                                             |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `src-tauri/src/lib.rs`                    | Registers `tauri_plugin_updater` and `tauri_plugin_process`                                                      |
+| `src-tauri/capabilities/default.json`     | Grants `updater:default` and `process:allow-restart` only                                                        |
+| `src-tauri/src/commands/app.rs`           | `get_update_support`: available, reason, endpoint, channel                                                       |
+| `src/services/updater.ts`                 | Wraps the plugins (desktop) or mock feeds (preview) behind `UpdaterService`                                      |
+| `src/hooks/use-updater.ts`                | State machine (zustand) and `useUpdater()`                                                                       |
+| `src/pages/settings/update-centre.tsx`    | Update Centre UI                                                                                                 |
+| `src/components/common/update-notice.tsx` | Home banner                                                                                                      |
+| `src-tauri/tests/policy.rs`               | Guards: pubkey present, no private key, no endpoint committed, HTTPS GitHub endpoint in CI, no `latest/download` |
 
 ## Testing
 

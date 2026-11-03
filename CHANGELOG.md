@@ -14,6 +14,7 @@ notes come from commit subjects. This file records the larger milestones.
 - System Tweaks and Gaming: card grid with category tabs, search, filters, sort, impact estimate,
   indicators, "Stage recommended", a review bar and a details dialog with values and references.
 - Settings: row-based sections (General, Appearance, Notifications, Updates, Behaviour, Security, About).
+- Sidebar: "Check for updates" checks, downloads and then offers "Restart to update".
 
 ### Features
 - Switch a tweak off to undo exactly what 2VX changed (`revert_tweak`), after a confirmation.
