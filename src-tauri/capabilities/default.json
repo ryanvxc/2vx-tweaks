@@ -1,0 +1,18 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Main window: read-only system information, logging and custom window chrome.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-close",
+    "core:window:allow-start-dragging",
+    "allow-get-app-info",
+    "allow-log-frontend-event",
+    "allow-get-system-snapshot",
+    "allow-get-metrics",
+    "allow-list-tweaks"
+  ]
+}

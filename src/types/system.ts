@@ -1,0 +1,98 @@
+// Mirrors the serde types in src-tauri/src/system and src-tauri/src/commands/app.rs.
+// Keep field names in sync (Rust uses `rename_all = "camelCase"`).
+
+export interface OsInfo {
+  productName: string;
+  displayVersion: string | null;
+  build: number;
+  ubr: number | null;
+  editionId: string | null;
+  isWindows11: boolean;
+  architecture: string;
+}
+
+export interface CpuInfo {
+  brand: string;
+  vendor: string;
+  physicalCores: number | null;
+  logicalCores: number;
+  frequencyMhz: number;
+}
+
+export interface MemoryInfo {
+  totalBytes: number;
+  swapTotalBytes: number;
+}
+
+export interface GpuInfo {
+  vendor: string | null;
+  model: string | null;
+  dedicatedMemoryBytes: number | null;
+}
+
+export type StorageKind = "ssd" | "hdd" | "unknown";
+
+export interface DiskInfo {
+  name: string;
+  mountPoint: string;
+  fileSystem: string;
+  kind: StorageKind;
+  totalBytes: number;
+  availableBytes: number;
+  isRemovable: boolean;
+}
+
+export interface MotherboardInfo {
+  vendor: string | null;
+  name: string | null;
+}
+
+export interface SystemSnapshot {
+  hostname: string | null;
+  uptimeSecs: number | null;
+  os: OsInfo;
+  cpu: CpuInfo;
+  memory: MemoryInfo;
+  gpus: GpuInfo[];
+  disks: DiskInfo[];
+  motherboard: MotherboardInfo | null;
+}
+
+export interface GpuSample {
+  model: string | null;
+  usagePercent: number | null;
+  // Used VRAM is deliberately absent; see GpuSample in src-tauri/src/system/metrics.rs.
+  memoryTotalBytes: number | null;
+}
+
+export interface MetricsSample {
+  timestampMs: number;
+  cpuPercent: number;
+  perCorePercent: number[];
+  memoryUsedBytes: number;
+  memoryTotalBytes: number;
+  gpus: GpuSample[];
+  networkRxBytesPerSec: number;
+  networkTxBytesPerSec: number;
+}
+
+export interface AppInfo {
+  name: string;
+  version: string;
+  isElevated: boolean;
+  logDir: string;
+  debugBuild: boolean;
+}
+
+/** Serialised `AppError` from the backend. */
+export interface BackendError {
+  code:
+    | "invalid_input"
+    | "unsupported"
+    | "elevation_required"
+    | "system"
+    | "io"
+    | "internal"
+    | "preview";
+  message: string;
+}
