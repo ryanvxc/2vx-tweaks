@@ -42,6 +42,8 @@ src-tauri/src/
   system/                    read-only system info (os, hardware, metrics sampler, privilege)
   engine/                    declarative tweaks, policy, journal, plan/apply/revert, elevation broker
   logging.rs, error.rs
+scripts/                     release helpers for CI: next-version, release-notes, check-update-feed (+ tests)
+.github/workflows/            ci.yml (checks), release.yml (signed main-channel release + update feed)
 docs/                        status, backlog, roadmap, architecture, modules, Windows APIs, security, testing,
                              release; research/ holds the EXM competitor analysis
 ```
@@ -77,13 +79,14 @@ Stages 1 (foundation) and 2 (safety engine) are done; **stage 3 (first real opti
 of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_BACKLOG.md` (P0–P3) and stages in
 `docs/DEVELOPMENT_ROADMAP.md`. Use those stage and task IDs, not the older "Phase N" labels.
 
-In short: the shell, dashboard, sampler and the whole engine are implemented and tested. Four documented tweaks
-ship (`engine/tweaks/`: two HKLM Edge policies, two HKCU privacy values). System Tweaks lists them with detected state;
-the change inspector plans, applies and reports every outcome; History lists batches and undoes them. Still open in
-stage 3: the broker's real UAC path on a VM (P0-7, needs a person). P0-8 decisions are in `docs/security.md`: Run-value
-removal for startup, no in-app updater, a future fixed-argv exception for SFC/DISM only.
-Monitoring, Startup, Cleaner and Tools are placeholders; Gaming has no tweaks yet. Dashboard Recommendations is sample
-data. `HKCU\Software\Policies` is admin-only on Windows: never target it from a `User` tweak.
+In short (0.2, uncommitted): the UI was redesigned (`docs/DESIGN_SYSTEM.md`, `docs/UI_UX_REDESIGN.md`); eight
+documented tweaks ship (`engine/tweaks/`: HKLM Edge policies and privacy values, two HKCU privacy values) with
+per-tweak undo (`revert_tweak`). Hardware, Startup (read-only), PC Cleaner (read-only scan) and Tools are real pages;
+Gaming has no tweaks yet. A signed Tauri updater with an Update Centre is built (`docs/UPDATE_SYSTEM.md`); the feed URL
+is injected only by `.github/workflows/release.yml`, so local builds never update. P0-8b (no updater) is superseded;
+P0-8a/c stand. Still open: the broker's real UAC path on a VM (P0-7), GitHub remote + signing secrets
+(`docs/UPDATE_SETUP_GUIDE.md`), a real update test on a VM. `HKCU\Software\Policies` is admin-only on Windows: never
+target it from a `User` tweak. The updater private key lives in `%USERPROFILE%\.tauri\`, never in the repo.
 Known limitations: GPU usage is sysinfo's sum over all engines (clamped 100); used VRAM not available system-wide yet.
 Build: cargo can run out of memory at default parallelism here; set `CARGO_BUILD_JOBS=2` (or 1).
 Research on EXM Tweaks (a competitor, studied statically) is in `docs/research/`; never copy its code or assets.

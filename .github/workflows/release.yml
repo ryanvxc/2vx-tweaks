@@ -1,0 +1,182 @@
+# Main-channel release: every push to main that touches the app builds a signed NSIS installer,
+# publishes it as a GitHub prerelease and points installed copies at it.
+#
+#   checks (ci.yml) → version (monotonic) → notes → signed build → GitHub prerelease v<version>
+#   → validate latest.json (signed, HTTPS, newer) → upload it to the rolling `updater-main` release
+#
+# Installed copies poll only `updater-main/latest.json`. GitHub's "latest release" URL is never
+# used: main builds are prereleases and would not appear there.
+#
+# Without the TAURI_SIGNING_PRIVATE_KEY secret the workflow builds an unsigned installer as a
+# workflow artifact, publishes nothing and says so. See docs/UPDATE_SETUP_GUIDE.md.
+name: Release (main channel)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "src-tauri/**"
+      - "public/**"
+      - "scripts/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.ts"
+      - "tsconfig*.json"
+      - ".github/workflows/release.yml"
+      - ".github/workflows/ci.yml"
+  workflow_dispatch:
+
+# Everything read-only unless a job asks for more.
+permissions:
+  contents: read
+
+# One release at a time, never cancelled half-way (a cancelled run could leave a release
+# without its feed). Later pushes queue behind it.
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    if: ${{ !contains(github.event.head_commit.message, '[skip release]') }}
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  release:
+    needs: checks
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      # Create the release and upload assets. Nothing else: no packages, no workflow edits.
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history and tags: the version and the notes are computed from them.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+
+      - name: Is the updater signing key configured?
+        id: signing
+        shell: bash
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Not published::TAURI_SIGNING_PRIVATE_KEY is not set. Building an unsigned installer as a workflow artifact only; no release and no update feed are published."
+          fi
+
+      - name: Next version
+        id: version
+        shell: bash
+        run: node scripts/next-version.mjs
+
+      - name: Release notes
+        id: notes
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PREVIOUS: ${{ steps.version.outputs.previous_tag }}
+        run: |
+          node scripts/release-notes.mjs "$VERSION" "$PREVIOUS" > release-notes.md
+          delimiter="notes_$(openssl rand -hex 16)"
+          {
+            echo "body<<$delimiter"
+            cat release-notes.md
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
+          cat release-notes.md >> "$GITHUB_STEP_SUMMARY"
+
+      # --- Without a signing key: build only, publish nothing. ---------------------------------
+      - name: Build unsigned installer (not published)
+        if: steps.signing.outputs.configured != 'true'
+        run: npx tauri build --bundles nsis
+
+      - name: Keep the unsigned installer as a workflow artifact
+        if: steps.signing.outputs.configured != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: 2vx-tweaks-${{ steps.version.outputs.version }}-unsigned
+          path: src-tauri/target/release/bundle/nsis/*.exe
+          retention-days: 14
+
+      - name: Explain why nothing was published
+        if: steps.signing.outputs.configured != 'true'
+        shell: bash
+        run: |
+          {
+            echo "## Not published"
+            echo
+            echo "The updater signing key secret is missing, so no GitHub release or update feed was created."
+            echo "An unsigned installer is attached to this run as a workflow artifact."
+            echo "Follow docs/UPDATE_SETUP_GUIDE.md to add TAURI_SIGNING_PRIVATE_KEY and TAURI_SIGNING_PRIVATE_KEY_PASSWORD."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # --- With a signing key: signed build, prerelease, feed. ---------------------------------
+      - name: Build, sign and create the prerelease
+        id: build
+        if: steps.signing.outputs.configured == 'true'
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ steps.version.outputs.tag }}
+          releaseName: 2VX Tweaks ${{ steps.version.outputs.version }}
+          releaseBody: ${{ steps.notes.outputs.body }}
+          releaseDraft: false
+          prerelease: true
+          uploadUpdaterJson: true
+          updaterJsonPreferNsis: true
+          # The committed config ships no update URL and no updater artifacts, so local and
+          # development builds can never update. Only this build gets the main-channel feed.
+          args: >-
+            --bundles nsis
+            --config '{"bundle":{"createUpdaterArtifacts":true},"plugins":{"updater":{"endpoints":["https://github.com/${{ github.repository }}/releases/download/updater-main/latest.json"]}}}'
+
+      - name: Validate the new update feed
+        if: steps.signing.outputs.configured == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p feed/new feed/current
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir feed/new
+          # The feed users have now, if any: the new one must be newer (no downgrades).
+          gh release download updater-main --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir feed/current || true
+          node scripts/check-update-feed.mjs feed/new/latest.json "$VERSION" feed/current/latest.json
+
+      - name: Publish the feed to updater-main
+        if: steps.signing.outputs.configured == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_URL: ${{ steps.build.outputs.releaseHtmlUrl }}
+        run: |
+          if ! gh release view updater-main --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create updater-main --repo "$GITHUB_REPOSITORY" --prerelease \
+              --target "$GITHUB_SHA" --title "Update feed (main channel)" \
+              --notes "Holds latest.json for installed copies of 2VX Tweaks. Not an installer: download a versioned release instead."
+          fi
+          gh release upload updater-main feed/new/latest.json --repo "$GITHUB_REPOSITORY" --clobber
+          echo "Published update feed for $VERSION: $RELEASE_URL" >> "$GITHUB_STEP_SUMMARY"

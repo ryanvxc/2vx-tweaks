@@ -20,6 +20,8 @@ const base: Omit<TweakMeta, "id" | "name" | "permission"> = {
   device: "any",
   recommended: false,
   restart: "none",
+  impact: "low",
+  addedIn: "0.1",
   references: ["https://learn.microsoft.com/test"],
 };
 
@@ -67,6 +69,7 @@ function status(meta: TweakMeta, label: string, applied: boolean): TweakStatus {
         error: null,
       },
     ],
+    undoable: applied,
   };
 }
 

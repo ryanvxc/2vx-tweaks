@@ -58,15 +58,15 @@ against.
 
 | Commitment | Enforcement |
 | --- | --- |
-| No telemetry, analytics or crash upload | No network, analytics or crash-reporting crates in `Cargo.toml`; CSP allows only the IPC bridge |
+| No telemetry, analytics or crash upload | No direct network, analytics or crash-reporting crates in `Cargo.toml` (`tauri-plugin-updater` is the one reviewed exception); CSP allows only the IPC bridge |
 | No hardware fingerprinting or device IDs | No machine-ID crates; nothing leaves the machine |
-| No remote kill switch or remote content | No network clients; tweaks are compiled in, never downloaded |
+| No remote kill switch or remote content | Tweaks are compiled in, never downloaded. The only network client is the signed updater (decision P0-8b, superseded): it fetches the release feed and, on request, a signed installer |
 | No background persistence | No service or scheduled task is created; nothing runs when the app is closed |
 | No kernel drivers | None bundled; not in scope |
 | No unrestricted command execution | The backend source may not spawn processes or shells (`Command::new`, PowerShell, cmd, reg, sc, schtasks, bcdedit, wmic…). The only process launch is the broker's self-relaunch. |
 | No unnecessary privilege | `asInvoker`, per-batch broker, never SYSTEM or TrustedInstaller |
 | No undocumented or protected changes | Metadata gate (https references) and the policy denylist |
-| Every IPC command is deliberate | `build.rs` manifest, capability grants and `generate_handler!` must list the same commands; no plugin permissions beyond window chrome |
+| Every IPC command is deliberate | `build.rs` manifest, capability grants and `generate_handler!` must list the same commands; plugin permissions limited to window chrome, `updater:default` and `process:allow-restart` |
 
 Changing any of these requires updating this document and the guard test in the same change, with a reason.
 
@@ -89,8 +89,14 @@ value. Task Manager's `StartupApproved` values are not used (undocumented, `REG_
 a disabled entry disappears from Task Manager's Startup tab rather than showing "Disabled". Startup-folder shortcuts
 need a file primitive with the same journal guarantees before they can be disabled. No guard change.
 
-**(b) Updates** (P1-11): no in-app updater. The "No network clients" commitment and its guard stay as they are;
-`tauri-plugin-updater` remains forbidden. Releases are downloaded by hand (signed installer).
+**(b) Updates** (P1-11): ~~no in-app updater~~ **superseded for 0.2** at the owner's request (the redesign
+brief asked for an in-app Tauri updater). The updater is allowed under these conditions, all enforced by
+`tests/policy.rs` or the release workflow (details in `UPDATE_SYSTEM.md`):
+- official `tauri-plugin-updater`, signature verification always on, public key committed, private key never;
+- HTTPS GitHub feed only, injected by CI; the committed config has no update URL, so local builds never update;
+- never `releases/latest/download`; feed must be newer than the published one (no downgrades);
+- checking is the only automatic step and can be turned off; download and install each need a click;
+- release notes are shown before installing and rendered as text.
 
 **(c) Windows repair tools** (P2-8): a fixed-argv exception will be allowed. When P2-8 is built, exactly one module
 may launch `sfc.exe` and `dism.exe` from `%SystemRoot%\System32`, with argument lists that are compile-time

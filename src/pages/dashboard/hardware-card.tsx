@@ -128,7 +128,7 @@ function DiskRow({ disk }: { disk: DiskInfo }) {
         value={usedPct}
         className="mt-1.5"
         indicatorClassName={cn(
-          usedPct > 90 ? "bg-destructive" : usedPct > 80 ? "bg-warning" : "bg-primary",
+          usedPct > 90 ? "bg-destructive" : usedPct > 80 ? "bg-warning" : "bg-brand",
         )}
       />
     </div>

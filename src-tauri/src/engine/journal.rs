@@ -361,11 +361,49 @@ impl Journal {
 
     /// In the order they were made.
     pub fn changes(&self, snapshot_id: i64) -> AppResult<Vec<ChangeRecord>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT id, snapshot_id, seq, tweak_id, target, before_value, after_value, status, error, updated_at_ms
-             FROM changes WHERE snapshot_id = ?1 ORDER BY seq",
+        self.query_changes(
+            &format!("{CHANGE_SELECT} WHERE snapshot_id = ?1 ORDER BY seq"),
+            [snapshot_id],
+        )
+    }
+
+    /// Changes 2VX made for `tweak_id` and has not undone yet, newest first. These are the
+    /// rows a per-tweak revert restores.
+    pub fn undoable_changes(&self, tweak_id: &str) -> AppResult<Vec<ChangeRecord>> {
+        self.query_changes(
+            &format!(
+                "{CHANGE_SELECT} WHERE tweak_id = ?1 AND {UNDOABLE} ORDER BY snapshot_id DESC, seq DESC"
+            ),
+            [tweak_id],
+        )
+    }
+
+    /// IDs of every tweak with at least one undoable change.
+    pub fn undoable_tweaks(&self) -> AppResult<std::collections::BTreeSet<String>> {
+        let mut stmt = self.conn.prepare(&format!(
+            "SELECT DISTINCT tweak_id FROM changes WHERE {UNDOABLE}"
+        ))?;
+        let rows = stmt.query_map([], |r| r.get::<_, String>(0))?;
+        Ok(rows.collect::<Result<_, _>>()?)
+    }
+
+    /// Whether an apply snapshot still has changes left to undo.
+    pub fn has_undoable_changes(&self, snapshot_id: i64) -> AppResult<bool> {
+        let count: i64 = self.conn.query_row(
+            &format!("SELECT COUNT(*) FROM changes WHERE snapshot_id = ?1 AND {UNDOABLE}"),
+            [snapshot_id],
+            |r| r.get(0),
         )?;
-        let rows = stmt.query_map([snapshot_id], |r| {
+        Ok(count > 0)
+    }
+
+    fn query_changes(
+        &self,
+        sql: &str,
+        params: impl rusqlite::Params,
+    ) -> AppResult<Vec<ChangeRecord>> {
+        let mut stmt = self.conn.prepare(sql)?;
+        let rows = stmt.query_map(params, |r| {
             Ok((
                 r.get::<_, i64>(0)?,
                 r.get::<_, i64>(1)?,
@@ -422,6 +460,14 @@ impl Journal {
         Ok(())
     }
 }
+
+const CHANGE_SELECT: &str = "SELECT id, snapshot_id, seq, tweak_id, target, before_value, after_value, status, error, updated_at_ms FROM changes";
+
+/// Rows of finished or interrupted apply snapshots that may still be in effect: the same
+/// filter `Engine::revert` uses for a whole snapshot.
+const UNDOABLE: &str = "status IN ('verified', 'intent', 'failed')
+    AND snapshot_id IN (SELECT id FROM snapshots
+        WHERE kind = 'apply' AND status IN ('completed', 'interrupted', 'failed'))";
 
 const SNAPSHOT_SELECT: &str =
     "SELECT s.id, s.kind, s.tweak_ids, s.reverts, s.status, s.error, s.app_version,

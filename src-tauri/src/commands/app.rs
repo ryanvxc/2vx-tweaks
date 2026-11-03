@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, State};
 
 use crate::error::AppResult;
 use crate::logging::{LogState, sanitise_message};
@@ -24,6 +24,61 @@ pub fn get_app_info(log: State<'_, LogState>) -> AppInfo {
         log_dir: log.log_dir.to_string_lossy().into_owned(),
         debug_build: cfg!(debug_assertions),
     }
+}
+
+/// Whether this build can check for updates, and where. The check itself runs in the
+/// updater plugin, which verifies every download against the public key in
+/// `tauri.conf.json` and only accepts versions newer than this one.
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateSupport {
+    pub available: bool,
+    /// Why updates are unavailable, for the Update Centre.
+    pub reason: Option<&'static str>,
+    pub endpoint: Option<String>,
+    pub channel: &'static str,
+}
+
+/// Release builds from the workflow carry the `main` channel endpoint (injected at build
+/// time). Local builds have none, and development builds never update themselves.
+fn update_support(debug_build: bool, endpoints: &[String]) -> UpdateSupport {
+    let endpoint = endpoints
+        .iter()
+        .find(|e| e.starts_with("https://"))
+        .cloned();
+    let reason = if debug_build {
+        Some("Development builds don't update themselves. Install a release build to get updates.")
+    } else if endpoint.is_none() {
+        Some(
+            "This build has no update channel. Builds published by the release workflow check GitHub Releases.",
+        )
+    } else {
+        None
+    };
+    UpdateSupport {
+        available: reason.is_none(),
+        reason,
+        endpoint: endpoint.filter(|_| reason.is_none()),
+        channel: "main",
+    }
+}
+
+#[tauri::command]
+pub fn get_update_support(app: AppHandle) -> UpdateSupport {
+    let endpoints: Vec<String> = app
+        .config()
+        .plugins
+        .0
+        .get("updater")
+        .and_then(|u| u.get("endpoints"))
+        .and_then(|e| e.as_array())
+        .map(|list| {
+            list.iter()
+                .filter_map(|v| v.as_str().map(str::to_owned))
+                .collect()
+        })
+        .unwrap_or_default();
+    update_support(cfg!(debug_assertions), &endpoints)
 }
 
 /// Levels the frontend may log at. Deserialisation rejects anything else.
@@ -61,6 +116,17 @@ pub fn log_frontend_event(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn updates_need_a_release_build_and_an_https_endpoint() {
+        let url = "https://github.com/o/r/releases/download/updater-main/latest.json".to_string();
+        assert!(!update_support(true, std::slice::from_ref(&url)).available);
+        assert!(!update_support(false, &[]).available);
+        assert!(!update_support(false, &["http://example.com/latest.json".into()]).available);
+        let ok = update_support(false, std::slice::from_ref(&url));
+        assert!(ok.available);
+        assert_eq!(ok.endpoint, Some(url));
+    }
 
     #[test]
     fn rejects_unknown_log_level() {

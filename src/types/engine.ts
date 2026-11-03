@@ -6,6 +6,8 @@ export type TweakCategory =
 export type Permission = "user" | "administrator";
 export type RestartRequirement = "none" | "signOut" | "reboot";
 export type DeviceScope = "any" | "desktopOnly" | "laptopOnly";
+/** Documented estimate of how noticeable a tweak is. Never a measurement. */
+export type Impact = "low" | "medium" | "high";
 
 export interface BuildRange {
   minBuild: number;
@@ -24,6 +26,9 @@ export interface TweakMeta {
   device: DeviceScope;
   recommended: boolean;
   restart: RestartRequirement;
+  impact: Impact;
+  /** `major.minor` app version that first shipped the tweak. */
+  addedIn: string;
   references: string[];
 }
 
@@ -65,6 +70,8 @@ export interface TweakStatus {
   compatibility: Compatibility;
   state: TweakState;
   settings: SettingStatus[];
+  /** 2VX journaled changes for this tweak that `revertTweak` can undo. */
+  undoable: boolean;
 }
 
 export interface PlannedChange {

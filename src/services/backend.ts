@@ -8,7 +8,15 @@ import type {
   TweakMeta,
   TweakStatus,
 } from "@/types/engine";
-import type { AppInfo, BackendError, MetricsSample, SystemSnapshot } from "@/types/system";
+import type {
+  AppInfo,
+  BackendError,
+  MetricsSample,
+  CleanupLocation,
+  StartupInventory,
+  SystemSnapshot,
+  UpdateSupport,
+} from "@/types/system";
 import { preview } from "./preview";
 
 /**
@@ -39,6 +47,9 @@ export const backend = {
   getAppInfo: (): Promise<AppInfo> =>
     isDesktop ? call("get_app_info") : Promise.resolve(preview.appInfo()),
 
+  /** Desktop only; `services/updater` serves the preview answer. */
+  getUpdateSupport: (): Promise<UpdateSupport> => call("get_update_support"),
+
   getSystemSnapshot: (): Promise<SystemSnapshot> =>
     isDesktop ? call("get_system_snapshot") : Promise.resolve(preview.snapshot()),
 
@@ -47,6 +58,14 @@ export const backend = {
     isDesktop
       ? call("get_metrics", { sinceMs: sinceMs ?? null })
       : Promise.resolve(preview.metricsSince(sinceMs)),
+
+  /** Run keys and Startup folders. Read-only. */
+  listStartupItems: (): Promise<StartupInventory> =>
+    isDesktop ? call("list_startup_items") : Promise.resolve(preview.startup()),
+
+  /** Sizes of the fixed cleanup allowlist. Read-only; can take a few seconds. */
+  scanCleanupLocations: (): Promise<CleanupLocation[]> =>
+    isDesktop ? call("scan_cleanup_locations") : preview.cleanup(),
 
   listTweaks: (): Promise<TweakMeta[]> =>
     isDesktop ? call("list_tweaks") : Promise.resolve(preview.tweaks()),
@@ -68,6 +87,10 @@ export const backend = {
 
   revertSnapshot: (snapshotId: number): Promise<OperationOutcome> =>
     isDesktop ? call("revert_snapshot", { snapshotId }) : preview.refuse(),
+
+  /** Undoes 2VX's recorded changes for one tweak, whichever batches made them. */
+  revertTweak: (tweakId: string): Promise<OperationOutcome> =>
+    isDesktop ? call("revert_tweak", { tweakId }) : preview.refuse(),
 
   /** Newest first; the backend defaults to 50. */
   listSnapshots: (limit?: number): Promise<SnapshotRecord[]> =>

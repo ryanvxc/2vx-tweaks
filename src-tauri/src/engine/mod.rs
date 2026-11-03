@@ -69,6 +69,18 @@ pub enum RestartRequirement {
     Reboot,
 }
 
+/// The expected size of a tweak's effect, from its documentation. An estimate shown to set
+/// expectations, never a measurement: 2VX does not claim gains it has not measured.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "camelCase")]
+pub enum Impact {
+    /// Removes a small annoyance or one data flow; most people won't notice a difference.
+    Low,
+    /// Noticeable in day-to-day use (fewer background processes, fewer prompts).
+    Medium,
+    High,
+}
+
 /// Which kind of PC a tweak is meant for (battery-powered or not).
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -118,6 +130,9 @@ pub struct TweakMeta {
     /// Whether the tweak is part of the default recommended set. Never for `High` risk.
     pub recommended: bool,
     pub restart: RestartRequirement,
+    pub impact: Impact,
+    /// App version (`major.minor`) that first shipped the tweak; the UI labels recent ones "New".
+    pub added_in: &'static str,
     /// Documentation the change is based on (Microsoft Learn etc.). `https://` URLs, at least one.
     pub references: &'static [&'static str],
 }
@@ -289,6 +304,14 @@ fn validate(tweak: &dyn Tweak) -> AppResult<()> {
     if let Some(bad) = meta.references.iter().find(|r| !r.starts_with("https://")) {
         return fail(format!("reference `{bad}` is not an https URL"));
     }
+    let version_ok = meta.added_in.split_once('.').is_some_and(|(major, minor)| {
+        [major, minor]
+            .iter()
+            .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+    });
+    if !version_ok {
+        return fail("added_in must be `major.minor`".into());
+    }
     if meta.risk == RiskLevel::High && meta.recommended {
         return fail("High-risk tweaks cannot be recommended".into());
     }
@@ -349,6 +372,8 @@ pub(crate) mod tests {
             device: DeviceScope::Any,
             recommended: false,
             restart: RestartRequirement::None,
+            impact: Impact::Low,
+            added_in: "0.1",
             references: &["https://learn.microsoft.com/"],
         }
     }

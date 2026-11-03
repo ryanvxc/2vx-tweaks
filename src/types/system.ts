@@ -84,6 +84,47 @@ export interface AppInfo {
   debugBuild: boolean;
 }
 
+// Mirrors src-tauri/src/system/startup.rs.
+export type StartupSource = "runKey" | "runOnceKey" | "startupFolder";
+export type StartupScope = "currentUser" | "allUsers";
+
+export interface StartupItem {
+  id: string;
+  name: string;
+  command: string;
+  source: StartupSource;
+  scope: StartupScope;
+  location: string;
+  /** `false` when Task Manager has it disabled; `null` when it has no record. */
+  enabled: boolean | null;
+}
+
+export interface StartupInventory {
+  items: StartupItem[];
+  unreadable: string[];
+}
+
+// Mirrors src-tauri/src/system/cleanup.rs.
+export type ScanStatus = "measured" | "partial" | "missing" | "denied";
+
+export interface CleanupLocation {
+  id: string;
+  label: string;
+  description: string;
+  path: string;
+  bytes: number;
+  files: number;
+  status: ScanStatus;
+}
+
+/** Mirrors `UpdateSupport` in src-tauri/src/commands/app.rs. */
+export interface UpdateSupport {
+  available: boolean;
+  reason: string | null;
+  endpoint: string | null;
+  channel: string;
+}
+
 /** Serialised `AppError` from the backend. */
 export interface BackendError {
   code:

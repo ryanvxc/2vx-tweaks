@@ -11,13 +11,22 @@ describe("App shell", () => {
     clearQueryCache();
   });
 
-  it("renders the dashboard with preview data clearly labelled", async () => {
+  it("renders Home with preview data clearly labelled", async () => {
     render(<App />);
-    expect(screen.getByRole("heading", { name: "Dashboard" })).toBeInTheDocument();
-    expect(await screen.findByText("PREVIEW-PC")).toBeInTheDocument();
-    expect(screen.getByText(/browser preview/i)).toBeInTheDocument();
-    // Sample content must carry the sample label.
-    expect(screen.getByText("Sample data")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Welcome back" })).toBeInTheDocument();
+    expect(await screen.findByText(/PREVIEW-PC/)).toBeInTheDocument();
+    expect(screen.getByText("Browser preview: simulated data")).toBeInTheDocument();
+    // Live data in the browser is labelled as simulated.
+    expect((await screen.findAllByText("Preview")).length).toBeGreaterThan(0);
+  });
+
+  it("shows the update notice from the mock feed and links to the Update Centre", async () => {
+    render(<App />);
+    expect(await screen.findByText("2VX Tweaks 0.3.0 is available")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "See what's new" })).toHaveAttribute(
+      "href",
+      "#/settings#updates",
+    );
   });
 
   it("navigates via the sidebar", async () => {

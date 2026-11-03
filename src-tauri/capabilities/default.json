@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window: system information, logging, custom window chrome, and the tweak engine (IDs only: plan, apply, revert, history).",
+  "description": "Main window: system information, logging, custom window chrome, the tweak engine (IDs only: plan, apply, revert, history), and the signed updater (check, download, install, relaunch).",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -9,16 +9,22 @@
     "core:window:allow-toggle-maximize",
     "core:window:allow-close",
     "core:window:allow-start-dragging",
+    "updater:default",
+    "process:allow-restart",
     "allow-get-app-info",
     "allow-log-frontend-event",
+    "allow-get-update-support",
     "allow-get-system-snapshot",
     "allow-get-metrics",
+    "allow-list-startup-items",
+    "allow-scan-cleanup-locations",
     "allow-list-tweaks",
     "allow-get-engine-status",
     "allow-get-tweak-statuses",
     "allow-plan-tweaks",
     "allow-apply-plan",
     "allow-revert-snapshot",
+    "allow-revert-tweak",
     "allow-list-snapshots",
     "allow-get-snapshot-changes"
   ]

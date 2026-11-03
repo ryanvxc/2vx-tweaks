@@ -1,0 +1,62 @@
+# Checks for every pull request and branch push. The release workflow calls this first, so
+# nothing is built for release unless the same checks pass. Read-only: no secrets, no writes.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  frontend:
+    name: Frontend (typecheck, lint, format, tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run test
+
+  rust:
+    name: Backend (fmt, clippy, tests)
+    # The backend uses Win32 APIs and some tests read the real system.
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      # tauri's build script embeds the frontend, so `dist` has to exist for clippy and tests.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run rust:fmt
+      - run: npm run rust:check
+      - run: npm run rust:test

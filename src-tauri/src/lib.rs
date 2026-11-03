@@ -34,6 +34,10 @@ fn tweak_context() -> TweakContext {
 
 pub fn run() {
     tauri::Builder::default()
+        // Update checks are the app's only network traffic (docs/UPDATE_SYSTEM.md). Downloads
+        // are verified against the bundled public key; installing needs the user's go-ahead.
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
             let log_dir = app.path().app_log_dir()?;
             let guard = logging::init(&log_dir)?;
@@ -60,14 +64,18 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::app::get_app_info,
             commands::app::log_frontend_event,
+            commands::app::get_update_support,
             commands::system::get_system_snapshot,
             commands::system::get_metrics,
+            commands::system::list_startup_items,
+            commands::system::scan_cleanup_locations,
             commands::engine::list_tweaks,
             commands::engine::get_engine_status,
             commands::engine::get_tweak_statuses,
             commands::engine::plan_tweaks,
             commands::engine::apply_plan,
             commands::engine::revert_snapshot,
+            commands::engine::revert_tweak,
             commands::engine::list_snapshots,
             commands::engine::get_snapshot_changes,
         ])

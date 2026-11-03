@@ -84,3 +84,5 @@ export function summariseHealth(checks: HealthCheck[]) {
   const status: HealthStatus = warnings ? "warning" : attention ? "attention" : "good";
   return { status, warnings, attention, total: checks.length };
 }
+
+export type HealthSummary = ReturnType<typeof summariseHealth>;

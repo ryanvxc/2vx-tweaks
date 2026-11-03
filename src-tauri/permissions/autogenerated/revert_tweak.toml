@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-revert-tweak"
+description = "Enables the revert_tweak command without any pre-configured scope."
+commands.allow = ["revert_tweak"]
+
+[[permission]]
+identifier = "deny-revert-tweak"
+description = "Denies the revert_tweak command without any pre-configured scope."
+commands.deny = ["revert_tweak"]

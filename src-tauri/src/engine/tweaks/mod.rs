@@ -5,6 +5,7 @@
 
 mod performance;
 mod privacy;
+mod windows;
 
 use crate::engine::{SettingsTweak, TweakRegistry};
 use crate::error::AppResult;
@@ -14,6 +15,10 @@ const ALL: &[SettingsTweak] = &[
     performance::edge_background_mode::TWEAK,
     privacy::app_launch_tracking::TWEAK,
     privacy::language_list_opt_out::TWEAK,
+    privacy::edge_shopping::TWEAK,
+    privacy::advertising_id::TWEAK,
+    windows::edge_sidebar::TWEAK,
+    windows::edge_recommendations::TWEAK,
 ];
 
 pub fn register_all(registry: &mut TweakRegistry) -> AppResult<()> {
@@ -118,7 +123,21 @@ mod tests {
             ),
             (None, Some(RegValue::Dword(1)))
         );
-        assert_eq!(plan.changes.len(), 4);
+        for value in [
+            "EdgeShoppingAssistantEnabled",
+            "HubsSidebarEnabled",
+            "ShowRecommendationsEnabled",
+        ] {
+            assert_eq!(to(r"SOFTWARE\Policies\Microsoft\Edge", value), off);
+        }
+        assert_eq!(
+            to(
+                r"SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo",
+                "Enabled"
+            ),
+            off
+        );
+        assert_eq!(plan.changes.len(), ALL.len());
         assert!(plan.needs_elevation);
     }
 

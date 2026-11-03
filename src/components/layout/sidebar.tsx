@@ -1,9 +1,10 @@
 import { NavLink } from "react-router";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, ShieldAlert, ShieldCheck } from "lucide-react";
 import logo from "@/assets/logo.svg";
 import { NAV_GROUPS, SETTINGS_ITEM, type NavItem } from "@/app/navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAppInfo } from "@/hooks/use-system";
+import { useUpdater } from "@/hooks/use-updater";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -11,6 +12,8 @@ export function Sidebar() {
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
   const toggle = useUiStore((s) => s.toggleSidebar);
   const { data: app } = useAppInfo();
+  const updater = useUpdater();
+  const updateReady = updater.state.kind === "available" || updater.state.kind === "ready";
 
   return (
     <aside
@@ -22,26 +25,23 @@ export function Sidebar() {
       <div
         data-tauri-drag-region
         className={cn(
-          "flex h-(--titlebar-height) shrink-0 items-center gap-2.5 border-b border-transparent",
+          "flex h-14 shrink-0 items-center gap-2.5",
           collapsed ? "justify-center" : "px-4",
         )}
       >
-        <img src={logo} alt="" className="pointer-events-none size-6" draggable={false} />
+        <img src={logo} alt="" className="pointer-events-none size-7" draggable={false} />
         {!collapsed && (
-          <span
-            data-tauri-drag-region
-            className="text-sm font-semibold tracking-tight text-foreground"
-          >
+          <span data-tauri-drag-region className="text-[15px] font-bold tracking-tight">
             2VX <span className="font-medium text-muted-foreground">Tweaks</span>
           </span>
         )}
       </div>
 
-      <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 pt-4" aria-label="Main">
+      <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-2.5 pt-2" aria-label="Main">
         {NAV_GROUPS.map((group) => (
-          <div key={group.label} className="flex flex-col gap-0.5">
+          <div key={group.label} className="flex flex-col gap-px">
             {!collapsed && (
-              <div className="mb-1 px-2.5 text-[10.5px] font-semibold tracking-[0.08em] text-muted-foreground/70 uppercase">
+              <div className="mb-1 px-2.5 text-[11px] font-medium text-muted-foreground/70">
                 {group.label}
               </div>
             )}
@@ -52,31 +52,50 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="flex flex-col gap-0.5 border-t border-sidebar-border px-3 py-3">
-        <SidebarLink item={SETTINGS_ITEM} collapsed={collapsed} />
+      <div className="flex flex-col gap-px border-t border-sidebar-border px-2.5 py-2.5">
+        <SidebarLink item={SETTINGS_ITEM} collapsed={collapsed} dot={updateReady} />
+        {app && !collapsed && (
+          <div className="mt-1.5 flex items-center gap-2.5 rounded-lg bg-sidebar-accent/50 px-2.5 py-2">
+            {app.isElevated ? (
+              <ShieldAlert className="size-4 shrink-0 text-warning" />
+            ) : (
+              <ShieldCheck className="size-4 shrink-0 text-success" />
+            )}
+            <div className="min-w-0 flex-1 leading-tight">
+              <div className="truncate text-[12px] font-medium text-foreground">
+                {app.isElevated ? "Administrator" : "Standard user"}
+              </div>
+              <div className="text-[11px] text-muted-foreground tabular">v{app.version}</div>
+            </div>
+          </div>
+        )}
         <button
           type="button"
           onClick={toggle}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "flex h-9 items-center gap-3 rounded-md px-2.5 text-[13px] text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            "mt-1 flex h-8 items-center gap-3 rounded-md px-2.5 text-[12.5px] text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             collapsed && "justify-center px-0",
           )}
         >
           {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
           {!collapsed && <span>Collapse</span>}
-          {!collapsed && app && (
-            <span className="ml-auto text-[11px] text-muted-foreground/60 tabular">
-              v{app.version}
-            </span>
-          )}
         </button>
       </div>
     </aside>
   );
 }
 
-function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
+function SidebarLink({
+  item,
+  collapsed,
+  dot,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  /** Small marker for something waiting there, e.g. an update. */
+  dot?: boolean;
+}) {
   const Icon = item.icon;
   const link = (
     <NavLink
@@ -84,8 +103,8 @@ function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean })
       end={item.to === "/"}
       className={({ isActive }) =>
         cn(
-          "group relative flex h-9 items-center gap-3 rounded-md px-2.5 text-[13px] font-medium transition-colors",
-          "hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
+          "group relative flex h-8.5 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium transition-colors",
+          "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
           isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
           collapsed && "justify-center px-0",
         )
@@ -93,19 +112,22 @@ function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean })
     >
       {({ isActive }) => (
         <>
-          <span
-            className={cn(
-              "absolute top-2 bottom-2 left-0 w-0.5 rounded-full bg-primary transition-opacity",
-              isActive ? "opacity-100" : "opacity-0",
-            )}
-          />
           <Icon
             className={cn(
               "size-4 shrink-0",
-              isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+              isActive ? "text-brand" : "text-muted-foreground group-hover:text-foreground",
             )}
           />
           {!collapsed && <span className="truncate">{item.label}</span>}
+          {dot && (
+            <span
+              aria-label="Update available"
+              className={cn(
+                "size-1.5 rounded-full bg-primary",
+                collapsed ? "absolute top-1.5 right-2.5" : "ml-auto",
+              )}
+            />
+          )}
         </>
       )}
     </NavLink>

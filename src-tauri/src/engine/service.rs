@@ -77,6 +77,9 @@ pub struct TweakStatus {
     pub compatibility: Compatibility,
     pub state: TweakState,
     pub settings: Vec<SettingStatus>,
+    /// 2VX has journaled changes for this tweak that it can undo (`revert_tweak`). `false`
+    /// for a value set outside 2VX, which the app then leaves to the user.
+    pub undoable: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -183,6 +186,12 @@ impl Engine {
 
     pub fn tweak_statuses(&self) -> Vec<TweakStatus> {
         let ctx = (self.context)();
+        // Without a journal nothing is undoable; the UI disables changes anyway.
+        let undoable = self
+            .journal()
+            .ok()
+            .and_then(|g| g.as_ref().ok().and_then(|j| j.undoable_tweaks().ok()))
+            .unwrap_or_default();
         self.registry
             .iter()
             .map(|tweak| {
@@ -224,6 +233,7 @@ impl Engine {
                     compatibility: check_compatibility(tweak.meta(), &ctx),
                     state,
                     settings,
+                    undoable: undoable.contains(tweak.meta().id),
                 }
             })
             .collect()
@@ -469,97 +479,8 @@ impl Engine {
         let snapshot =
             journal.begin_snapshot(SnapshotKind::Revert, &original.tweak_ids, Some(snapshot_id))?;
 
-        let mut all_done = true;
-        for (seq, change) in pending.iter().enumerate() {
-            let current = match self.store.read(&change.target) {
-                Ok(v) => v,
-                Err(e) => {
-                    journal
-                        .record_change(
-                            snapshot,
-                            seq,
-                            &change.tweak_id,
-                            &change.target,
-                            &None,
-                            &change.before,
-                            ChangeStatus::Failed,
-                        )
-                        .and_then(|id| {
-                            journal.set_change_status(
-                                id,
-                                ChangeStatus::Failed,
-                                Some(&e.to_string()),
-                            )
-                        })?;
-                    all_done = false;
-                    continue;
-                }
-            };
-            if current == change.before {
-                journal.record_change(
-                    snapshot,
-                    seq,
-                    &change.tweak_id,
-                    &change.target,
-                    &current,
-                    &change.before,
-                    ChangeStatus::Unchanged,
-                )?;
-                journal.set_change_status(change.id, ChangeStatus::Reverted, None)?;
-                continue;
-            }
-            if current != change.after {
-                let id = journal.record_change(
-                    snapshot,
-                    seq,
-                    &change.tweak_id,
-                    &change.target,
-                    &current,
-                    &change.before,
-                    ChangeStatus::Conflict,
-                )?;
-                journal.set_change_status(
-                    id,
-                    ChangeStatus::Conflict,
-                    Some(&format!(
-                        "changed by something else since 2VX set it (now {}); left as is",
-                        describe(&current)
-                    )),
-                )?;
-                all_done = false;
-                continue;
-            }
-            let id = journal.record_change(
-                snapshot,
-                seq,
-                &change.tweak_id,
-                &change.target,
-                &current,
-                &change.before,
-                ChangeStatus::Intent,
-            )?;
-            match writer.write(&change.target, change.before.as_ref()) {
-                Ok(read_back) if read_back == change.before => {
-                    journal.set_change_status(id, ChangeStatus::Verified, None)?;
-                    journal.set_change_status(change.id, ChangeStatus::Reverted, None)?;
-                }
-                Ok(read_back) => {
-                    journal.set_change_status(
-                        id,
-                        ChangeStatus::Failed,
-                        Some(&format!(
-                            "reads back {} after restore",
-                            describe(&read_back)
-                        )),
-                    )?;
-                    all_done = false;
-                }
-                Err(e) => {
-                    journal.set_change_status(id, ChangeStatus::Failed, Some(&e.to_string()))?;
-                    all_done = false;
-                }
-            }
-        }
+        let pending: Vec<_> = pending.into_iter().map(|c| (c, Vec::new())).collect();
+        let all_done = self.restore(journal, writer.as_mut(), snapshot, &pending)?;
         drop(writer);
 
         let (status, error) = if all_done {
@@ -596,6 +517,190 @@ impl Engine {
         })
     }
 
+    /// Restores the before-value of each change, newest first as given, journaling every
+    /// step in `snapshot`. A value changed by something else since 2VX set it is left alone
+    /// and recorded as a conflict. Each entry carries older rows for the same target that
+    /// are closed along with it. Returns `true` if every change was undone.
+    fn restore(
+        &self,
+        journal: &mut Journal,
+        writer: &mut dyn SettingWriter,
+        snapshot: i64,
+        pending: &[(ChangeRecord, Vec<i64>)],
+    ) -> AppResult<bool> {
+        let mut all_done = true;
+        for (seq, (change, superseded)) in pending.iter().enumerate() {
+            let current = match self.store.read(&change.target) {
+                Ok(v) => v,
+                Err(e) => {
+                    journal
+                        .record_change(
+                            snapshot,
+                            seq,
+                            &change.tweak_id,
+                            &change.target,
+                            &None,
+                            &change.before,
+                            ChangeStatus::Failed,
+                        )
+                        .and_then(|id| {
+                            journal.set_change_status(
+                                id,
+                                ChangeStatus::Failed,
+                                Some(&e.to_string()),
+                            )
+                        })?;
+                    all_done = false;
+                    continue;
+                }
+            };
+            if current == change.before {
+                journal.record_change(
+                    snapshot,
+                    seq,
+                    &change.tweak_id,
+                    &change.target,
+                    &current,
+                    &change.before,
+                    ChangeStatus::Unchanged,
+                )?;
+                mark_reverted(journal, change.id, superseded)?;
+                continue;
+            }
+            if current != change.after {
+                let id = journal.record_change(
+                    snapshot,
+                    seq,
+                    &change.tweak_id,
+                    &change.target,
+                    &current,
+                    &change.before,
+                    ChangeStatus::Conflict,
+                )?;
+                journal.set_change_status(
+                    id,
+                    ChangeStatus::Conflict,
+                    Some(&format!(
+                        "changed by something else since 2VX set it (now {}); left as is",
+                        describe(&current)
+                    )),
+                )?;
+                all_done = false;
+                continue;
+            }
+            let id = journal.record_change(
+                snapshot,
+                seq,
+                &change.tweak_id,
+                &change.target,
+                &current,
+                &change.before,
+                ChangeStatus::Intent,
+            )?;
+            match writer.write(&change.target, change.before.as_ref()) {
+                Ok(read_back) if read_back == change.before => {
+                    journal.set_change_status(id, ChangeStatus::Verified, None)?;
+                    mark_reverted(journal, change.id, superseded)?;
+                }
+                Ok(read_back) => {
+                    journal.set_change_status(
+                        id,
+                        ChangeStatus::Failed,
+                        Some(&format!(
+                            "reads back {} after restore",
+                            describe(&read_back)
+                        )),
+                    )?;
+                    all_done = false;
+                }
+                Err(e) => {
+                    journal.set_change_status(id, ChangeStatus::Failed, Some(&e.to_string()))?;
+                    all_done = false;
+                }
+            }
+        }
+        Ok(all_done)
+    }
+
+    /// Undoes what 2VX changed for one tweak, across every apply snapshot that touched it.
+    /// Per target only the newest record counts: it holds the value from before 2VX's latest
+    /// change. Older records for that target are superseded and closed with it.
+    pub fn revert_tweak(&self, tweak_id: &str) -> AppResult<OperationOutcome> {
+        let restart = self
+            .registry
+            .get(tweak_id)
+            .ok_or_else(|| AppError::InvalidInput(format!("unknown tweak `{tweak_id}`")))?
+            .meta()
+            .restart;
+        let mut guard = self.journal()?;
+        let journal = guard.as_mut().expect("checked by journal()");
+        let rows = journal.undoable_changes(tweak_id)?;
+        if rows.is_empty() {
+            return Err(AppError::InvalidInput(
+                "2VX has no record of changing this tweak, so there is nothing to undo".into(),
+            ));
+        }
+        let mut originals: Vec<i64> = rows.iter().map(|c| c.snapshot_id).collect();
+        originals.dedup();
+        let mut pending: Vec<(ChangeRecord, Vec<i64>)> = Vec::new();
+        for row in rows {
+            match pending
+                .iter_mut()
+                .find(|(newest, _)| newest.target.same_as(&row.target))
+            {
+                Some((_, superseded)) => superseded.push(row.id),
+                None => pending.push((row, Vec::new())),
+            }
+        }
+
+        let ctx = (self.context)();
+        let needs_admin =
+            !ctx.is_elevated && pending.iter().any(|(c, _)| c.target.hive.needs_elevation());
+        let mut writer = self.elevation.writer(self.store.as_ref(), needs_admin)?;
+        let reverts = (originals.len() == 1).then(|| originals[0]);
+        let snapshot =
+            journal.begin_snapshot(SnapshotKind::Revert, &[tweak_id.to_string()], reverts)?;
+        let all_done = self.restore(journal, writer.as_mut(), snapshot, &pending)?;
+        drop(writer);
+
+        for original in originals {
+            if !journal.has_undoable_changes(original)? {
+                journal.set_snapshot_status(original, SnapshotStatus::Reverted)?;
+            }
+        }
+        let (status, error) = if all_done {
+            (SnapshotStatus::Completed, None)
+        } else {
+            (
+                SnapshotStatus::Failed,
+                Some("some values could not be restored; see the change list".to_string()),
+            )
+        };
+        journal.finish_snapshot(snapshot, status, error.as_deref())?;
+        journal.audit(
+            "tweak_revert_finished",
+            serde_json::json!({ "snapshot": snapshot, "tweak": tweak_id, "status": status.as_str() }),
+        )?;
+        tracing::info!(
+            snapshot,
+            tweak = tweak_id,
+            status = status.as_str(),
+            "tweak revert finished"
+        );
+
+        Ok(OperationOutcome {
+            snapshot_id: Some(snapshot),
+            status,
+            error,
+            changes: journal.changes(snapshot)?,
+            restart: if status == SnapshotStatus::Completed {
+                restart
+            } else {
+                RestartRequirement::None
+            },
+        })
+    }
+
     pub fn history(&self, limit: u32) -> AppResult<Vec<SnapshotRecord>> {
         let guard = self.journal()?;
         guard
@@ -614,6 +719,14 @@ impl Engine {
         }
         journal.changes(snapshot_id)
     }
+}
+
+fn mark_reverted(journal: &mut Journal, id: i64, superseded: &[i64]) -> AppResult<()> {
+    journal.set_change_status(id, ChangeStatus::Reverted, None)?;
+    for &older in superseded {
+        journal.set_change_status(older, ChangeStatus::Reverted, None)?;
+    }
+    Ok(())
 }
 
 /// Restores before-values in reverse order. Returns `true` if every change was undone.
@@ -815,6 +928,86 @@ mod tests {
         assert_eq!(history[0].kind, SnapshotKind::Revert);
         assert_eq!(history[1].status, SnapshotStatus::Reverted);
         assert!(e.revert(snapshot).is_err(), "already reverted");
+    }
+
+    #[test]
+    fn revert_tweak_undoes_one_tweak_of_a_batch() {
+        let store = Arc::new(MemoryStore::default());
+        let e = engine(store.clone(), true);
+        let undoable = |e: &Engine, id: &str| {
+            e.tweak_statuses()
+                .iter()
+                .find(|s| s.meta.id == id)
+                .unwrap()
+                .undoable
+        };
+        assert!(!undoable(&e, "gaming.a"));
+        assert!(e.revert_tweak("gaming.a").is_err(), "nothing recorded yet");
+        assert!(e.revert_tweak("gaming.nope").is_err());
+
+        let plan = e.plan(&ids(&["gaming.a", "gaming.b"])).unwrap();
+        let batch = e.apply(&plan.id).unwrap().snapshot_id.unwrap();
+        assert!(undoable(&e, "gaming.a") && undoable(&e, "gaming.b"));
+
+        let out = e.revert_tweak("gaming.b").unwrap();
+        assert_eq!(out.status, SnapshotStatus::Completed);
+        assert_eq!(out.restart, RestartRequirement::Reboot);
+        assert_eq!(store.get(&TWO), None);
+        assert_eq!(
+            store.get(&ONE),
+            Some(RegValue::Dword(1)),
+            "other tweak kept"
+        );
+        assert!(!undoable(&e, "gaming.b"));
+        assert_eq!(e.history(10).unwrap()[1].status, SnapshotStatus::Completed);
+
+        // Undoing the last tweak of the batch closes the batch too.
+        e.revert_tweak("gaming.a").unwrap();
+        assert_eq!(store.get(&ONE), None);
+        let history = e.history(10).unwrap();
+        assert_eq!(history[0].reverts, Some(batch));
+        assert_eq!(history[2].status, SnapshotStatus::Reverted);
+        assert!(e.revert(batch).is_err(), "already reverted");
+    }
+
+    #[test]
+    fn revert_tweak_restores_the_value_from_before_the_latest_apply() {
+        let store = Arc::new(MemoryStore::default());
+        let e = engine(store.clone(), true);
+        let plan = e.plan(&ids(&["gaming.b"])).unwrap();
+        let first = e.apply(&plan.id).unwrap().snapshot_id.unwrap();
+        // Something else sets its own value, then the user applies the tweak again.
+        store.write(&TWO, Some(&RegValue::Dword(7))).unwrap();
+        let plan = e.plan(&ids(&["gaming.b"])).unwrap();
+        e.apply(&plan.id).unwrap();
+
+        let out = e.revert_tweak("gaming.b").unwrap();
+        assert_eq!(out.status, SnapshotStatus::Completed);
+        assert_eq!(out.changes.len(), 1, "superseded record is not replayed");
+        assert_eq!(store.get(&TWO), Some(RegValue::Dword(7)));
+        let history = e.history(10).unwrap();
+        assert!(
+            history
+                .iter()
+                .filter(|s| s.kind == SnapshotKind::Apply)
+                .all(|s| s.status == SnapshotStatus::Reverted)
+        );
+        assert!(e.revert(first).is_err());
+    }
+
+    #[test]
+    fn revert_tweak_leaves_a_value_changed_by_others() {
+        let store = Arc::new(MemoryStore::default());
+        let e = engine(store.clone(), true);
+        let plan = e.plan(&ids(&["gaming.b"])).unwrap();
+        e.apply(&plan.id).unwrap();
+        store.write(&TWO, Some(&RegValue::Dword(9))).unwrap();
+
+        let out = e.revert_tweak("gaming.b").unwrap();
+        assert_eq!(out.status, SnapshotStatus::Failed);
+        assert_eq!(out.restart, RestartRequirement::None);
+        assert_eq!(out.changes[0].status, ChangeStatus::Conflict);
+        assert_eq!(store.get(&TWO), Some(RegValue::Dword(9)));
     }
 
     #[test]

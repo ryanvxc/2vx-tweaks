@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-scan-cleanup-locations"
+description = "Enables the scan_cleanup_locations command without any pre-configured scope."
+commands.allow = ["scan_cleanup_locations"]
+
+[[permission]]
+identifier = "deny-scan-cleanup-locations"
+description = "Denies the scan_cleanup_locations command without any pre-configured scope."
+commands.deny = ["scan_cleanup_locations"]

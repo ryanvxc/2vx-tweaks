@@ -1,5 +1,12 @@
 import type { EngineStatus, TweakMeta, TweakStatus } from "@/types/engine";
-import type { AppInfo, BackendError, MetricsSample, SystemSnapshot } from "@/types/system";
+import type {
+  AppInfo,
+  BackendError,
+  CleanupLocation,
+  MetricsSample,
+  StartupInventory,
+  SystemSnapshot,
+} from "@/types/system";
 
 /**
  * Simulated backend used when the UI runs outside the desktop shell (browser dev
@@ -13,7 +20,7 @@ const HISTORY = 300;
 function appInfo(): AppInfo {
   return {
     name: "2VX Tweaks",
-    version: "0.1.0",
+    version: "0.2.0",
     isElevated: false,
     logDir: "(preview — no log directory)",
     debugBuild: true,
@@ -105,38 +112,97 @@ function metricsSince(sinceMs?: number): MetricsSample[] {
   return out;
 }
 
-// Two invented tweaks so the tweak list can be laid out in a browser. They are not the
-// real catalogue (that lives in Rust) and their names say so.
-const SAMPLE_TWEAKS: TweakMeta[] = [
+// Invented tweaks so the card grid can be laid out in a browser. They are not the real
+// catalogue (that lives in Rust) and their names say so.
+type Sample = Pick<TweakMeta, "category" | "permission" | "impact" | "addedIn" | "recommended"> & {
+  slug: string;
+  title: string;
+  state: TweakStatus["state"];
+  risk?: TweakMeta["risk"];
+  restart?: TweakMeta["restart"];
+};
+
+const SAMPLES: Sample[] = [
   {
-    id: "performance.preview-sample-admin",
-    name: "Preview sample: machine-wide setting",
-    description: "Stands in for a real HKLM tweak in browser preview. Applying is disabled here.",
-    details: "Preview only. The desktop app lists the real, documented tweaks from its engine.",
+    slug: "machine-wide",
+    title: "machine-wide setting",
     category: "performance",
-    risk: "low",
     permission: "administrator",
-    supportedBuilds: { minBuild: 10240, maxBuild: null },
-    device: "any",
-    recommended: false,
-    restart: "none",
-    references: ["https://learn.microsoft.com/"],
+    impact: "medium",
+    addedIn: "0.1",
+    recommended: true,
+    state: "notApplied",
   },
   {
-    id: "privacy.preview-sample-user",
-    name: "Preview sample: per-user setting",
-    description: "Stands in for a real HKCU tweak in browser preview. Applying is disabled here.",
-    details: "Preview only. The desktop app lists the real, documented tweaks from its engine.",
+    slug: "per-user",
+    title: "per-user setting",
     category: "privacy",
-    risk: "low",
     permission: "user",
-    supportedBuilds: { minBuild: 10240, maxBuild: null },
-    device: "any",
+    impact: "low",
+    addedIn: "0.1",
     recommended: false,
+    state: "applied",
     restart: "signOut",
-    references: ["https://learn.microsoft.com/"],
+  },
+  {
+    slug: "new-privacy",
+    title: "new privacy setting",
+    category: "privacy",
+    permission: "administrator",
+    impact: "low",
+    addedIn: "0.2",
+    recommended: true,
+    state: "notApplied",
+  },
+  {
+    slug: "browser",
+    title: "browser setting",
+    category: "windows",
+    permission: "administrator",
+    impact: "low",
+    addedIn: "0.2",
+    recommended: false,
+    state: "notApplied",
+  },
+  {
+    slug: "moderate",
+    title: "moderate-risk setting",
+    category: "performance",
+    permission: "user",
+    impact: "high",
+    addedIn: "0.2",
+    recommended: false,
+    state: "partial",
+    risk: "moderate",
+  },
+  {
+    slug: "outside",
+    title: "value set outside 2VX",
+    category: "windows",
+    permission: "user",
+    impact: "low",
+    addedIn: "0.1",
+    recommended: false,
+    state: "applied",
   },
 ];
+
+const SAMPLE_TWEAKS: TweakMeta[] = SAMPLES.map((x) => ({
+  id: `${x.category}.preview-sample-${x.slug}`,
+  name: `Preview sample: ${x.title}`,
+  description: "Stands in for a real tweak in browser preview. Applying is disabled here.",
+  details: "Preview only. The desktop app lists the real, documented tweaks from its engine.",
+  category: x.category,
+  risk: x.risk ?? "low",
+  permission: x.permission,
+  supportedBuilds: { minBuild: 10240, maxBuild: null },
+  device: "any",
+  recommended: x.recommended,
+  restart: x.restart ?? "none",
+  impact: x.impact,
+  addedIn: x.addedIn,
+  references: ["https://learn.microsoft.com/"],
+}));
 
 function tweaks(): TweakMeta[] {
   return SAMPLE_TWEAKS;
@@ -144,7 +210,9 @@ function tweaks(): TweakMeta[] {
 
 function tweakStatuses(): TweakStatus[] {
   return SAMPLE_TWEAKS.map((meta, i) => {
+    const sample = SAMPLES[i]!;
     const admin = meta.permission === "administrator";
+    const applied = sample.state === "applied";
     const target = {
       hive: admin ? ("localMachine" as const) : ("currentUser" as const),
       key: String.raw`Software\2VX-Preview`,
@@ -153,19 +221,21 @@ function tweakStatuses(): TweakStatus[] {
     return {
       meta,
       compatibility: admin ? "needsElevation" : "compatible",
-      state: i === 0 ? "notApplied" : "applied",
+      state: sample.state,
       settings: [
         {
           target,
           targetLabel: `${admin ? "HKLM" : "HKCU"}\\${target.key}\\${target.value}`,
-          current: i === 0 ? null : { type: "dword", data: 0 },
-          currentLabel: i === 0 ? "(not set)" : "0 (REG_DWORD)",
+          current: applied ? { type: "dword", data: 0 } : null,
+          currentLabel: applied ? "0 (REG_DWORD)" : "(not set)",
           desired: { type: "dword", data: 0 },
           desiredLabel: "0 (REG_DWORD)",
-          matches: i !== 0,
+          matches: applied,
           error: null,
         },
       ],
+      // The "outside 2VX" sample shows the toggle-locked case.
+      undoable: applied && sample.slug !== "outside",
     };
   });
 }
@@ -177,6 +247,64 @@ function engineStatus(): EngineStatus {
     journalError: "No change journal in browser preview",
     interruptedSnapshots: 0,
   };
+}
+
+function startup(): StartupInventory {
+  const user = String.raw`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`;
+  const machine = String.raw`HKLM\Software\Microsoft\Windows\CurrentVersion\Run`;
+  const folder = String.raw`C:\Users\Preview\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup`;
+  const item = (
+    name: string,
+    command: string,
+    location: string,
+    enabled: boolean | null,
+    source: StartupInventory["items"][number]["source"] = "runKey",
+  ): StartupInventory["items"][number] => ({
+    id: `${location}\\${name}`,
+    name: `Preview sample: ${name}`,
+    command,
+    source,
+    scope: location.startsWith("HKLM") ? "allUsers" : "currentUser",
+    location,
+    enabled,
+  });
+  return {
+    items: [
+      item("Chat app", String.raw`"C:\Program Files\Chat\chat.exe" --minimized`, user, true),
+      item("Cloud sync", String.raw`C:\Program Files\Sync\sync.exe /background`, user, false),
+      item("Audio control panel", String.raw`C:\Windows\System32\audio.exe -s`, machine, null),
+      item("Launcher", String.raw`C:\Games\Launcher\launcher.exe`, folder, true, "startupFolder"),
+    ],
+    unreadable: [],
+  };
+}
+
+async function cleanup(): Promise<CleanupLocation[]> {
+  await new Promise((r) => setTimeout(r, 600));
+  const MiB = 1024 ** 2;
+  const loc = (
+    id: string,
+    label: string,
+    bytes: number,
+    files: number,
+    status: CleanupLocation["status"] = "measured",
+  ): CleanupLocation => ({
+    id,
+    label,
+    description: "Preview sample. The desktop app measures this location on your PC.",
+    path: "(preview)",
+    bytes,
+    files,
+    status,
+  });
+  return [
+    loc("user-temp", "Your temporary files", 1840 * MiB, 5210),
+    loc("windows-temp", "Windows temporary files", 0, 0, "denied"),
+    loc("directx-shader-cache", "DirectX shader cache", 412 * MiB, 380),
+    loc("nvidia-shader-cache", "NVIDIA shader cache", 0, 0, "missing"),
+    loc("edge-cache", "Microsoft Edge cache", 655 * MiB, 9120),
+    loc("recycle-bin", "Recycle Bin", 3.2 * 1024 * MiB, 214),
+  ];
 }
 
 /** Anything that would change the system is refused outright, never simulated. */
@@ -192,5 +320,7 @@ export const preview = {
   tweaks,
   tweakStatuses,
   engineStatus,
+  startup,
+  cleanup,
   refuse,
 };

@@ -1,5 +1,5 @@
 use crate::engine::{
-    BuildRange, DeviceScope, Hive, Permission, RestartRequirement, RiskLevel, Setting,
+    BuildRange, DeviceScope, Hive, Impact, Permission, RestartRequirement, RiskLevel, Setting,
     SettingsTweak, TweakCategory, TweakMeta,
 };
 
@@ -22,6 +22,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         device: DeviceScope::Any,
         recommended: false,
         restart: RestartRequirement::None,
+        impact: Impact::Medium,
+        added_in: "0.1",
         references: &[
             "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/startupboostenabled",
         ],

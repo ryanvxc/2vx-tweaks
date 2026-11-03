@@ -81,7 +81,9 @@ fn backend_never_spawns_shells_or_processes() {
     }
 }
 
-/// No network clients, analytics, crash reporters or remote-control crates.
+/// No network clients, analytics, crash reporters or remote-control crates. The updater
+/// plugin is the one reviewed exception (docs/security.md, decision P0-8b revised); its own
+/// guard is `updater_is_signed_https_and_opt_in`.
 #[test]
 fn no_network_or_telemetry_dependencies() {
     let manifest = read("Cargo.toml");
@@ -96,7 +98,6 @@ fn no_network_or_telemetry_dependencies() {
         "curl",
         "tauri-plugin-http",
         "tauri-plugin-shell",
-        "tauri-plugin-updater",
         "sentry",
         "posthog",
         "segment",
@@ -158,15 +159,52 @@ fn commands_manifest_capability_and_handler_agree() {
     );
 }
 
-/// The capability grants no plugin permissions beyond core window chrome.
+/// The capability grants no plugin permissions beyond core window chrome and the reviewed
+/// updater set: check/download/install, and relaunch after an install.
 #[test]
-fn capability_grants_no_plugins() {
+fn capability_grants_only_reviewed_plugins() {
     for permission in quoted_list_after(&read("capabilities/default.json"), "\"permissions\"") {
         let ok = permission.starts_with("allow-")
             || permission == "core:default"
-            || permission.starts_with("core:window:allow-");
+            || permission.starts_with("core:window:allow-")
+            || permission == "updater:default"
+            || permission == "process:allow-restart";
         assert!(ok, "permission `{permission}` needs a security review");
     }
+}
+
+/// Updates are signed, fetched over HTTPS only, and the committed config has no endpoint:
+/// the release workflow injects the repository's channel URL, so local builds never update.
+#[test]
+fn updater_is_signed_https_and_opt_in() {
+    let conf: serde_json::Value = serde_json::from_str(&read("tauri.conf.json")).unwrap();
+    let updater = &conf["plugins"]["updater"];
+    let pubkey = updater["pubkey"].as_str().unwrap_or_default();
+    assert!(pubkey.len() > 40, "updater public key missing");
+    assert!(
+        !pubkey.contains("PRIVATE") && !read("tauri.conf.json").contains("secret key"),
+        "a private key must never be committed"
+    );
+    assert_eq!(updater["endpoints"], serde_json::json!([]));
+    assert!(
+        updater.get("dangerousInsecureTransportProtocol").is_none(),
+        "insecure update transport"
+    );
+    let workflow = fs::read_to_string(root().join("../.github/workflows/release.yml")).unwrap();
+    for endpoint in workflow
+        .split("endpoints")
+        .skip(1)
+        .filter_map(|s| s.split('"').nth(2))
+    {
+        assert!(
+            endpoint.starts_with("https://github.com/"),
+            "endpoint `{endpoint}`"
+        );
+    }
+    assert!(
+        !workflow.contains("releases/latest/download"),
+        "main builds are prereleases; the stable `latest` URL would never see them"
+    );
 }
 
 /// The built-in registry validates (metadata gate, policy, conflicts) on every build.

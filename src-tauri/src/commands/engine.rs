@@ -69,6 +69,16 @@ pub async fn revert_snapshot(
     blocking(&engine, move |e| e.revert(snapshot_id)).await
 }
 
+/// Undoes 2VX's recorded changes for one tweak (the toggle-off path). The ID is checked
+/// against the registry; the values restored come from the journal, never the caller.
+#[tauri::command]
+pub async fn revert_tweak(
+    engine: State<'_, Arc<Engine>>,
+    tweak_id: String,
+) -> AppResult<OperationOutcome> {
+    blocking(&engine, move |e| e.revert_tweak(&tweak_id)).await
+}
+
 /// Most recent snapshots first.
 #[tauri::command]
 pub async fn list_snapshots(

@@ -7,9 +7,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useState } from "react";
 import { SectionCard } from "@/components/common/section-card";
 import { LoadingRows } from "@/components/common/states";
 import { percentOf } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { MetricsSample } from "@/types/system";
 
 const SERIES = [
@@ -18,7 +20,17 @@ const SERIES = [
   { key: "ram", label: "Memory", color: "var(--chart-2)" },
 ] as const;
 
+type View = "all" | (typeof SERIES)[number]["key"];
+const VIEWS: { value: View; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "cpu", label: "CPU" },
+  { value: "gpu", label: "GPU" },
+  { value: "ram", label: "Memory" },
+];
+
 export function UtilisationChart({ samples }: { samples: MetricsSample[] }) {
+  const [view, setView] = useState<View>("all");
+  const shown = SERIES.filter((s) => view === "all" || s.key === view);
   const now = samples.at(-1)?.timestampMs ?? 0;
   const data = samples.map((s) => ({
     ago: Math.round((s.timestampMs - now) / 1000),
@@ -33,16 +45,30 @@ export function UtilisationChart({ samples }: { samples: MetricsSample[] }) {
       description="Last 5 minutes, sampled every second"
       source="live"
       actions={
-        <div className="mr-1 flex items-center gap-3">
-          {SERIES.map((s) => (
-            <span
-              key={s.key}
-              className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground"
-            >
-              <span className="size-2 rounded-full" style={{ background: s.color }} />
-              {s.label}
-            </span>
-          ))}
+        <div role="radiogroup" aria-label="Series" className="flex rounded-md border p-0.5">
+          {VIEWS.map((v) => {
+            const series = SERIES.find((x) => x.key === v.value);
+            return (
+              <button
+                key={v.value}
+                type="button"
+                role="radio"
+                aria-checked={view === v.value}
+                onClick={() => setView(v.value)}
+                className={cn(
+                  "flex h-6 items-center gap-1.5 rounded px-2 text-[11.5px] font-medium transition-colors",
+                  view === v.value
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {series && (
+                  <span className="size-1.5 rounded-full" style={{ background: series.color }} />
+                )}
+                {v.label}
+              </button>
+            );
+          })}
         </div>
       }
       contentClassName="pl-2"
@@ -97,7 +123,7 @@ export function UtilisationChart({ samples }: { samples: MetricsSample[] }) {
                   SERIES.find((s) => s.key === name)?.label ?? String(name),
                 ]}
               />
-              {SERIES.map((s) => (
+              {shown.map((s) => (
                 <Area
                   key={s.key}
                   type="monotone"

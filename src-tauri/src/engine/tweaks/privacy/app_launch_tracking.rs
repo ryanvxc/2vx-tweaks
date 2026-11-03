@@ -1,5 +1,5 @@
 use crate::engine::{
-    BuildRange, DeviceScope, Hive, Permission, RestartRequirement, RiskLevel, Setting,
+    BuildRange, DeviceScope, Hive, Impact, Permission, RestartRequirement, RiskLevel, Setting,
     SettingsTweak, TweakCategory, TweakMeta,
 };
 
@@ -24,6 +24,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         device: DeviceScope::Any,
         recommended: false,
         restart: RestartRequirement::SignOut,
+        impact: Impact::Low,
+        added_in: "0.1",
         references: &[
             "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#181-general",
         ],
