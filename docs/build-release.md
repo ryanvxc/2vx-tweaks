@@ -15,7 +15,10 @@ npm run check:all
 npm run app:build
 ```
 
-Output goes to `src-tauri/target/release/bundle/{nsis,msi}/`. The release profile uses LTO, `opt-level = "s"`,
+Output goes to `src-tauri/target/release/bundle/{nsis,msi}/` (`npm run app:build -- --bundles nsis` builds only the
+NSIS setup). The NSIS installer is per-machine (`bundle.windows.nsis.installMode`): it installs to
+`C:\Program Files\2VX Tweaks` and asks for administrator permission once, at install time. The app itself still runs
+unelevated. The release profile uses LTO, `opt-level = "s"`,
 stripped symbols and `panic = "abort"`.
 
 ## Before the first public release (backlog P1-11)
