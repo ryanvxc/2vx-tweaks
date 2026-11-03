@@ -1,6 +1,7 @@
 import {
   Activity,
   Gamepad2,
+  History,
   LayoutDashboard,
   Rocket,
   Settings,
@@ -37,6 +38,12 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Monitoring",
         icon: Activity,
         description: "Live and historical utilisation",
+      },
+      {
+        to: "/history",
+        label: "History",
+        icon: History,
+        description: "Every change 2VX has made, with undo",
       },
     ],
   },
@@ -86,7 +93,7 @@ export const SETTINGS_ITEM: NavItem = {
   to: "/settings",
   label: "Settings",
   icon: Settings,
-  description: "Preferences, backups and restore history",
+  description: "Preferences and engine status",
 };
 
 export const ALL_NAV_ITEMS: NavItem[] = [...NAV_GROUPS.flatMap((g) => g.items), SETTINGS_ITEM];

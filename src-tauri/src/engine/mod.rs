@@ -7,7 +7,7 @@
 //!
 //! Every tweak lives in its own module under `engine/tweaks/` and is registered in
 //! [`TweakRegistry::with_builtin_tweaks`]. See `docs/optimisation-modules.md` for the
-//! review checklist. No tweaks ship yet.
+//! review checklist.
 
 pub mod broker;
 pub mod journal;
@@ -16,6 +16,7 @@ pub mod policy;
 pub mod service;
 pub mod setting;
 pub mod store;
+mod tweaks;
 
 use std::collections::BTreeMap;
 
@@ -185,9 +186,17 @@ pub struct TweakRegistry {
 }
 
 impl TweakRegistry {
-    /// The registry the app ships with. Empty until the first audited tweaks land (P1.3).
+    /// The registry the app ships with.
+    ///
+    /// # Panics
+    /// If a built-in tweak fails the metadata gate. That is a build defect, caught by the
+    /// unit tests and `tests/policy.rs`, never a runtime condition.
     pub fn with_builtin_tweaks() -> Self {
-        Self::default()
+        let mut registry = Self::default();
+        if let Err(e) = tweaks::register_all(&mut registry) {
+            panic!("built-in tweak catalogue is invalid: {e}");
+        }
+        registry
     }
 
     pub fn register(&mut self, tweak: Box<dyn Tweak>) -> AppResult<()> {
@@ -362,11 +371,6 @@ pub(crate) mod tests {
             is_elevated,
             has_battery: Some(false),
         }
-    }
-
-    #[test]
-    fn builtin_registry_is_empty_until_first_tweaks() {
-        assert!(TweakRegistry::with_builtin_tweaks().is_empty());
     }
 
     #[test]

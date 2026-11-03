@@ -10,7 +10,7 @@ use std::path::Path;
 use rusqlite::{Connection, OptionalExtension, params};
 use serde::Serialize;
 
-use crate::engine::setting::{RegTarget, RegValue};
+use crate::engine::setting::{RegTarget, RegValue, describe};
 use crate::error::{AppError, AppResult};
 
 /// Bump when adding a migration below.
@@ -151,8 +151,12 @@ pub struct ChangeRecord {
     pub seq: i64,
     pub tweak_id: String,
     pub target: RegTarget,
+    /// Display forms, as in `PlannedChange`, so history needs no value formatting in the UI.
+    pub target_label: String,
     pub before: Option<RegValue>,
+    pub before_label: String,
     pub after: Option<RegValue>,
+    pub after_label: String,
     pub status: ChangeStatus,
     pub error: Option<String>,
     pub updated_at_ms: i64,
@@ -388,14 +392,20 @@ impl Journal {
                 error,
                 updated_at_ms,
             ) = row?;
+            let target: RegTarget = from_json(&target)?;
+            let before = from_json(&before)?;
+            let after = from_json(&after)?;
             Ok(ChangeRecord {
                 id,
                 snapshot_id,
                 seq,
                 tweak_id,
-                target: from_json(&target)?,
-                before: from_json(&before)?,
-                after: from_json(&after)?,
+                target_label: target.to_string(),
+                target,
+                before_label: describe(&before),
+                before,
+                after_label: describe(&after),
+                after,
                 status: ChangeStatus::parse(&status)?,
                 error,
                 updated_at_ms,
@@ -502,6 +512,9 @@ mod tests {
         let changes = j.changes(s).unwrap();
         assert_eq!(changes[0].before, None);
         assert_eq!(changes[0].after, Some(RegValue::Dword(1)));
+        assert_eq!(changes[0].target_label, target().to_string());
+        assert_eq!(changes[0].before_label, "(not set)");
+        assert_eq!(changes[0].after_label, "1 (REG_DWORD)");
         assert_eq!(changes[0].status, ChangeStatus::Verified);
         assert!(j.snapshot(999).unwrap().is_none());
     }

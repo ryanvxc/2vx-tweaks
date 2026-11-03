@@ -18,10 +18,11 @@ npm run app:build
 Output goes to `src-tauri/target/release/bundle/{nsis,msi}/`. The release profile uses LTO, `opt-level = "s"`,
 stripped symbols and `panic = "abort"`.
 
-## Before the first public release (Phase 5)
+## Before the first public release (backlog P1-11)
 
 - **Code signing**: an unsigned optimiser triggers SmartScreen, and some AV engines flag it. Configure
   `bundle.windows.certificateThumbprint` or a signing command (Azure Trusted Signing / EV certificate).
-- **Updater**: `tauri-plugin-updater` with signed update manifests.
+- **Updates**: no in-app updater (decision P0-8b in `docs/security.md`); `src-tauri/tests/policy.rs` keeps
+  forbidding `tauri-plugin-updater`. Users download new signed installers by hand.
 - **Version**: bump `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` together.
 - **Identifier**: `com.twovx.tweaks`. Changing it moves the app's data and log folders.

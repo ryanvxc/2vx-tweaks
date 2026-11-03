@@ -100,6 +100,42 @@ const DENIED_VALUES: &[(Hive, &str, &str)] = &[
         r"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer",
         "SmartScreenEnabled",
     ),
+    // Microsoft Edge policies share one key; its SmartScreen and security policies are protected.
+    (
+        Hive::LocalMachine,
+        r"SOFTWARE\Policies\Microsoft\Edge",
+        "SmartScreenEnabled",
+    ),
+    (
+        Hive::LocalMachine,
+        r"SOFTWARE\Policies\Microsoft\Edge",
+        "SmartScreenPuaEnabled",
+    ),
+    (
+        Hive::LocalMachine,
+        r"SOFTWARE\Policies\Microsoft\Edge",
+        "PreventSmartScreenPromptOverride",
+    ),
+    (
+        Hive::LocalMachine,
+        r"SOFTWARE\Policies\Microsoft\Edge",
+        "PreventSmartScreenPromptOverrideForFiles",
+    ),
+    (
+        Hive::LocalMachine,
+        r"SOFTWARE\Policies\Microsoft\Edge",
+        "SmartScreenForTrustedDownloadsEnabled",
+    ),
+    (
+        Hive::LocalMachine,
+        r"SOFTWARE\Policies\Microsoft\Edge",
+        "TyposquattingCheckerEnabled",
+    ),
+    (
+        Hive::LocalMachine,
+        r"SOFTWARE\Policies\Microsoft\Edge",
+        "SitePerProcess",
+    ),
 ];
 
 /// Services whose configuration (start type included) is protected.
@@ -245,6 +281,11 @@ mod tests {
                 Hive::LocalMachine,
                 r"SOFTWARE\Policies\Microsoft\Windows\System",
                 "EnableSmartScreen",
+            ),
+            t(
+                Hive::LocalMachine,
+                r"SOFTWARE\Policies\Microsoft\Edge",
+                "smartscreenenabled",
             ),
             t(Hive::LocalMachine, "SAM", "X"),
         ] {

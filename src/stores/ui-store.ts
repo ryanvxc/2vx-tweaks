@@ -7,7 +7,7 @@ interface UiState {
 }
 
 // UI preferences only. Anything that must survive reinstalls or be backed up belongs
-// in the backend's SQLite store (Phase 2), not here.
+// in the backend (the change journal is SQLite), not here.
 export const useUiStore = create<UiState>()(
   persist(
     (set) => ({

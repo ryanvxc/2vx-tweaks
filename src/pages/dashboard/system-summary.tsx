@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { Activity, Gamepad2, Monitor, Rocket, Sparkles } from "lucide-react";
+import { History, Monitor, SlidersHorizontal } from "lucide-react";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,11 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatUptime } from "@/lib/format";
 import type { SystemSnapshot } from "@/types/system";
 
+// Only destinations that do something today; more join as their sections are built.
 const QUICK_ACTIONS = [
-  { label: "Gaming", icon: Gamepad2, to: "/gaming" },
-  { label: "Monitoring", icon: Activity, to: "/monitoring" },
-  { label: "Startup apps", icon: Rocket, to: "/startup" },
-  { label: "Clean up", icon: Sparkles, to: "/cleaner" },
+  { label: "System tweaks", icon: SlidersHorizontal, to: "/system" },
+  { label: "History", icon: History, to: "/history" },
 ];
 
 export function SystemSummary({ snapshot }: { snapshot: SystemSnapshot | undefined }) {

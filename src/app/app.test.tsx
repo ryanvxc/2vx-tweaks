@@ -26,6 +26,8 @@ describe("App shell", () => {
     const nav = screen.getByRole("navigation", { name: "Main" });
     await user.click(within(nav).getByRole("link", { name: /gaming/i }));
     expect(await screen.findByRole("heading", { name: "Gaming" })).toBeInTheDocument();
-    expect(await screen.findByText("No optimisations registered yet")).toBeInTheDocument();
+    expect(await screen.findByText("No optimisations in this section yet")).toBeInTheDocument();
+    // The preview never claims an engine is connected.
+    expect(screen.getByText("Browser preview")).toBeInTheDocument();
   });
 });

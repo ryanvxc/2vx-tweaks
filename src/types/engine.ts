@@ -122,8 +122,11 @@ export interface ChangeRecord {
   seq: number;
   tweakId: string;
   target: RegTarget;
+  targetLabel: string;
   before: RegValue | null;
+  beforeLabel: string;
   after: RegValue | null;
+  afterLabel: string;
   status: ChangeStatus;
   error: string | null;
   updatedAtMs: number;

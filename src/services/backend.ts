@@ -48,14 +48,15 @@ export const backend = {
       ? call("get_metrics", { sinceMs: sinceMs ?? null })
       : Promise.resolve(preview.metricsSince(sinceMs)),
 
-  listTweaks: (): Promise<TweakMeta[]> => (isDesktop ? call("list_tweaks") : Promise.resolve([])),
+  listTweaks: (): Promise<TweakMeta[]> =>
+    isDesktop ? call("list_tweaks") : Promise.resolve(preview.tweaks()),
 
   getEngineStatus: (): Promise<EngineStatus> =>
     isDesktop ? call("get_engine_status") : Promise.resolve(preview.engineStatus()),
 
   /** Reads every target of every tweak; can take a moment, runs on a backend worker thread. */
   getTweakStatuses: (): Promise<TweakStatus[]> =>
-    isDesktop ? call("get_tweak_statuses") : Promise.resolve([]),
+    isDesktop ? call("get_tweak_statuses") : Promise.resolve(preview.tweakStatuses()),
 
   /** Dry run: writes nothing. Unknown IDs are rejected with `invalid_input`. */
   planTweaks: (tweakIds: string[]): Promise<Plan> =>

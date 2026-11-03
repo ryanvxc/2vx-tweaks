@@ -2,9 +2,9 @@ import { CircleDashed } from "lucide-react";
 import { SectionCard } from "./section-card";
 
 /** Lists the features a page will hold, so unbuilt sections are explicit rather than faked. */
-export function PlannedFeatures({ phase, features }: { phase: string; features: string[] }) {
+export function PlannedFeatures({ features }: { features: string[] }) {
   return (
-    <SectionCard title="Planned for this section" description={phase} source="planned">
+    <SectionCard title="Planned for this section" description="Not built yet" source="planned">
       <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5">
         {features.map((f) => (
           <li key={f} className="flex items-start gap-2 text-[13px] text-muted-foreground">

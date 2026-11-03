@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DashboardPage } from "@/pages/dashboard/dashboard-page";
+import { HistoryPage } from "@/pages/history/history-page";
 import {
   CleanerPage,
   GamingPage,
@@ -23,6 +24,7 @@ export function App() {
           <Route element={<AppShell />}>
             <Route index element={<DashboardPage />} />
             <Route path="monitoring" element={<MonitoringPage />} />
+            <Route path="history" element={<HistoryPage />} />
             <Route path="gaming" element={<GamingPage />} />
             <Route path="system" element={<SystemTweaksPage />} />
             <Route path="startup" element={<StartupPage />} />

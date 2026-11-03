@@ -7,11 +7,14 @@ describe("backend engine commands in preview", () => {
     expect(isDesktop).toBe(false);
   });
 
-  it("reports an empty engine with no journal", async () => {
+  it("serves labelled samples and no journal", async () => {
     const status = await backend.getEngineStatus();
-    expect(status.tweakCount).toBe(0);
+    const statuses = await backend.getTweakStatuses();
     expect(status.journalAvailable).toBe(false);
-    await expect(backend.getTweakStatuses()).resolves.toEqual([]);
+    expect(status.tweakCount).toBe(statuses.length);
+    // Preview samples must never pass for the real catalogue.
+    for (const t of statuses) expect(t.meta.name).toMatch(/^Preview sample/);
+    expect((await backend.listTweaks()).map((t) => t.id)).toEqual(statuses.map((t) => t.meta.id));
     await expect(backend.listSnapshots()).resolves.toEqual([]);
     await expect(backend.getSnapshotChanges(1)).resolves.toEqual([]);
   });

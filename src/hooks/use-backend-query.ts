@@ -10,6 +10,8 @@ interface QueryState<T> {
 
 // Results survive page switches so navigating doesn't flash loading states.
 const cache = new Map<string, unknown>();
+// Mounted queries per key, so a change in one place (an apply) refreshes every view of it.
+const listeners = new Map<string, Set<() => void>>();
 
 /**
  * Minimal async query hook for backend calls. `key` identifies the result in the
@@ -38,20 +40,32 @@ export function useBackendQuery<T>(key: string, fetcher: () => Promise<T>) {
     );
   }, [key]);
 
-  useEffect(() => {
-    mounted.current = true;
-    if (!cache.has(key)) load();
-    return () => {
-      mounted.current = false;
-    };
-  }, [key, load]);
-
   const refetch = useCallback(() => {
     setState((s) => ({ ...s, loading: true, error: undefined }));
     load();
   }, [load]);
 
+  useEffect(() => {
+    mounted.current = true;
+    if (!cache.has(key)) load();
+    let set = listeners.get(key);
+    if (!set) listeners.set(key, (set = new Set()));
+    set.add(refetch);
+    return () => {
+      mounted.current = false;
+      set.delete(refetch);
+    };
+  }, [key, load, refetch]);
+
   return { ...state, refetch };
+}
+
+/** Drops cached results and reloads every mounted query for these keys. */
+export function invalidateQueries(keys: string[]) {
+  for (const key of keys) {
+    cache.delete(key);
+    listeners.get(key)?.forEach((reload) => reload());
+  }
 }
 
 /** Test helper. */

@@ -1,6 +1,7 @@
 # Writing an optimisation module
 
-The contract lives in `src-tauri/src/engine/mod.rs`. No tweaks ship yet (the first audited set is roadmap P1.3).
+The contract lives in `src-tauri/src/engine/mod.rs`. The catalogue is in `src-tauri/src/engine/tweaks/`; the
+first audited set (backlog P0-6) is listed at the end of this document.
 This document is the gate each tweak must pass.
 
 ## The contract: tweaks are declarative
@@ -69,5 +70,33 @@ src-tauri/src/engine/
   mod.rs                    contract, registry, metadata gate
   tweaks/
     mod.rs                  register_all(&mut TweakRegistry)
-    gaming/game_mode.rs     one tweak per file
+    <category>/<tweak>.rs   one tweak per file, `pub const TWEAK: SettingsTweak`
 ```
+
+## Hive and permission pitfalls
+
+- `HKCU\Software\Policies` is writable only by Administrators and SYSTEM, even though it is in the user's hive. A
+  tweak targeting it would be registered as `User` (the permission follows the hive) and then fail with
+  `elevation_required`; elevating would write the elevated account's hive, not necessarily the signed-in user's.
+  `engine::tweaks::tests` refuses such targets. Use the HKLM policy, or the documented non-policy value.
+- Machine policies (`HKLM\SOFTWARE\Policies\…`) make Settings or the affected app say "managed by your organization".
+  Say so in `details`.
+- Policy CSP pages list the editions a policy applies to. A policy not documented for Home is not shipped until
+  `TweakContext` knows the edition (e.g. `AllowGameDVR`, Pro and above).
+
+## Shipped tweaks
+
+| ID | Target | Value | Permission | Reference |
+|---|---|---|---|---|
+| `performance.edge-startup-boost-off` | `HKLM\SOFTWARE\Policies\Microsoft\Edge\StartupBoostEnabled` | `0` | Administrator | [StartupBoostEnabled](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/startupboostenabled) |
+| `performance.edge-background-mode-off` | `HKLM\SOFTWARE\Policies\Microsoft\Edge\BackgroundModeEnabled` | `0` | Administrator | [BackgroundModeEnabled](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/backgroundmodeenabled) |
+| `privacy.app-launch-tracking-off` | `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Start_TrackProgs` | `0` | User | [Manage connections, § 18.1](https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services#181-general) |
+| `privacy.language-list-opt-out` | `HKCU\Control Panel\International\User Profile\HttpAcceptLanguageOptOut` | `1` | User | same page, § 18.1 |
+
+All are Low risk and not `recommended`: no measured benefit has been shown on a user's PC yet. Considered and not
+shipped: Game DVR policy (`AllowGameDVR`, not documented for Home), Game Mode and Game Bar values (no Microsoft
+documentation of the registry values), visual-effects values (undocumented).
+
+The policy denylist also protects the Edge policies that must not be weakened (`SmartScreenEnabled`,
+`SmartScreenPuaEnabled`, `PreventSmartScreenPromptOverride*`, `SmartScreenForTrustedDownloadsEnabled`,
+`TyposquattingCheckerEnabled`, `SitePerProcess`), because the first tweaks share that key.

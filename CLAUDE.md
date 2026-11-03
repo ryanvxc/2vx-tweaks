@@ -42,7 +42,8 @@ src-tauri/src/
   system/                    read-only system info (os, hardware, metrics sampler, privilege)
   engine/                    declarative tweaks, policy, journal, plan/apply/revert, elevation broker
   logging.rs, error.rs
-docs/                        architecture, modules, Windows APIs, security, testing, release
+docs/                        status, backlog, roadmap, architecture, modules, Windows APIs, security, testing,
+                             release; research/ holds the EXM competitor analysis
 ```
 
 ## Conventions
@@ -70,14 +71,19 @@ Full rationale in `docs/security.md`. In short:
   informed confirmation (`ConfirmDialog` with `risk="high"`).
 - Request elevation only for operations that need it. Never claim FPS gains without measurement.
 
-## Status (end of Phase 2a / P0)
+## Status
 
-Implemented: shell, navigation, design system, logging (file + frontend forwarding), system snapshot, live metrics
-sampler, dashboard. Engine (P0): typed registry primitive + policy denylist, metadata gate, SQLite write-ahead journal,
-plan → apply → verify → rollback → revert, elevation broker, policy guard tests (`src-tauri/tests/policy.rs`).
-Engine commands are wrapped in `services/backend.ts` but no UI uses them yet, and no tweaks are registered (P1.3).
-Sample: dashboard Recommendations. Planned: see the Phase table in `docs/architecture.md` and
-`docs/research/2VX_IMPROVEMENT_ROADMAP.md`.
+Stages 1 (foundation) and 2 (safety engine) are done; **stage 3 (first real optimisations) is in progress**. The single source
+of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_BACKLOG.md` (P0–P3) and stages in
+`docs/DEVELOPMENT_ROADMAP.md`. Use those stage and task IDs, not the older "Phase N" labels.
+
+In short: the shell, dashboard, sampler and the whole engine are implemented and tested. Four documented tweaks
+ship (`engine/tweaks/`: two HKLM Edge policies, two HKCU privacy values). System Tweaks lists them with detected state;
+the change inspector plans, applies and reports every outcome; History lists batches and undoes them. Still open in
+stage 3: the broker's real UAC path on a VM (P0-7, needs a person). P0-8 decisions are in `docs/security.md`: Run-value
+removal for startup, no in-app updater, a future fixed-argv exception for SFC/DISM only.
+Monitoring, Startup, Cleaner and Tools are placeholders; Gaming has no tweaks yet. Dashboard Recommendations is sample
+data. `HKCU\Software\Policies` is admin-only on Windows: never target it from a `User` tweak.
 Known limitations: GPU usage is sysinfo's sum over all engines (clamped 100); used VRAM not available system-wide yet.
-The broker's real UAC launch has not been exercised end to end (its pipe protocol is tested).
-Build: cargo can run out of memory at default parallelism here; set `CARGO_BUILD_JOBS=2`.
+Build: cargo can run out of memory at default parallelism here; set `CARGO_BUILD_JOBS=2` (or 1).
+Research on EXM Tweaks (a competitor, studied statically) is in `docs/research/`; never copy its code or assets.

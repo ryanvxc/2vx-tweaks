@@ -1,4 +1,4 @@
-import type { EngineStatus } from "@/types/engine";
+import type { EngineStatus, TweakMeta, TweakStatus } from "@/types/engine";
 import type { AppInfo, BackendError, MetricsSample, SystemSnapshot } from "@/types/system";
 
 /**
@@ -105,9 +105,74 @@ function metricsSince(sinceMs?: number): MetricsSample[] {
   return out;
 }
 
+// Two invented tweaks so the tweak list can be laid out in a browser. They are not the
+// real catalogue (that lives in Rust) and their names say so.
+const SAMPLE_TWEAKS: TweakMeta[] = [
+  {
+    id: "performance.preview-sample-admin",
+    name: "Preview sample: machine-wide setting",
+    description: "Stands in for a real HKLM tweak in browser preview. Applying is disabled here.",
+    details: "Preview only. The desktop app lists the real, documented tweaks from its engine.",
+    category: "performance",
+    risk: "low",
+    permission: "administrator",
+    supportedBuilds: { minBuild: 10240, maxBuild: null },
+    device: "any",
+    recommended: false,
+    restart: "none",
+    references: ["https://learn.microsoft.com/"],
+  },
+  {
+    id: "privacy.preview-sample-user",
+    name: "Preview sample: per-user setting",
+    description: "Stands in for a real HKCU tweak in browser preview. Applying is disabled here.",
+    details: "Preview only. The desktop app lists the real, documented tweaks from its engine.",
+    category: "privacy",
+    risk: "low",
+    permission: "user",
+    supportedBuilds: { minBuild: 10240, maxBuild: null },
+    device: "any",
+    recommended: false,
+    restart: "signOut",
+    references: ["https://learn.microsoft.com/"],
+  },
+];
+
+function tweaks(): TweakMeta[] {
+  return SAMPLE_TWEAKS;
+}
+
+function tweakStatuses(): TweakStatus[] {
+  return SAMPLE_TWEAKS.map((meta, i) => {
+    const admin = meta.permission === "administrator";
+    const target = {
+      hive: admin ? ("localMachine" as const) : ("currentUser" as const),
+      key: String.raw`Software\2VX-Preview`,
+      value: `Sample${i}`,
+    };
+    return {
+      meta,
+      compatibility: admin ? "needsElevation" : "compatible",
+      state: i === 0 ? "notApplied" : "applied",
+      settings: [
+        {
+          target,
+          targetLabel: `${admin ? "HKLM" : "HKCU"}\\${target.key}\\${target.value}`,
+          current: i === 0 ? null : { type: "dword", data: 0 },
+          currentLabel: i === 0 ? "(not set)" : "0 (REG_DWORD)",
+          desired: { type: "dword", data: 0 },
+          desiredLabel: "0 (REG_DWORD)",
+          matches: i !== 0,
+          error: null,
+        },
+      ],
+    };
+  });
+}
+
 function engineStatus(): EngineStatus {
   return {
-    tweakCount: 0,
+    tweakCount: SAMPLE_TWEAKS.length,
     journalAvailable: false,
     journalError: "No change journal in browser preview",
     interruptedSnapshots: 0,
@@ -120,4 +185,12 @@ function refuse(): Promise<never> {
   return Promise.reject(err);
 }
 
-export const preview = { appInfo, snapshot, metricsSince, engineStatus, refuse };
+export const preview = {
+  appInfo,
+  snapshot,
+  metricsSince,
+  tweaks,
+  tweakStatuses,
+  engineStatus,
+  refuse,
+};

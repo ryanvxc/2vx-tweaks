@@ -82,6 +82,22 @@ Changing any of these requires updating this document and the guard test in the 
 7. Never apply anything silently. Presets show the full list of changes before applying.
 8. No performance claims without measurement on the user's machine.
 
+## Decisions (backlog P0-8, decided by the owner on 2026-11-03)
+
+**(a) Disabling startup entries** (P1-5): remove the `Run`/`RunOnce` value and journal it, so Undo restores the exact
+value. Task Manager's `StartupApproved` values are not used (undocumented, `REG_BINARY`). Consequence to tell users:
+a disabled entry disappears from Task Manager's Startup tab rather than showing "Disabled". Startup-folder shortcuts
+need a file primitive with the same journal guarantees before they can be disabled. No guard change.
+
+**(b) Updates** (P1-11): no in-app updater. The "No network clients" commitment and its guard stay as they are;
+`tauri-plugin-updater` remains forbidden. Releases are downloaded by hand (signed installer).
+
+**(c) Windows repair tools** (P2-8): a fixed-argv exception will be allowed. When P2-8 is built, exactly one module
+may launch `sfc.exe` and `dism.exe` from `%SystemRoot%\System32`, with argument lists that are compile-time
+constants (no user input, no paths), elevated through the broker, with output shown to the user. The guard test in
+`tests/policy.rs` and the "No unrestricted command execution" row above change in that same change to allow exactly
+those constants in that one file. Until then, the guard forbids all process launches except the broker relaunch.
+
 ## Logging and privacy
 
 - Logs and the change journal stay local (`%LOCALAPPDATA%\com.twovx.tweaks\`, per-user ACLs). No telemetry.

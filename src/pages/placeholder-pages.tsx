@@ -1,18 +1,19 @@
 import { PageHeader } from "@/components/layout/page-header";
+import { EngineBanner } from "@/components/common/engine-banner";
 import { PlannedFeatures } from "@/components/common/planned-features";
-import { TweakRegistryCard } from "./tweaks/tweak-registry-card";
+import { TweakList } from "./tweaks/tweak-list";
 
-// Sections whose functionality is scheduled for later phases. They render real
-// engine state where it exists and list planned features explicitly.
+// Sections that are not fully built yet. They show real engine state where it exists
+// and list what is still planned explicitly, without promising dates.
 
 export function GamingPage() {
   return (
     <>
       <PageHeader title="Gaming" description="Presets, game profiles and latency settings" />
       <div className="flex flex-col gap-4">
-        <TweakRegistryCard categories={["gaming"]} />
+        <EngineBanner />
+        <TweakList categories={["gaming"]} />
         <PlannedFeatures
-          phase="Phase 3"
           features={[
             "Gaming presets built from individually reviewed tweaks",
             "Windows Game Mode, Game Bar and capture settings",
@@ -35,18 +36,16 @@ export function SystemTweaksPage() {
         description="Windows, power, network and privacy configuration"
       />
       <div className="flex flex-col gap-4">
-        <TweakRegistryCard
+        <EngineBanner />
+        <TweakList
           categories={["performance", "power", "network", "privacy", "services", "windows"]}
         />
         <PlannedFeatures
-          phase="Phase 2"
           features={[
-            "Power plan management using documented powercfg schemes",
+            "Power plans through the Windows power API",
             "Visual effects and performance options",
-            "Privacy and telemetry settings that Microsoft documents",
+            "More privacy settings that Microsoft documents",
             "Service start-type review with explanations (never bulk-disable)",
-            "Dry-run preview of every registry and setting change",
-            "Automatic backup and one-click revert for each tweak",
           ]}
         />
       </div>
@@ -59,14 +58,13 @@ export function MonitoringPage() {
     <>
       <PageHeader title="Monitoring" description="Live and historical utilisation" />
       <PlannedFeatures
-        phase="Phase 2"
         features={[
           "Per-core CPU usage and clock speeds",
           "GPU engine usage and VRAM over time",
           "Temperatures where sensors are exposed to Windows",
           "Disk read/write throughput and queue length",
           "Per-adapter network throughput",
-          "Longer history persisted to the local database",
+          "Longer history kept on this PC",
         ]}
       />
     </>
@@ -78,7 +76,6 @@ export function CleanerPage() {
     <>
       <PageHeader title="PC Cleaner" description="Reclaim storage from safe locations" />
       <PlannedFeatures
-        phase="Phase 4"
         features={[
           "Scan before clean: nothing is removed without review",
           "User and system temp folders (files not in use)",
@@ -97,10 +94,9 @@ export function StartupPage() {
     <>
       <PageHeader title="Startup" description="Control what runs when Windows starts" />
       <PlannedFeatures
-        phase="Phase 4"
         features={[
           "Startup entries from Run keys, Startup folders and scheduled tasks",
-          "Enable or disable using the same mechanism Task Manager uses",
+          "Disable and re-enable entries with an undo, using a documented method",
           "Publisher, path and signature details for each entry",
           "Startup impact where Windows reports it",
         ]}
@@ -114,7 +110,6 @@ export function ToolsPage() {
     <>
       <PageHeader title="Tools" description="Diagnostics, DNS and Windows utilities" />
       <PlannedFeatures
-        phase="Phase 5"
         features={[
           "Ping, traceroute and latency testing",
           "DNS resolver benchmark and flush",

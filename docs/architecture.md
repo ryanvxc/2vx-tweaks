@@ -37,11 +37,11 @@ The nine areas from the project brief map like this:
 | App state and settings | `src/stores` (UI prefs). Durable engine state in the SQLite journal |
 | System information | `src-tauri/src/system` |
 | Optimisation engine | `src-tauri/src/engine/` (`service.rs` is the only path that changes the system) |
-| Optimisation modules | `src-tauri/src/engine/tweaks/<category>/<tweak>.rs` (first tweaks: P1.3) |
+| Optimisation modules | `src-tauri/src/engine/tweaks/<category>/<tweak>.rs` (first tweaks: backlog P0-6) |
 | Windows API integrations | `system/*`, `engine/store.rs`, `engine/broker.rs`. See `windows-integration.md` |
 | Backup and restore | `engine/journal.rs`: `%LOCALAPPDATA%\com.twovx.tweaks\journal.db` |
 | Logging and errors | `logging.rs`, `error.rs`, `src/services/logger.ts` |
-| Diagnostics and benchmarking | Phase 5 |
+| Diagnostics and benchmarking | Not started (backlog P2-3, P2-9) |
 
 ## Data flow
 
@@ -87,13 +87,7 @@ UI: confirm  ──apply_plan(planId)──► re-read & compare ─► [UAC onc
 UI: revert_snapshot(id) ──► per change: current == after ? restore before : (== before ? skip : conflict)
 ```
 
-## Phases
+## Stages
 
-| Phase | Scope | Status |
-|---|---|---|
-| 1 | Shell, design system, navigation, dashboard, system info, live metrics, logging, engine contracts | **Done** |
-| 2a (P0) | SQLite change journal, typed registry primitive, policy denylist, plan → apply → verify → rollback → revert, elevation broker, metadata gate, policy CI guards | **Done** (no UI yet) |
-| 2b (P1) | Theme refresh, change inspector UI, first audited tweaks, power plans, restore points, Monitoring page, per-engine GPU counters | Next |
-| 3 | Gaming: Game Mode, HAGS, Game Bar/DVR, game detection, per-game profiles, frame-time measurement | |
-| 4 | Startup manager, PC Cleaner (allowlisted locations, scan-then-clean) | |
-| 5 | Tools: network diagnostics, DNS, reports; installer, code signing, updater | |
+Stages, their scope and status live in [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md); the current state of each
+area is in [PROJECT_STATUS.md](PROJECT_STATUS.md).
