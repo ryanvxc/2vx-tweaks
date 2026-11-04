@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GAMING_PROFILES } from "./profiles";
+import { DEFAULT_GAME_MODE_TWEAKS, GAME_MODE_TWEAKS, GAMING_PROFILES } from "./profiles";
 import { TWEAK_ICON, TWEAK_SECTIONS, tweakHref, tweakPlacement } from "./tweak-presentation";
 
 // The Rust catalogue is the source of truth; this catches a tweak added there and not here.
@@ -24,21 +24,25 @@ describe("tweak presentation", () => {
     expect(new Set(Object.values(TWEAK_ICON)).size).toBe(Object.keys(TWEAK_ICON).length);
   });
 
-  it("places every tweak once, and gaming tweaks only on Gaming", () => {
-    const pageTweaks = CATALOGUE.filter((id) => !id.startsWith("gaming."));
-    expect(pageTweaks.filter((id) => !PLACED.includes(id))).toEqual([]);
+  it("places every tweak once", () => {
+    expect(CATALOGUE.filter((id) => !PLACED.includes(id))).toEqual([]);
     expect(new Set(PLACED).size).toBe(PLACED.length);
     expect(PLACED.filter((id) => !CATALOGUE.includes(id))).toEqual([]);
   });
 
   it("builds profiles only from real tweaks", () => {
-    const ids = GAMING_PROFILES.flatMap((p) => p.tweakIds);
+    const ids = [...GAMING_PROFILES.flatMap((p) => p.tweakIds), ...GAME_MODE_TWEAKS];
     expect(ids.filter((id) => !CATALOGUE.includes(id))).toEqual([]);
+  });
+
+  it("offers Game Mode's defaults, and every profile, in Configure", () => {
+    const listed = [...DEFAULT_GAME_MODE_TWEAKS, ...GAMING_PROFILES.flatMap((p) => p.tweakIds)];
+    expect(listed.filter((id) => !GAME_MODE_TWEAKS.includes(id))).toEqual([]);
   });
 
   it("links a tweak to its primary location", () => {
     expect(tweakHref({ id: "gaming.game-dvr-off", category: "gaming" })).toBe(
-      "/gaming?tweak=gaming.game-dvr-off",
+      "/tweaks?tab=windows&tweak=gaming.game-dvr-off",
     );
     expect(tweakHref({ id: "privacy.edge-shopping-off", category: "privacy" })).toBe(
       "/tweaks?tab=windows&tweak=privacy.edge-shopping-off",

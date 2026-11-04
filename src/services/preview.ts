@@ -7,6 +7,7 @@ import type {
   MetricsSample,
   StartupInventory,
   SystemSnapshot,
+  RunningProgram,
 } from "@/types/system";
 
 /**
@@ -27,6 +28,11 @@ function appInfo(): AppInfo {
     debugBuild: true,
   };
 }
+
+const runningPrograms = (): RunningProgram[] => [
+  { fileName: "explorer.exe", runningSeconds: 11_520, libraryGame: null },
+  { fileName: "steam.exe", runningSeconds: 3_240, libraryGame: null },
+];
 
 let previewAccount: Account | null = { email: "preview@example.com" };
 
@@ -369,6 +375,7 @@ function refuse(): Promise<never> {
 
 export const preview = {
   appInfo,
+  runningPrograms,
   account,
   setAccount,
   clearAccount,

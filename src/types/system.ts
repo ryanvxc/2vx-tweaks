@@ -76,6 +76,14 @@ export interface MetricsSample {
   networkTxBytesPerSec: number;
 }
 
+// Mirrors src-tauri/src/system/processes.rs.
+export interface RunningProgram {
+  fileName: string;
+  runningSeconds: number;
+  /** The game's folder, when it runs from a game library. */
+  libraryGame: string | null;
+}
+
 // Mirrors src-tauri/src/account.rs.
 export interface Account {
   email: string;

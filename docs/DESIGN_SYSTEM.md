@@ -107,7 +107,7 @@ skips. Moving the cursor holds it for up to 7 s. Settings › Appearance turns i
 
 | Component | Purpose |
 | --- | --- |
-| `OptimisationCard`, `CardGrid`, `NewBadge` | The fixed-height card used by Tweaks and Gaming: icon, title, description, then indicators and one control |
+| `OptimisationCard`, `CardGrid`, `NewBadge` | The fixed-height card used by Tweaks: icon, title, description, then indicators and one control |
 | `Indicator`, `ImpactMeter` | Bare 24 px icons with tooltips (warning, restart, blocked, partial) and the 3-bar impact estimate |
 | `FilterBar` | Search box, filter and sort menus on one row |
 | `PageTabs` | Accessible tab list (`role="tablist"`) used by Monitoring, Tweaks and Startup, with an `end` slot for that page's filters; `useTabParam` keeps the tab in the URL |
@@ -134,5 +134,5 @@ status lines.
 - Switches carry an action label ("Turn on X", "Undo X"); indicators have `aria-label`s matching their tooltips.
 - Live regions (`aria-live="polite"`) announce updater and selection changes.
 - Text contrast: foreground ≥ 12:1, muted ≥ 4.5:1 on cards.
-- The Monitoring tiles and the Gaming profile cards are tabs and radios with a selected state, so the keyboard
+- The Monitoring tiles are tabs with a selected state, so the keyboard
   and screen readers see them as choices.

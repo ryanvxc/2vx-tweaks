@@ -112,13 +112,14 @@ export function tweakIcon(meta: Pick<TweakMeta, "id" | "category">): LucideIcon 
   return TWEAK_ICON[meta.id] ?? CATEGORY_ICON[meta.category] ?? Globe;
 }
 
-/** Sections per tab, in display order. Gaming tweaks live on the Gaming page instead. */
+/** Sections per tab, in display order. */
 export const TWEAK_SECTIONS: Record<TweakTab, { title: string; ids: string[] }[]> = {
   windows: [
     {
       title: "Responsiveness",
       ids: ["performance.foreground-boost", "windows.window-animations-off"],
     },
+    { title: "Gaming", ids: ["gaming.mmcss-games-priority", "gaming.game-dvr-off"] },
     { title: "Storage", ids: ["performance.last-access-off", "windows.storage-sense-off"] },
     {
       title: "Microsoft Edge",
@@ -200,10 +201,7 @@ export function tweakPlacement(meta: Pick<TweakMeta, "id" | "category">) {
 
 /** A tweak's primary location, with its details open. */
 export function tweakHref(meta: Pick<TweakMeta, "id" | "category">) {
-  const id = encodeURIComponent(meta.id);
-  return meta.category === "gaming"
-    ? `/gaming?tweak=${id}`
-    : `/tweaks?tab=${tweakPlacement(meta).tab}&tweak=${id}`;
+  return `/tweaks?tab=${tweakPlacement(meta).tab}&tweak=${encodeURIComponent(meta.id)}`;
 }
 
 /** "New" for tweaks first shipped in the running app's `major.minor`. */

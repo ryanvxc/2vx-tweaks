@@ -10,7 +10,15 @@ export function TweaksPage() {
         <EngineBanner />
         <TweakGrid
           browse
-          categories={["performance", "privacy", "windows", "power", "network", "services"]}
+          categories={[
+            "gaming",
+            "performance",
+            "privacy",
+            "windows",
+            "power",
+            "network",
+            "services",
+          ]}
         />
       </div>
     </>

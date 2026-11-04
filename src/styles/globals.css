@@ -266,6 +266,11 @@
     background-position: -200% 0;
   }
 }
+@keyframes orb-breathe {
+  50% {
+    opacity: 1;
+  }
+}
 @keyframes ping-soft {
   75%,
   100% {
@@ -291,6 +296,32 @@
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
+}
+
+/* Game Mode's ring. A gradient rather than a shadow, so the glow can fade with the ring's state. */
+.game-orb-glow {
+  position: absolute;
+  inset: -24%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--success) 30%, transparent) 66%,
+    transparent
+  );
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 220ms;
+}
+.game-orb-glow[data-orb="ready"] {
+  animation: orb-breathe 2.6s ease-in-out infinite;
+}
+.game-orb-glow[data-orb="on"] {
+  opacity: 1;
+}
+.game-orb-glow[data-orb="blocked"],
+.game-orb-glow[data-orb="busy"] {
+  opacity: 0;
 }
 
 /* Sonner stops its toasts for the Windows setting with !important, so its transition comes back here. */

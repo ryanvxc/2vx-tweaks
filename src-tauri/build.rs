@@ -11,6 +11,7 @@ fn main() {
             "clear_account",
             "get_system_snapshot",
             "get_metrics",
+            "get_running_programs",
             "list_startup_items",
             "scan_cleanup_locations",
             "list_tweaks",

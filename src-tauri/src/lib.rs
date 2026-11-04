@@ -72,6 +72,7 @@ pub fn run() {
             commands::account::clear_account,
             commands::system::get_system_snapshot,
             commands::system::get_metrics,
+            commands::system::get_running_programs,
             commands::system::list_startup_items,
             commands::system::scan_cleanup_locations,
             commands::engine::list_tweaks,

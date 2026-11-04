@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import type { SavedGame } from "@/lib/game-mode";
 
 interface UiState {
   sidebarCollapsed: boolean;
@@ -15,6 +16,12 @@ interface UiState {
   showQuickstart: boolean;
   /** Show the loading screen at launch. */
   showSplash: boolean;
+  /** Games the user added. Only ever compared with running programs. */
+  games: SavedGame[];
+  /** What Game Mode turns on. `null` until the user saves their own list. */
+  gameModeTweaks: string[] | null;
+  /** The batch Game Mode applied, so turning it off undoes that and nothing else. */
+  gameModeSnapshot: number | null;
   toggleSidebar: () => void;
   set: (patch: Partial<Omit<UiState, "toggleSidebar" | "set">>) => void;
 }
@@ -31,6 +38,9 @@ export const useUiStore = create<UiState>()(
       reduceMotion: false,
       showQuickstart: true,
       showSplash: true,
+      games: [],
+      gameModeTweaks: null,
+      gameModeSnapshot: null,
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       set: (patch) => set(patch),
     }),

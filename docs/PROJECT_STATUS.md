@@ -27,8 +27,8 @@ checked at 1280×720, 1024×600 and maximised.
 ## Summary
 
 Version 0.2: the app was restructured and restyled (`INFORMATION_ARCHITECTURE.md`, `REDESIGN_ROADMAP.md`,
-`DESIGN_SYSTEM.md`). 35 documented tweaks ship with per-tweak undo, grouped under Tweaks and Gaming, with gaming
-profiles built from those same tweaks. Monitoring, Hardware, Startup (read-only), PC Cleaner (read-only scan), the
+`DESIGN_SYSTEM.md`). 35 documented tweaks ship with per-tweak undo, grouped under Tweaks, with Game Mode and its
+presets built from those same tweaks. Monitoring, Hardware, Startup (read-only), PC Cleaner (read-only scan), the
 Restore Centre and Tools are real pages,
 and a signed Tauri updater with an Update Centre is built (`UPDATE_SYSTEM.md`). The release pipeline is written but
 has never run: there is no GitHub remote and the signing secrets aren't configured (`UPDATE_SETUP_GUIDE.md`). The
@@ -47,7 +47,7 @@ broker's real UAC path (P0-7) and a real update install still need a VM.
 | Dashboard: Recommendations | **Implemented** (derived) | Replaced by recommended tweaks derived from detected state; no sample data left on Home. | Keep | – |
 | Dashboard: Recently applied                                                                                       | **Implemented** (last 4 journal batches)                             | –                                                                                                                                                                                   | Keep                                                        | –           |
 | Monitoring page | **Implemented** (Hardware page, 0.2) | `/monitoring` redirects to `/hardware`. Per-thread CPU, GPU, memory, storage, network tabs from the existing sampler. No disk throughput or persisted history. | Extend sampler | P1-3 |
-| Game Mode page                                                                                                    | **Implemented** (2 tweaks: MMCSS Games priority, Game DVR policy)    | Few gaming values are documented; the rest of the pack review is in `optimisation-modules.md`                                                                                       | More gaming tweaks once documented                          | P2          |
+| Game Mode page | **Implemented** (detection, ring, Configure, Add a Game) | Turning on reviews and applies the chosen tweaks; turning off reverts that batch. Stays on until turned off: session-scoped automatic undo is P2-2 | Automatic undo on game exit | P2-2 |
 | Tweaks page | **Implemented** (topic tabs, 33 tweaks, card grid, filters, switch-off undo, break warnings) | Desktop flow not yet run on a VM | VM checklist | P0-7 |
 | Startup page | **Partial** (read-only inventory) | Lists Run/RunOnce values and Startup-folder shortcuts with Task Manager state. Disabling (journaled Run-value removal, P0-8a) not built. | Build disable/undo | P1-5 |
 | PC Cleaner page | **Partial** (read-only scan) | Measures allowlisted locations and the Recycle Bin. Cleaning not built. | Build journaled deletion | P1-6 |

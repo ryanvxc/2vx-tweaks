@@ -36,14 +36,15 @@ had four tweaks on its own and Apps only had Edge, so the two tabs became one.
 
 | Section | Tweak |
 | --- | --- |
-| Gaming settings | `gaming.mmcss-games-priority`, `gaming.game-dvr-off` |
+| Gaming | `gaming.mmcss-games-priority`, `gaming.game-dvr-off` |
 
 Xbox services stay under Services: they're switches that remove a feature, and Gaming shouldn't suggest turning off
 something that breaks Game Pass.
 
-## Gaming profiles
+## Game Mode presets
 
-Profiles reference tweaks; each tweak's card stays in its primary location.
+Presets reference tweaks; each tweak's card stays in its primary location, on Tweaks. Configure lists all seven tweaks
+below. Those that need a restart are off by default, because they can't help a game that's already running.
 
 | Profile | Adds | Includes |
 | --- | --- | --- |

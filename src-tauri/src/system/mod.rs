@@ -7,4 +7,5 @@ pub mod metrics;
 pub mod os;
 pub mod power;
 pub mod privilege;
+pub mod processes;
 pub mod startup;

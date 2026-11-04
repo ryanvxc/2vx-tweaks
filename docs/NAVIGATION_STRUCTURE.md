@@ -11,7 +11,7 @@ General
   Resources        /tools
 
 Tools
-  Game Mode        /gaming              (brand colour)
+  Game Mode        /gaming              ?view=configure (brand colour)
 
 Optimisations
   Tweaks           /tweaks              ?tab=windows | privacy | services

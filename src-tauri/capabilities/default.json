@@ -19,6 +19,7 @@
     "allow-clear-account",
     "allow-get-system-snapshot",
     "allow-get-metrics",
+    "allow-get-running-programs",
     "allow-list-startup-items",
     "allow-scan-cleanup-locations",
     "allow-list-tweaks",

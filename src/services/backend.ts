@@ -17,6 +17,7 @@ import type {
   StartupInventory,
   SystemSnapshot,
   UpdateSupport,
+  RunningProgram,
 } from "@/types/system";
 import { preview } from "./preview";
 
@@ -47,6 +48,10 @@ export function toBackendError(err: unknown): BackendError {
 export const backend = {
   getAppInfo: (): Promise<AppInfo> =>
     isDesktop ? call("get_app_info") : Promise.resolve(preview.appInfo()),
+
+  /** Read-only, for Game Mode. Takes no process names: the game list stays in the UI. */
+  getRunningPrograms: (): Promise<RunningProgram[]> =>
+    isDesktop ? call("get_running_programs") : Promise.resolve(preview.runningPrograms()),
 
   /** The local account, if there is one. It stays on this PC. */
   getAccount: (): Promise<Account | null> =>

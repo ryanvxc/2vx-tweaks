@@ -109,6 +109,10 @@ those constants in that one file. Until then, the guard forbids all process laun
 - Logs and the change journal stay local (`%LOCALAPPDATA%\com.twovx.tweaks\`, per-user ACLs). No telemetry.
 - The journal stores registry targets and values that 2VX changed, plus an audit log of apply/revert events. It
   stores no personal data or hardware identifiers.
+- Game Mode reads the names of running programs through `get_running_programs`, only while its page is open. The
+  command takes no arguments: the game list stays in the UI and is compared there, so no process name reaches a command.
+  Paths stay in the backend, except a game's folder name. The list isn't stored or logged, and nothing is launched or
+  stopped.
 - The local account is one email address in `account.json` in the same folder, used only to label the account card.
   There's no server, password or sign-in, so it proves nothing and unlocks nothing. It's never transmitted or logged,
   and Log out deletes the file.

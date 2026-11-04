@@ -45,6 +45,7 @@ export function ChangeInspector({
   tweakIds,
   names,
   warnings = {},
+  onApplied,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -53,6 +54,8 @@ export function ChangeInspector({
   names: Record<string, string>;
   /** Tweak ID → the features it can break. */
   warnings?: Record<string, string | null>;
+  /** After a clean apply, with the batch it made. */
+  onApplied?: (snapshotId: number) => void;
 }) {
   const [step, setStep] = useState<Step>({ kind: "planning" });
   const [acknowledged, setAcknowledged] = useState(false);
@@ -98,6 +101,7 @@ export function ChangeInspector({
         if (id !== run.current) return;
         // The switch already shows a clean apply. Anything else has to be read, so it stays open.
         if (outcome.status === "completed" && outcome.snapshotId != null) {
+          onApplied?.(outcome.snapshotId);
           const restart = restartNote(outcome.restart);
           if (restart) toast.info(restart);
           close();

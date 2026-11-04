@@ -5,6 +5,14 @@ notes come from commit subjects. This file records the larger milestones.
 
 ## 0.2.0 (unreleased)
 
+### Game Mode
+- Game Mode is one screen: a ring, the detected game, how long it has run and live CPU and GPU use. The ring turns on
+  once a game is running.
+- Games in Steam, Epic, GOG, Xbox, Ubisoft, EA and Riot folders are found by themselves. Add a Game covers the rest.
+- Turning it on opens the usual review. Turning it off undoes that batch and nothing else, and it stays on until you do.
+- Configure chooses what it turns on, with the three profiles as presets. Only changes that need no restart are on by
+  default. Game DVR and MMCSS moved to Tweaks, with every other switch.
+
 ### Sidebar and account
 - The sidebar is rebuilt in Poppins, with larger rows and three groups: General, Tools and Optimisations. Gaming is now
   Game Mode, in the brand colour, and Tools is now Resources.

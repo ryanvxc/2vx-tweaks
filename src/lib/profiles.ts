@@ -22,6 +22,20 @@ const QUIET = [
 ];
 const EVERYTHING = [...QUIET, "gaming.game-dvr-off", "windows.window-animations-off"];
 
+/** Everything Game Mode can turn on, in Configure's order. */
+export const GAME_MODE_TWEAKS = EVERYTHING;
+
+/**
+ * What Game Mode turns on until the user chooses. Only tweaks that need no restart: one that
+ * does can't help a game that's already running.
+ */
+export const DEFAULT_GAME_MODE_TWEAKS = [
+  "performance.foreground-boost",
+  "performance.edge-background-mode-off",
+  "performance.edge-startup-boost-off",
+  "privacy.background-apps-off",
+];
+
 export const GAMING_PROFILES: Profile[] = [
   {
     id: "responsive",

@@ -4,6 +4,7 @@ use crate::error::{AppError, AppResult};
 use crate::system::cleanup::{self, CleanupLocation};
 use crate::system::hardware::{self, SystemSnapshot};
 use crate::system::metrics::{MetricsSample, MetricsSampler};
+use crate::system::processes::{self, RunningProgram};
 use crate::system::startup::{self, StartupInventory};
 
 #[tauri::command]
@@ -11,6 +12,14 @@ pub async fn get_system_snapshot() -> AppResult<SystemSnapshot> {
     tauri::async_runtime::spawn_blocking(hardware::collect_snapshot)
         .await
         .map_err(|e| AppError::Internal(format!("snapshot task failed: {e}")))?
+}
+
+/// Running programs, for Game Mode's detected game. Read-only, with no arguments.
+#[tauri::command]
+pub async fn get_running_programs() -> AppResult<Vec<RunningProgram>> {
+    tauri::async_runtime::spawn_blocking(processes::running_programs)
+        .await
+        .map_err(|e| AppError::Internal(format!("program list task failed: {e}")))
 }
 
 /// Returns samples newer than `since_ms` (Unix ms), or the full history when omitted.
