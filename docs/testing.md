@@ -46,7 +46,7 @@ batches go through the broker. Use a build from `npm run app:build`, or `npm run
 |---|---|---|
 | 1 | Open Tweaks | Four tweaks with a state read from the VM; the Edge tweaks say "Asks for administrator permission". No banner. Title bar shows "Standard user". |
 | 2 | Select "Don't share your language list", Review | The dialog lists `HKCU\Control Panel\International\User Profile\HttpAcceptLanguageOptOut`, current → `1 (REG_DWORD)`, and no UAC notice. |
-| 3 | Apply | **No UAC prompt.** "Applied and verified"; the row shows Applied; regedit shows `1`; the Restore Centre lists the batch. |
+| 3 | Apply | **No UAC prompt.** The review closes by itself; the switch shows Applied; regedit shows `1`; the Restore Centre lists the batch. |
 | 4 | Restore Centre → Undo → Undo | No UAC prompt; toast "Reverted"; the value is back to its earlier state (deleted if it was not set). |
 | 5 | Select both Edge tweaks, Review | UAC notice in the dialog; two HKLM rows. |
 | 6 | Apply, then **decline** UAC | "Administrator permission was not granted. Nothing was changed."; regedit unchanged. |

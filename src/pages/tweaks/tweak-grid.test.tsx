@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router";
@@ -25,6 +25,13 @@ const mock = vi.hoisted(() => ({
   listSnapshots: vi.fn(),
 }));
 
+const toast = vi.hoisted(() => ({
+  info: vi.fn(),
+  success: vi.fn(),
+  warning: vi.fn(),
+  error: vi.fn(),
+}));
+vi.mock("sonner", () => ({ toast }));
 vi.mock("@/services/backend", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/backend")>()),
   isDesktop: true,
@@ -103,7 +110,31 @@ describe("TweakGrid", () => {
     const dialog = await screen.findByRole("dialog");
     expect(mock.planTweaks).toHaveBeenCalledWith([USER_TWEAK.id]);
     await user.click(await within(dialog).findByRole("button", { name: "Apply 1 change" }));
-    expect(await within(dialog).findByText("Applied and verified")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(mock.applyPlan).toHaveBeenCalledOnce();
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
+  });
+
+  it("reminds about a restart after a clean apply", async () => {
+    mock.applyPlan.mockResolvedValue(outcome({ restart: "reboot" }));
+    const user = userEvent.setup();
+    renderGrid();
+    await user.click(await screen.findByRole("switch", { name: `Turn on ${USER_TWEAK.name}` }));
+    await user.click(screen.getByRole("button", { name: "Review 1 change" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(await within(dialog).findByRole("button", { name: "Apply 1 change" }));
+    await waitFor(() => expect(toast.info).toHaveBeenCalledWith("Restart Windows to finish."));
+  });
+
+  it("keeps the review open when the apply didn't finish cleanly", async () => {
+    mock.applyPlan.mockResolvedValue(outcome({ status: "rolledBack", error: "write failed" }));
+    const user = userEvent.setup();
+    renderGrid();
+    await user.click(await screen.findByRole("switch", { name: `Turn on ${USER_TWEAK.name}` }));
+    await user.click(screen.getByRole("button", { name: "Review 1 change" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(await within(dialog).findByRole("button", { name: "Apply 1 change" }));
+    expect(await within(dialog).findByText("Not applied: rolled back")).toBeInTheDocument();
   });
 
   it("undoes an applied tweak after confirmation", async () => {

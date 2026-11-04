@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { MessageNotice, Notice, StatusPill } from "@/components/common/notice";
 import { RiskBadge } from "@/components/common/risk-badge";
 import { LoadingRows } from "@/components/common/states";
@@ -90,7 +91,15 @@ export function ChangeInspector({
     backend.applyPlan(plan.id).then(
       (outcome) => {
         refreshEngineState();
-        if (id === run.current) setStep({ kind: "done", outcome });
+        if (id !== run.current) return;
+        // The switch already shows a clean apply. Anything else has to be read, so it stays open.
+        if (outcome.status === "completed" && outcome.snapshotId != null) {
+          const restart = restartNote(outcome.restart);
+          if (restart) toast.info(restart);
+          close();
+        } else {
+          setStep({ kind: "done", outcome });
+        }
       },
       (err: unknown) => {
         const error = toBackendError(err);

@@ -18,13 +18,15 @@ Surfaces get lighter as they come forward: `background` < `sidebar` < `card` < `
 | `popover` | `oklch(0.2 0.012 280)` | Tooltips, menus, dialogs |
 | `foreground` | `oklch(0.965 0.004 285)` | Body text |
 | `muted-foreground` | `oklch(0.65 0.014 285)` | Secondary text (≥ 4.5:1 on `card`) |
-| `brand` | `oklch(0.7 0.17 293)` | Icons, active navigation, focus ring, impact bars |
+| `brand` | `oklch(0.7 0.17 293)` | Icons, active navigation, focus ring |
 | `primary` | `oklch(0.645 0.235 358)` | Primary buttons, switches that are on, selected cards, update notice |
 | `border` | white at 7 % | Hairlines; `input` is 10 % |
 | `success` / `warning` / `destructive` / `info` | green / amber / red / blue | **State only** |
 
 Status colours mean something: success = applied/healthy, warning = needs attention or restart,
 destructive = failed or dangerous, info = neutral facts (preview, scope). Never use them for decoration.
+The impact meter also uses them: one green bar is a small effect, two amber a noticeable one, three red a
+large one. The number of bars and the tooltip carry the same meaning without colour.
 Chart series use `chart-1…5` (violet, blue, green, amber, magenta).
 
 ## Typography

@@ -5,7 +5,7 @@ Reviewed at commit `a961def` (2026-11-03); rows are updated for stage 3 and the 
 plans. Priorities point to [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md); stages to
 [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md).
 
-**Verification (0.2, 2026-11-03):** `npm run check:all` passes: typecheck, lint, Prettier, 85 Vitest tests in 16 files
+**Verification (0.2, 2026-11-03):** `npm run check:all` passes: typecheck, lint, Prettier, 87 Vitest tests in 16 files
 (including the updater state machine and the release scripts), `cargo fmt`, clippy with `-D warnings`, 68 Rust unit
 tests (1 ignored real-registry test) and 7 policy guard tests. The GitHub workflows have not run (no remote). The
 makeover was also toured on the desktop debug build with the real catalogue: every page, every Tweaks tab, a tweak review

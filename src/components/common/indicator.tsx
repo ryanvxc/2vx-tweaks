@@ -77,19 +77,22 @@ function IndicatorTip({
   );
 }
 
-const IMPACT: Record<Impact, { bars: number; title: string; text: string }> = {
+const IMPACT: Record<Impact, { bars: number; color: string; title: string; text: string }> = {
   low: {
     bars: 1,
+    color: "bg-success",
     title: "Small effect",
     text: "Removes one annoyance or data flow. Most people won't notice a speed difference.",
   },
   medium: {
     bars: 2,
+    color: "bg-warning",
     title: "Noticeable effect",
     text: "Fewer background processes or prompts in everyday use.",
   },
   high: {
     bars: 3,
+    color: "bg-destructive",
     title: "Large effect",
     text: "Changes how Windows behaves in a way most people will notice.",
   },
@@ -111,7 +114,7 @@ export function ImpactMeter({ impact }: { impact: Impact }) {
               key={n}
               className={cn(
                 "w-[3px] rounded-full",
-                n <= info.bars ? "bg-brand" : "bg-muted-foreground/25",
+                n <= info.bars ? info.color : "bg-muted-foreground/25",
               )}
               style={{ height: 3 + n * 3 }}
             />

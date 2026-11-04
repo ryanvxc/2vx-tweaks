@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router";
@@ -99,8 +99,7 @@ describe("Change inspector", () => {
 
     const statusCalls = mock.getTweakStatuses.mock.calls.length;
     await user.click(within(dialog).getByRole("button", { name: "Apply 1 change" }));
-    expect(await within(dialog).findByText("Applied and verified")).toBeInTheDocument();
-    expect(within(dialog).getByText("Verified")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(mock.applyPlan).toHaveBeenCalledWith("a".repeat(32));
     expect(mock.getTweakStatuses.mock.calls.length).toBeGreaterThan(statusCalls);
   });
