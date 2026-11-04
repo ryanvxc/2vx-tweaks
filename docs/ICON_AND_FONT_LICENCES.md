@@ -19,6 +19,6 @@ paid assets are used, and no third-party brand logos are bundled.
 
 - Brand logos (Microsoft Edge, Chrome, NVIDIA, AMD, Windows) are trademarks. They are not downloaded or
   redrawn; neutral Lucide glyphs stand in for them.
-- Nothing from EXM Tweaks (code, icons, images, fonts, copy) is used. `docs/research/` describes it only.
+- Nothing from EXM Tweaks (code, icons, images, fonts, copy) is used.
 - A new asset needs a row in this table with its licence before it is merged.
 - The Settings › About › Open-source licences row summarises this file.

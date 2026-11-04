@@ -14,3 +14,6 @@ src-tauri/gen/schemas
 # Playwright MCP output
 .playwright-mcp/
 .serena/
+
+# Notes on a competitor: kept on the development PC, out of the public repository
+docs/research/

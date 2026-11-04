@@ -1,9 +1,8 @@
 # Feature backlog
 
 Actionable work, prioritised against the actual state in [PROJECT_STATUS.md](PROJECT_STATUS.md). Sources: that status
-review and the EXM research in [research/](research/). This backlog **supersedes the P0–P3 lists in
-[research/2VX_IMPROVEMENT_ROADMAP.md](research/2VX_IMPROVEMENT_ROADMAP.md)**; that roadmap's P0 is complete and its
-remaining items are re-prioritised here. Stages are defined in [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md).
+review and the EXM research, which is kept off this repository. This backlog **supersedes the P0–P3 lists in the
+earlier improvement roadmap**; that roadmap's P0 is complete and its remaining items are re-prioritised here. Stages are defined in [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md).
 
 | Priority | Meaning                                                               |
 | -------- | --------------------------------------------------------------------- |
@@ -76,4 +75,3 @@ Every task ends with `npm run check:all` passing and the docs updated (see `docs
 Server-delivered scripts, generic command execution, TrustedInstaller or SYSTEM execution, a background service,
 security-tool monitoring, hardware IDs, analytics, server-side tweak history, a kill switch, kernel drivers, timer
 resolution persistence, placebo RAM tweaks, upsell blur, and bundling NSudo, DevManView, NVCleanInstall or HIDUSBF.
-See [research/EXM_VS_2VX_COMPARISON.md](research/EXM_VS_2VX_COMPARISON.md).

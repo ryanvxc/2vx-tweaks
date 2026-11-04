@@ -46,7 +46,7 @@ src-tauri/src/
 scripts/                     release helpers for CI: next-version, release-notes, check-update-feed (+ tests)
 .github/workflows/            ci.yml (checks), release.yml (signed main-channel release + update feed)
 docs/                        status, backlog, roadmap, architecture, modules, Windows APIs, security, testing,
-                             release; research/ holds the EXM competitor analysis
+                             release; research/ holds the EXM competitor analysis (git-ignored, local only)
 ```
 
 ## Conventions
@@ -101,4 +101,4 @@ P0-8a/c stand. Still open: the broker's real UAC path on a VM (P0-7), GitHub rem
 target it from a `User` tweak. The updater private key lives in `%USERPROFILE%\.tauri\`, never in the repo.
 Known limitations: GPU usage is sysinfo's sum over all engines (clamped 100); used VRAM not available system-wide yet.
 Build: cargo can run out of memory at default parallelism here; set `CARGO_BUILD_JOBS=2` (or 1).
-Research on EXM Tweaks (a competitor, studied statically) is in `docs/research/`; never copy its code or assets.
+Research on EXM Tweaks (a competitor, studied statically) is in `docs/research/` (git-ignored, never publish it); never copy its code or assets.
