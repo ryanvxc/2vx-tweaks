@@ -3,6 +3,12 @@ import { formatBytes, formatUptime, percentOf } from "./format";
 
 export type HealthStatus = "good" | "attention" | "warning";
 
+export const HEALTH_HEADLINE: Record<HealthStatus, string> = {
+  good: "Everything looks healthy",
+  attention: "A few things to look at",
+  warning: "Needs attention",
+};
+
 export interface HealthCheck {
   id: string;
   label: string;

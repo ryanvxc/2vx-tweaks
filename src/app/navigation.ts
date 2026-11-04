@@ -100,7 +100,7 @@ export const NAV_GROUPS: NavGroup[] = [
         to: "/gaming",
         label: "Game Mode",
         icon: Gamepad2,
-        description: "Pick a profile, then review what it changes",
+        description: "Turn it on while a game is running",
         highlight: true,
       },
     ],

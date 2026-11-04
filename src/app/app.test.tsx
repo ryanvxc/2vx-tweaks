@@ -21,12 +21,12 @@ describe("App shell", () => {
 
     fireEvent.keyDown(window, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("progressbar")).not.toBeInTheDocument());
-    expect(screen.getByRole("heading", { name: "Welcome back" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Welcome back/ })).toBeInTheDocument();
   });
 
   it("renders Home with preview data clearly labelled", async () => {
     render(<App />);
-    expect(screen.getByRole("heading", { name: "Welcome back" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Welcome back/ })).toBeInTheDocument();
     expect(await screen.findByText(/PREVIEW-PC/)).toBeInTheDocument();
     expect(screen.getByText("Browser preview: simulated data")).toBeInTheDocument();
     // Live data in the browser is labelled as simulated.

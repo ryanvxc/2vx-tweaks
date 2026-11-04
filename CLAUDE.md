@@ -90,7 +90,9 @@ with per-tweak undo (`revert_tweak`), an impact rating, and a `warning` only whe
 needs an icon and a section in `lib/tweak-presentation.ts`; a test reads the Rust catalogue to enforce it. Gaming
 profiles (`lib/profiles.ts`) are named lists of existing tweaks: "active" is derived from detected state, never stored,
 and they make no FPS claims. Game Mode (`pages/gaming/`) applies a chosen list through the normal review and undoes that
-batch with `revert_snapshot`; the game list stays in the UI because commands never take process names. Monitoring, Hardware, Startup (read-only), PC Cleaner (read-only scan), the Restore Centre
+batch with `revert_snapshot`; the game list stays in the UI because commands never take process names. Home keeps its title in the page, with a thin
+title bar; Quickstart's ticks are derived where the PC can say (`lib/quickstart.ts`) and Patch Notes reads `CHANGELOG.md`, so write its
+newest section for users. Monitoring, Hardware, Startup (read-only), PC Cleaner (read-only scan), the Restore Centre
 and Tools are real pages.
 A signed Tauri updater with an Update Centre is built (`docs/UPDATE_SYSTEM.md`); the feed URL
 is injected only by `.github/workflows/release.yml`, so local builds never update. P0-8b (no updater) is superseded;

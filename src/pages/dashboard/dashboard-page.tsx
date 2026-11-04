@@ -1,61 +1,72 @@
 import { EngineBanner } from "@/components/common/engine-banner";
-import { PageHeader } from "@/components/layout/page-header";
+import { Notice } from "@/components/common/notice";
 import { ErrorState } from "@/components/common/states";
 import { UpdateNotice } from "@/components/common/update-notice";
 import { useLiveMetrics } from "@/hooks/use-live-metrics";
-import { useSystemSnapshot } from "@/hooks/use-system";
-import { HardwareCard } from "./hardware-card";
-import { HealthPanel } from "./health-panel";
-import { HomeStats, RecommendedTweaks } from "./home-panels";
-import { RecentActivity } from "./recent-activity";
+import { useStaggerIn } from "@/hooks/use-motion";
+import { useAccount, useSystemSnapshot } from "@/hooks/use-system";
+import { evaluateHealth } from "@/lib/health";
+import { HomeAction, HomeCards } from "./home-panels";
+import { Quickstart } from "./quickstart";
+import { UpdatesSection } from "./updates-section";
 import { UtilisationChart } from "./utilisation-chart";
 
-/** Summaries only, each linking to its primary location. The chart takes the spare height. */
+/**
+ * Every card opens the page that owns its feature. The page is taller than the window on purpose:
+ * Updates sits below the fold and shows just enough at the bottom to say there's more.
+ */
 export function DashboardPage() {
   const snapshot = useSystemSnapshot();
   const metrics = useLiveMetrics();
-  const os = snapshot.data?.os;
+  const account = useAccount();
+  const page = useStaggerIn<HTMLDivElement>("home");
+  const s = snapshot.data;
+  const os = s?.os;
+  const name = account.data?.email.split("@")[0];
+  // Below the fold now, so anything wrong comes up here instead of waiting to be found.
+  const problems = s ? evaluateHealth(s, metrics.latest).filter((c) => c.status !== "good") : [];
 
   return (
-    <>
-      <PageHeader
-        title="Welcome back"
-        description={
-          snapshot.data
-            ? `${snapshot.data.hostname ?? "This PC"} · ${os?.productName}${os?.displayVersion ? ` ${os.displayVersion}` : ""} · build ${os?.build}${os?.ubr != null ? `.${os.ubr}` : ""}`
-            : undefined
-        }
-      />
-
-      <div className="flex flex-1 flex-col gap-3">
-        <EngineBanner previewNotice={false} />
-        <UpdateNotice />
-        <HomeStats />
-
-        {metrics.error && metrics.samples.length === 0 && (
-          <ErrorState title="Live metrics unavailable" message={metrics.error.message} />
-        )}
-
-        <div className="grid flex-1 grid-cols-12 gap-3">
-          <div className="col-span-8">
-            <UtilisationChart samples={metrics.samples} snapshot={snapshot.data} />
-          </div>
-          <div className="col-span-4">
-            <HealthPanel snapshot={snapshot.data} latest={metrics.latest} />
-          </div>
+    <div
+      ref={page}
+      className="flex flex-1 flex-col gap-3 font-nav [--font-heading:var(--font-nav)]"
+    >
+      <div className="flex items-center justify-between gap-6 pb-1">
+        <div className="min-w-0">
+          <h1 className="truncate text-[1.75rem] leading-tight font-semibold tracking-tight">
+            Welcome back{name ? `, ${name}` : ""}!
+          </h1>
+          <p data-selectable className="truncate text-[14px] text-muted-foreground">
+            {s
+              ? `${s.hostname ?? "This PC"} · ${os?.productName}${os?.displayVersion ? ` ${os.displayVersion}` : ""} · build ${os?.build}${os?.ubr != null ? `.${os.ubr}` : ""}`
+              : " "}
+          </p>
         </div>
-
-        {/* A row, not a grid: Recommended drops out when there's nothing to suggest. */}
-        <div className="flex gap-3 *:min-w-0 *:flex-1">
-          <RecommendedTweaks />
-          <HardwareCard
-            snapshot={snapshot.data}
-            error={snapshot.error}
-            onRetry={snapshot.refetch}
-          />
-          <RecentActivity />
-        </div>
+        <HomeAction />
       </div>
-    </>
+
+      <EngineBanner previewNotice={false} />
+      <UpdateNotice />
+      {problems.map((c) => (
+        <Notice key={c.id} tone="warning" title={c.label}>
+          {c.detail}
+        </Notice>
+      ))}
+      <HomeCards />
+
+      {metrics.error && metrics.samples.length === 0 && (
+        <ErrorState title="Live metrics unavailable" message={metrics.error.message} />
+      )}
+
+      {/* Stops short of the window's height at the default size, so Updates shows at the bottom. */}
+      <div className="grid h-[clamp(20rem,calc(100vh-20rem),34rem)] shrink-0 grid-cols-3 gap-3">
+        <div data-stagger className="col-span-2 min-h-0">
+          <UtilisationChart samples={metrics.samples} snapshot={s} />
+        </div>
+        <Quickstart />
+      </div>
+
+      <UpdatesSection snapshot={s} latest={metrics.latest} />
+    </div>
   );
 }

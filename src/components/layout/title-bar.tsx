@@ -1,6 +1,7 @@
 import type { Ref } from "react";
 import { Search } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { isDesktop } from "@/services/backend";
 import { WindowControls } from "./window-controls";
 
@@ -8,11 +9,23 @@ import { WindowControls } from "./window-controls";
  * Custom title bar, which also carries the page's title (`PageHeader`). The whole bar is a drag
  * region (double-click maximises); interactive children opt out because they are not the drag target.
  */
-export function TitleBar({ slot, onSearch }: { slot: Ref<HTMLDivElement>; onSearch: () => void }) {
+export function TitleBar({
+  slot,
+  thin,
+  onSearch,
+}: {
+  slot: Ref<HTMLDivElement>;
+  /** Only the window controls, for a page that puts its title in the page. */
+  thin?: boolean;
+  onSearch: () => void;
+}) {
   return (
     <header
       data-tauri-drag-region
-      className="flex h-(--titlebar-height) shrink-0 items-stretch justify-between"
+      className={cn(
+        "flex shrink-0 items-stretch justify-between",
+        thin ? "h-9" : "h-(--titlebar-height)",
+      )}
     >
       <div
         ref={slot}

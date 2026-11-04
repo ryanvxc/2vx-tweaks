@@ -1,148 +1,206 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
-import { Gamepad2, History, SlidersHorizontal, type LucideIcon } from "lucide-react";
+import {
+  ArchiveRestore,
+  ChevronRight,
+  Headphones,
+  SlidersHorizontal,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 import { AnimatedNumber } from "@/components/common/animated-number";
-import { ImpactMeter } from "@/components/common/indicator";
-import { SectionCard } from "@/components/common/section-card";
-import { LoadingRows } from "@/components/common/states";
+import { DataSourceBadge, type DataSource } from "@/components/common/data-source-badge";
+import { DotField } from "@/components/common/dot-field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSnapshots, useTweakStatuses } from "@/hooks/use-system";
-import { isBlocked } from "@/lib/engine-text";
-import { activeProfile } from "@/lib/profiles";
-import { tweakHref, tweakIcon } from "@/lib/tweak-presentation";
+import { openRecommended, savedBackups } from "@/lib/quickstart";
+import { cn } from "@/lib/utils";
 
-/** Three headline numbers, each read from the engine. */
-export function HomeStats() {
+/** Written out in full so Tailwind can see each class. */
+const TONES = {
+  violet: {
+    icon: "group-hover:text-chart-1 group-focus-visible:text-chart-1",
+    chip: "border-chart-1/20 bg-chart-1/8 text-chart-1",
+    dots: "text-chart-1",
+    wash: "from-chart-1/30",
+    edge: "hover:border-chart-1/55 focus-visible:border-chart-1/55",
+  },
+  green: {
+    icon: "group-hover:text-chart-3 group-focus-visible:text-chart-3",
+    chip: "border-chart-3/20 bg-chart-3/8 text-chart-3",
+    dots: "text-chart-3",
+    wash: "from-chart-3/30",
+    edge: "hover:border-chart-3/55 focus-visible:border-chart-3/55",
+  },
+  pink: {
+    icon: "group-hover:text-chart-5 group-focus-visible:text-chart-5",
+    chip: "border-chart-5/20 bg-chart-5/8 text-chart-5",
+    dots: "text-chart-5",
+    wash: "from-chart-5/30",
+    edge: "hover:border-chart-5/55 focus-visible:border-chart-5/55",
+  },
+};
+
+/** The one action Home pushes: what's left to apply, or Game Mode once nothing is. */
+export function HomeAction() {
+  const { data } = useTweakStatuses();
+  if (!data) return null;
+  const open = openRecommended(data).length;
+
+  return (
+    <div className="group relative isolate shrink-0">
+      <span
+        aria-hidden
+        className="absolute -inset-1 -z-10 rounded-xl bg-linear-to-r from-brand to-primary opacity-35 blur-md transition-opacity duration-300 group-hover:opacity-70"
+      />
+      <Link
+        to={open > 0 ? "/tweaks" : "/gaming"}
+        className="home-action flex h-11 items-center gap-2.5 rounded-lg px-5 text-[14px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Sparkles
+          className="size-4 text-brand transition-[rotate,scale] duration-300 group-hover:scale-110 group-hover:rotate-12"
+          aria-hidden
+        />
+        {open > 0 ? `${open} recommended tweak${open === 1 ? "" : "s"}` : "Open Game Mode"}
+      </Link>
+    </div>
+  );
+}
+
+/** Three cards, each read from the engine or opening the page that holds the answer. */
+export function HomeCards() {
   const statuses = useTweakStatuses();
   const snapshots = useSnapshots();
   const applied = statuses.data?.filter((t) => t.state === "applied").length;
   const total = statuses.data?.length;
-  const batches = snapshots.data?.filter((s) => s.kind === "apply").length;
+  const backups = snapshots.data && savedBackups(snapshots.data).length;
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      <StatCard
+      <HomeCard
+        to="/restore"
+        icon={ArchiveRestore}
+        tone="violet"
+        action="View backups"
+        source="live"
+        title={
+          snapshots.error ? (
+            "—"
+          ) : backups !== undefined ? (
+            <AnimatedNumber value={backups} />
+          ) : undefined
+        }
+        text={
+          snapshots.error ? "Journal unavailable" : backups === 1 ? "Backup saved" : "Backups saved"
+        }
+      />
+      <HomeCard
+        to="/tools"
+        icon={Headphones}
+        tone="green"
+        action="Get help"
+        title="Need help?"
+        text="System report and Windows tools"
+      />
+      <HomeCard
         to="/tweaks"
         icon={SlidersHorizontal}
-        label="Tweaks in effect"
-        value={
+        tone="pink"
+        action="Browse tweaks"
+        source="live"
+        title={
           applied !== undefined ? (
             <>
               <AnimatedNumber value={applied} /> of {total}
             </>
           ) : undefined
         }
-      />
-      <StatCard
-        to="/gaming"
-        icon={Gamepad2}
-        label="Gaming profile"
-        value={statuses.data ? (activeProfile(statuses.data)?.name ?? "None") : undefined}
-      />
-      <StatCard
-        to="/restore"
-        icon={History}
-        label="Changes"
-        value={
-          snapshots.error ? (
-            "—"
-          ) : batches !== undefined ? (
-            <AnimatedNumber value={batches} />
-          ) : undefined
-        }
-        hint={snapshots.error ? "Journal unavailable" : undefined}
+        text="Tweaks in effect"
       />
     </div>
   );
 }
 
-function StatCard({
+function HomeCard({
   to,
   icon: Icon,
-  label,
-  value,
-  hint,
+  tone,
+  action,
+  title,
+  text,
+  source,
 }: {
   to: string;
   icon: LucideIcon;
-  label: string;
-  value: ReactNode;
-  hint?: string;
+  tone: keyof typeof TONES;
+  action: string;
+  title: ReactNode;
+  text: string;
+  source?: DataSource;
 }) {
+  const [active, setActive] = useState(false);
+  const t = TONES[tone];
+
   return (
     <Link
       to={to}
-      className="group flex items-center justify-between gap-3 panel px-4 py-2.5 transition-colors outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <div className="min-w-0">
-        <div className="text-[12.5px] text-muted-foreground">{label}</div>
-        {value === undefined ? (
-          <Skeleton className="mt-1 h-6 w-20" />
-        ) : (
-          <div className="truncate text-[21px] leading-snug font-semibold tracking-tight tabular">
-            {value}
-          </div>
-        )}
-        {hint && <div className="truncate text-[11.5px] text-muted-foreground">{hint}</div>}
-      </div>
-      <Icon className="size-5 shrink-0 text-brand transition-transform duration-200 group-hover:scale-110" />
-    </Link>
-  );
-}
-
-/**
- * Recommended tweaks that are not in effect yet. Derived from the live catalogue state:
- * the engine marks a tweak recommended only when it is low risk and documented.
- */
-export function RecommendedTweaks() {
-  const { data, loading } = useTweakStatuses();
-  const open = (data ?? []).filter(
-    (t) => t.meta.recommended && t.state !== "applied" && !isBlocked(t.compatibility),
-  );
-  // With nothing to suggest, the panels beside it take the room.
-  if (data && open.length === 0) return null;
-
-  return (
-    <SectionCard
-      title="Recommended"
-      source="derived"
-      actions={
-        open.length > 3 && (
-          <Link
-            to="/tweaks"
-            className="text-[12px] text-muted-foreground transition-colors hover:text-foreground"
-          >
-            All {open.length}
-          </Link>
-        )
-      }
-    >
-      {loading && !data ? (
-        <LoadingRows rows={3} />
-      ) : (
-        <ul className="-mx-2 flex flex-col">
-          {open.slice(0, 3).map((t) => {
-            const Icon = tweakIcon(t.meta);
-            return (
-              <li key={t.meta.id}>
-                <Link
-                  to={tweakHref(t.meta)}
-                  className="flex items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/60"
-                >
-                  <Icon className="size-4 shrink-0 text-brand" />
-                  <span
-                    className="min-w-0 flex-1 truncate text-[13px] font-medium"
-                    title={t.meta.name}
-                  >
-                    {t.meta.name}
-                  </span>
-                  <ImpactMeter impact={t.meta.impact} />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+      data-stagger
+      onPointerEnter={() => setActive(true)}
+      onPointerLeave={() => setActive(false)}
+      onFocus={() => setActive(true)}
+      onBlur={() => setActive(false)}
+      className={cn(
+        "group relative isolate flex h-31 flex-col justify-between overflow-hidden panel p-3.5 transition-colors duration-300 outline-none",
+        t.edge,
       )}
-    </SectionCard>
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "absolute inset-0 -z-20 bg-linear-to-t to-transparent to-80% opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100",
+          t.wash,
+        )}
+      />
+      <DotField active={active} className={cn("absolute inset-0 -z-10 size-full", t.dots)} />
+
+      <div className="flex items-start justify-between gap-2">
+        <span
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center rounded-lg border bg-background/40 text-muted-foreground transition-colors duration-300",
+            t.icon,
+          )}
+        >
+          <Icon className="size-4" strokeWidth={1.75} aria-hidden />
+        </span>
+        <span
+          className={cn(
+            "flex h-8 items-center gap-1 rounded-lg border pr-2 pl-3 text-[13px] font-medium",
+            t.chip,
+          )}
+        >
+          {action}
+          <ChevronRight
+            className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+            aria-hidden
+          />
+        </span>
+      </div>
+
+      <div className="flex items-end gap-2">
+        <div className="min-w-0 flex-1">
+          {title === undefined ? (
+            <Skeleton className="mb-1 h-7 w-16" />
+          ) : (
+            <div className="truncate text-[1.5rem] leading-tight font-semibold tracking-tight tabular">
+              {title}
+            </div>
+          )}
+          <div className="truncate text-[13px] text-muted-foreground transition-colors duration-300 group-hover:text-foreground/85 group-focus-visible:text-foreground/85">
+            {text}
+          </div>
+        </div>
+        {source && <DataSourceBadge source={source} />}
+      </div>
+    </Link>
   );
 }

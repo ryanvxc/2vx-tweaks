@@ -324,6 +324,33 @@
   opacity: 0;
 }
 
+.home-action {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    linear-gradient(95deg, var(--brand), var(--primary)) border-box;
+}
+
+/* Traces a stroke from its start. The element needs pathLength={1}. */
+.draw-in {
+  stroke-dasharray: 1;
+  animation: draw-in 620ms var(--ease-arrive) backwards;
+}
+@keyframes draw-in {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.now-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ping-soft 2.4s ease-out infinite;
+}
+
 /* Sonner stops its toasts for the Windows setting with !important, so its transition comes back here. */
 html:not(.reduce-motion) [data-sonner-toast]:not([data-swiping="true"]) {
   transition:

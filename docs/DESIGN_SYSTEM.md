@@ -31,7 +31,7 @@ Chart series use `chart-1…5` (violet, blue, green, amber, magenta).
 
 ## Typography
 
-Pages use Geist Variable (`@fontsource-variable/geist`, OFL 1.1). The sidebar and account menu use Poppins
+Pages use Geist Variable (`@fontsource-variable/geist`, OFL 1.1). The sidebar, account menu and Home use Poppins
 (`@fontsource/poppins`, OFL 1.1, weights 400 to 600) through `font-nav`. Both are bundled, with Segoe UI Variable as the
 fallback.
 Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
@@ -64,12 +64,15 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 - Copy: a row is an icon, a title and at most one short line, and that line stays only if something could confuse.
   Never explain how the app works or why it's safe. Tweak card descriptions fit two lines (aim for under 70 characters);
   the detail goes in `details`.
-- Home fits the default window with no scrolling.
+- Home is the one page taller than the window, and the one that keeps its title in the page: the title bar shrinks to
+  the window controls, and Updates sits below the fold with its heading showing at the bottom of the default window.
+  Each Updates card has an original image in `src/assets/home/`, painted from seeded noise for 2VX. No third-party art.
 
 ## Motion
 
 Motion answers something the user just did or shows that something is live. It never decorates, never loops except
-the live dot and loading shimmer, and never makes anyone wait.
+the live dot, the newest point on Home's chart and the loading shimmer, and never makes anyone wait. Home's cards are the
+one hover flourish: `DotField` rises and twinkles only while a card is hovered or focused, and draws nothing at rest.
 
 **One switch.** Settings › Reduce motion (`.reduce-motion` on `<html>`) is the only control. The Windows animation setting
 is deliberately ignored: it's often off for speed on the PCs this app is for, and following it would remove all motion
@@ -115,6 +118,7 @@ skips. Moving the cursor holds it for up to 7 s. Settings › Appearance turns i
 | `MetricChart` | Recharts area chart for live metrics with a fixed time window |
 | `CommandPalette` (`components/layout/`) | Ctrl K search over pages, tabs and tweaks. It only navigates |
 | `UpdateNotice` | Dismissible Home banner when an update is available |
+| `DotField` | Canvas of small squares that rises from a card's bottom edge. The colour is the element's `color` |
 | `SectionCard`, `DataSourceBadge` | Card with a title and the data source: solid dot `live`, hollow dot `derived`, plain text `sample`/`planned`/`Preview`. The name and meaning are in the tooltip and `aria-label` |
 | `ConfirmDialog` | Confirmation with `risk="high"` acknowledgement for dangerous actions |
 | `StatusLabel`, `Notice`, states | A dot and a word for state, inline notices, loading/empty/error states |

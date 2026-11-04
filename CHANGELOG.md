@@ -5,6 +5,13 @@ notes come from commit subjects. This file records the larger milestones.
 
 ## 0.2.0 (unreleased)
 
+### Home
+- Home is rebuilt: a greeting by account name, three cards that light up with rising dots on hover, a 60-second chart
+  with CPU, GPU and RAM tabs, a Quickstart checklist, and Updates below the fold.
+- Quickstart ticks what it can read from the PC. The rest tick once they've been opened.
+- Patch Notes reads this file, so it works offline. System health opens in a dialog, and anything wrong shows at the top.
+- The Updates cards use original art painted for 2VX.
+
 ### Game Mode
 - Game Mode is one screen: a ring, the detected game, how long it has run and live CPU and GPU use. The ring turns on
   once a game is running.

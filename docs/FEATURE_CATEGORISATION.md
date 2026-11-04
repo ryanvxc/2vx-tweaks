@@ -78,6 +78,10 @@ on Home a profile marks them unavailable and still works with the rest.
 | Home's stat tiles moved to Monitoring | Duplicated Home's chart |
 | Home's full hardware card reduced to four lines | Detail lives on Hardware |
 | Home's health tile replaced by active profile | Health already has a panel |
+| Home's hardware card removed | The chart names the device; detail lives on Hardware |
+| Home's health panel moved into a dialog | Anything wrong still shows at the top of Home |
+| Home's Recommended list replaced by Quickstart and the action button | Both are derived from the same tweaks |
+| Home's gaming profile tile removed | Game Mode has its own state |
 | Settings › Notifications merged into Updates | It held one update preference |
 | Settings' Version row moved to About | Next to the licences |
 | Card indicators for privacy, administrator and undo removed | The tab says privacy; review says admin; the switch undoes |

@@ -18,6 +18,7 @@ export function SectionCard({
   actions,
   children,
   className,
+  headerClassName,
   contentClassName,
 }: {
   title: string;
@@ -26,15 +27,16 @@ export function SectionCard({
   actions?: ReactNode;
   children: ReactNode;
   className?: string;
+  headerClassName?: string;
   contentClassName?: string;
 }) {
   return (
     <Card className={className}>
-      <CardHeader>
+      <CardHeader className={headerClassName}>
         <CardTitle className="text-section-title">{title}</CardTitle>
         {description && <CardDescription className="text-[12px]">{description}</CardDescription>}
         {(source || actions) && (
-          <CardAction className="flex h-5 items-center gap-3">
+          <CardAction className="flex min-h-5 items-center gap-3">
             {actions}
             {source && <DataSourceBadge source={source} />}
           </CardAction>

@@ -39,15 +39,13 @@ describe("UtilisationChart title", () => {
       />,
       { wrapper: TooltipProvider },
     );
-    title("Utilisation");
-    await pick(user, "CPU");
     title("Intel(R) Core(TM) i5-14600KF");
     await pick(user, "GPU");
     title("NVIDIA GeForce RTX 4070");
-    await pick(user, "Memory");
-    title("32.0 GB memory");
-    await pick(user, "All");
-    title("Utilisation");
+    await pick(user, "RAM");
+    title("32.0 GB system memory");
+    await pick(user, "CPU");
+    title("Intel(R) Core(TM) i5-14600KF");
   });
 
   it("falls back to the snapshot, then a plain label", async () => {
@@ -63,5 +61,7 @@ describe("UtilisationChart title", () => {
     title("GPU");
     await pick(user, "CPU");
     title("CPU");
+    await pick(user, "RAM");
+    title("Memory");
   });
 });

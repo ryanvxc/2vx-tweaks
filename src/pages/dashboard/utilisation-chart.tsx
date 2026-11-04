@@ -11,23 +11,21 @@ import { useState } from "react";
 import { SectionCard } from "@/components/common/section-card";
 import { LoadingRows } from "@/components/common/states";
 import { useSlidingIndicator } from "@/hooks/use-motion";
-import { formatBytes, percentOf } from "@/lib/format";
+import { formatBytes } from "@/lib/format";
+import { usagePoints } from "@/lib/usage-points";
 import { cn } from "@/lib/utils";
 import type { MetricsSample, SystemSnapshot } from "@/types/system";
 
-const SERIES = [
-  { key: "cpu", label: "CPU", color: "var(--chart-1)" },
-  { key: "gpu", label: "GPU", color: "var(--chart-3)" },
-  { key: "ram", label: "Memory", color: "var(--chart-2)" },
-] as const;
-
-type View = "all" | (typeof SERIES)[number]["key"];
-const VIEWS: { value: View; label: string }[] = [
-  { value: "all", label: "All" },
+const VIEWS = [
   { value: "cpu", label: "CPU" },
   { value: "gpu", label: "GPU" },
-  { value: "ram", label: "Memory" },
-];
+  { value: "ram", label: "RAM" },
+] as const;
+
+type View = (typeof VIEWS)[number]["value"];
+
+const COLOUR = "var(--chart-1)";
+const WINDOW_SECONDS = 60;
 
 export function UtilisationChart({
   samples,
@@ -36,53 +34,47 @@ export function UtilisationChart({
   samples: MetricsSample[];
   snapshot: SystemSnapshot | undefined;
 }) {
-  const [view, setView] = useState<View>("all");
+  const [view, setView] = useState<View>("cpu");
   const { container: views, indicator: pill } =
     useSlidingIndicator<HTMLDivElement>('[aria-checked="true"]');
-  const shown = SERIES.filter((s) => view === "all" || s.key === view);
-  const now = samples.at(-1)?.timestampMs ?? 0;
-  const data = samples.map((s) => ({
-    ago: Math.round((s.timestampMs - now) / 1000),
-    cpu: round(s.cpuPercent),
-    gpu: s.gpus[0]?.usagePercent != null ? round(s.gpus[0].usagePercent) : null,
-    ram: round(percentOf(s.memoryUsedBytes, s.memoryTotalBytes)),
-  }));
+  const data = usagePoints(samples);
+  const label = VIEWS.find((v) => v.value === view)?.label;
 
   return (
     <SectionCard
       title={viewTitle(view, samples.at(-1), snapshot)}
       source="live"
       className="h-full"
+      headerClassName="border-b items-center [&>[data-slot=card-title]]:row-span-2"
       actions={
-        <div ref={views} role="radiogroup" aria-label="Series" className="relative isolate flex">
+        <div
+          ref={views}
+          role="radiogroup"
+          aria-label="Device"
+          className="relative isolate flex rounded-lg border bg-background/40 p-0.5"
+        >
           <span
             ref={pill}
             aria-hidden
-            className="absolute top-0 left-0 -z-10 h-(--h) w-(--w) translate-x-(--x) translate-y-(--y) rounded bg-accent transition-[translate,width,height,opacity] duration-220"
+            className="absolute top-0 left-0 -z-10 h-(--h) w-(--w) translate-x-(--x) translate-y-(--y) rounded-md bg-accent transition-[translate,width,height,opacity] duration-220"
           />
-          {VIEWS.map((v) => {
-            const series = SERIES.find((x) => x.key === v.value);
-            return (
-              <button
-                key={v.value}
-                type="button"
-                role="radio"
-                aria-checked={view === v.value}
-                onClick={() => setView(v.value)}
-                className={cn(
-                  "flex h-6 items-center gap-1.5 rounded px-2 text-[11.5px] font-medium transition-colors",
-                  view === v.value
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {series && (
-                  <span className="size-1.5 rounded-full" style={{ background: series.color }} />
-                )}
-                {v.label}
-              </button>
-            );
-          })}
+          {VIEWS.map((v) => (
+            <button
+              key={v.value}
+              type="button"
+              role="radio"
+              aria-checked={view === v.value}
+              onClick={() => setView(v.value)}
+              className={cn(
+                "flex h-7 items-center rounded-md px-3.5 text-[13px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                view === v.value
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {v.label}
+            </button>
+          ))}
         </div>
       }
       contentClassName="relative min-h-[180px]"
@@ -90,38 +82,38 @@ export function UtilisationChart({
       {samples.length < 2 ? (
         <LoadingRows rows={5} />
       ) : (
-        // Absolute so the graph takes whatever height the health panel beside it needs.
-        // Keyed so choosing a series draws it in, while each new sample just updates.
+        // Absolute so the graph takes whatever height the row gives it.
+        // Keyed so choosing a device draws it in, while each new sample just updates.
         <div key={view} className="absolute inset-y-0 right-3 left-1 animate-reveal">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
+            <AreaChart data={data} margin={{ top: 8, right: 30, bottom: 2, left: 0 }}>
               <defs>
-                {SERIES.map((s) => (
-                  <linearGradient key={s.key} id={`util-${s.key}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={s.color} stopOpacity={0.22} />
-                    <stop offset="100%" stopColor={s.color} stopOpacity={0} />
-                  </linearGradient>
-                ))}
+                <linearGradient id="util-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={COLOUR} stopOpacity={0.5} />
+                  <stop offset="100%" stopColor={COLOUR} stopOpacity={0.02} />
+                </linearGradient>
               </defs>
-              <CartesianGrid stroke="var(--border)" vertical={false} />
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 6" vertical={false} />
               <XAxis
                 dataKey="ago"
                 type="number"
-                domain={[-299, 0]}
-                ticks={[-240, -180, -120, -60, 0]}
-                tickFormatter={(v: number) => (v === 0 ? "now" : `${-v / 60}m`)}
-                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                domain={[-WINDOW_SECONDS, 0]}
+                ticks={[-60, -45, -30, -15, 0]}
+                interval={0}
+                tickFormatter={(v: number) => `${Math.abs(v)} seconds`}
+                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
                 axisLine={false}
                 tickLine={false}
+                tickMargin={8}
               />
               <YAxis
                 domain={[0, 100]}
-                ticks={[0, 25, 50, 75, 100]}
+                ticks={[0, 20, 40, 60, 80, 100]}
                 tickFormatter={(v: number) => `${v}%`}
-                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
                 axisLine={false}
                 tickLine={false}
-                width={40}
+                width={48}
               />
               <Tooltip
                 cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.3 }}
@@ -132,24 +124,25 @@ export function UtilisationChart({
                   fontSize: 12,
                 }}
                 labelFormatter={(v) => (v === 0 ? "now" : `${-Number(v)}s ago`)}
-                formatter={(value, name) => [
-                  value == null ? "—" : `${value}%`,
-                  SERIES.find((s) => s.key === name)?.label ?? String(name),
-                ]}
+                formatter={(value) => [value == null ? "—" : `${value}%`, label]}
               />
-              {shown.map((s) => (
-                <Area
-                  key={s.key}
-                  type="monotone"
-                  dataKey={s.key}
-                  stroke={s.color}
-                  strokeWidth={1.5}
-                  fill={`url(#util-${s.key})`}
-                  isAnimationActive={false}
-                  dot={false}
-                  connectNulls
-                />
-              ))}
+              <Area
+                type="monotone"
+                dataKey={view}
+                stroke={COLOUR}
+                strokeWidth={2}
+                fill="url(#util-fill)"
+                isAnimationActive={false}
+                dot={(dot) =>
+                  dot.index === data.length - 1 ? (
+                    <NowDot key="now" {...dot} />
+                  ) : (
+                    <g key={dot.index} />
+                  )
+                }
+                activeDot={{ r: 4, fill: COLOUR, stroke: "none" }}
+                connectNulls
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -158,25 +151,30 @@ export function UtilisationChart({
   );
 }
 
-/** Names what a single-series view is plotting: the chart follows the first GPU in the samples. */
+/** Marks the newest reading, which is the only point on the line that's still moving. */
+function NowDot({ cx, cy }: { cx?: number; cy?: number }) {
+  if (cx == null || cy == null) return null;
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={4} fill={COLOUR} className="now-ping" />
+      <circle cx={cx} cy={cy} r={4} fill={COLOUR} />
+    </g>
+  );
+}
+
+/** Names the device being plotted: the chart follows the first GPU in the samples. */
 function viewTitle(
   view: View,
   latest: MetricsSample | undefined,
   snapshot: SystemSnapshot | undefined,
 ) {
   switch (view) {
-    case "all":
-      return "Utilisation";
     case "cpu":
       return snapshot?.cpu.brand.trim() || "CPU";
     case "gpu":
       return latest?.gpus[0]?.model || snapshot?.gpus[0]?.model || "GPU";
     case "ram":
       // Windows reports no memory module name through the APIs 2VX reads, so show the capacity.
-      return latest ? `${formatBytes(latest.memoryTotalBytes)} memory` : "Memory";
+      return latest ? `${formatBytes(latest.memoryTotalBytes)} system memory` : "Memory";
   }
-}
-
-function round(v: number) {
-  return Math.round(v * 10) / 10;
 }
