@@ -16,8 +16,8 @@ const TONE_TEXT: Record<IndicatorTone, string> = {
 };
 
 /**
- * A small icon on a card that explains itself on hover or keyboard focus: coloured icon,
- * title, one sentence. The label is also the accessible name, so the meaning never
+ * A small icon on a card that explains itself on hover or keyboard focus: a title, plus a
+ * sentence when the title isn't enough. The label is also the accessible name, so the meaning never
  * depends on colour or hover alone.
  */
 export function Indicator({
@@ -40,7 +40,7 @@ export function Indicator({
           tabIndex={0}
           aria-label={title}
           className={cn(
-            "inline-flex size-7 cursor-default items-center justify-center rounded-md border bg-background/40 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+            "inline-flex size-7 cursor-default items-center justify-center rounded-md border bg-background/40 transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
             TONE_TEXT[tone],
             className,
           )}
@@ -77,25 +77,10 @@ function IndicatorTip({
   );
 }
 
-const IMPACT: Record<Impact, { bars: number; color: string; title: string; text: string }> = {
-  low: {
-    bars: 1,
-    color: "bg-success",
-    title: "Small effect",
-    text: "Removes one annoyance or data flow. Most people won't notice a speed difference.",
-  },
-  medium: {
-    bars: 2,
-    color: "bg-warning",
-    title: "Noticeable effect",
-    text: "Fewer background processes or prompts in everyday use.",
-  },
-  high: {
-    bars: 3,
-    color: "bg-destructive",
-    title: "Large effect",
-    text: "Changes how Windows behaves in a way most people will notice.",
-  },
+const IMPACT: Record<Impact, { bars: number; color: string; title: string }> = {
+  low: { bars: 1, color: "bg-success", title: "Small effect" },
+  medium: { bars: 2, color: "bg-warning", title: "Noticeable effect" },
+  high: { bars: 3, color: "bg-destructive", title: "Large effect" },
 };
 
 /** Three bars for the documented size of a tweak's effect. An estimate, said so in the tooltip. */
@@ -107,13 +92,13 @@ export function ImpactMeter({ impact }: { impact: Impact }) {
         <span
           tabIndex={0}
           aria-label={`${info.title} (estimate)`}
-          className="inline-flex size-7 cursor-default items-end justify-center gap-[3px] rounded-md border bg-background/40 pb-[7px] outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+          className="group/impact inline-flex size-7 cursor-default items-end justify-center gap-[3px] rounded-md border bg-background/40 pb-[7px] transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
         >
           {[1, 2, 3].map((n) => (
             <span
               key={n}
               className={cn(
-                "w-[3px] rounded-full",
+                "w-[3px] origin-bottom rounded-full transition-transform duration-200 group-hover/impact:scale-y-115",
                 n <= info.bars ? info.color : "bg-muted-foreground/25",
               )}
               style={{ height: 3 + n * 3 }}
@@ -121,12 +106,7 @@ export function ImpactMeter({ impact }: { impact: Impact }) {
           ))}
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-64 px-3 py-2">
-        <div className="font-semibold">{info.title}</div>
-        <div className="mt-0.5 leading-snug text-muted-foreground">
-          {info.text} An estimate from the documentation, not measured on this PC.
-        </div>
-      </TooltipContent>
+      <TooltipContent side="top">{info.title} (estimate)</TooltipContent>
     </Tooltip>
   );
 }

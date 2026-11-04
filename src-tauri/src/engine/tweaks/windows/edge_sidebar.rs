@@ -7,7 +7,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "windows.edge-sidebar-off",
         name: "Hide the Microsoft Edge sidebar",
-        description: "Removes the launcher bar on the right side of Edge so pages get the full window width.",
+        description: "Removes the launcher bar on the right side of Edge.",
         details: "Sets the documented Edge policy HubsSidebarEnabled to 0 (HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge). The sidebar is then never shown, whatever the Edge setting says. From Edge 141 the Copilot toolbar icon has its own policy and is not affected by this one. Applies without restarting Edge. Because this is a machine policy, Edge shows the option as managed and may show \"Your browser is managed by your organization\". Reverting removes the value; the empty policy key is left in place.",
         category: TweakCategory::Windows,
         risk: RiskLevel::Low,

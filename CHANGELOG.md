@@ -5,6 +5,13 @@ notes come from commit subjects. This file records the larger milestones.
 
 ## 0.2.0 (unreleased)
 
+### Motion and copy
+- The app now responds to you: the sidebar, tabs, chart filter and selection outlines slide, pages and lists arrive,
+  figures count up, buttons and switches react to a press, and a tweak's card pulses green the moment it takes effect.
+- Settings › Reduce motion is the one control. The Windows animation setting no longer affects the app.
+- Far less text: page descriptions, explanatory paragraphs and setting descriptions are gone, and tweak descriptions fit
+  on their cards. Settings' Security tab, Home's Quickstart and the "planned" lists are removed.
+
 ### Loading screen
 - 2VX now opens on a loading screen: dots form the logo as the real startup calls finish, with a fact or tip underneath.
   The cursor pushes the dots, clicking sends a pulse, Space shows another fact and Esc skips.
@@ -24,7 +31,7 @@ notes come from commit subjects. This file records the larger milestones.
   what it changes, anything can be left out, and everything goes through the normal review. A profile counts
   as active only when its tweaks are detected in effect. No FPS claims.
 - Settings has tabs. Restore Centre replaces History and opens with a summary. PC Cleaner shows a total and a
-  ranked list. Planned lists are collapsed.
+  ranked list.
 - Ctrl K searches pages, tabs and tweaks. The title bar shows where you are.
 - Darker surfaces, a stronger magenta and Manrope headings.
 

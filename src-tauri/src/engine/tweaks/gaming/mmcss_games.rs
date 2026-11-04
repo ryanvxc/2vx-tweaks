@@ -7,7 +7,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "gaming.mmcss-games-priority",
         name: "Raise game priority in MMCSS",
-        description: "Gives games that register with the Multimedia Class Scheduler a higher thread priority.",
+        description: "Raises the thread priority of games that register with MMCSS.",
         details: "Sets Priority to 6 and Scheduling Category to High under the MMCSS Games task \
                   (HKLM\\SOFTWARE\\Microsoft\\Windows \
                   NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games), both documented values. It only \

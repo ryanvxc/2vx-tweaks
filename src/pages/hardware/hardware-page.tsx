@@ -10,7 +10,6 @@ import {
   Monitor,
   type LucideIcon,
 } from "lucide-react";
-import { pageDescription } from "@/app/navigation";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
 import { PageHeader } from "@/components/layout/page-header";
@@ -27,7 +26,7 @@ export function HardwarePage() {
 
   return (
     <>
-      <PageHeader title="Hardware" description={pageDescription("/hardware")} />
+      <PageHeader title="Hardware" />
       {snapshot.error ? (
         <ErrorState
           title="Couldn't read hardware information"

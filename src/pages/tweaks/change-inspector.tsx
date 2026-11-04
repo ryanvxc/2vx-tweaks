@@ -25,6 +25,9 @@ import { backend, toBackendError } from "@/services/backend";
 import type { OperationOutcome, Plan } from "@/types/engine";
 import type { BackendError } from "@/types/system";
 
+// Just longer than the dialog's exit in components/ui/dialog.tsx, so the loading rows never show as it leaves.
+const EXIT_MS = 180;
+
 type Step =
   | { kind: "planning" }
   | { kind: "planned"; plan: Plan }
@@ -73,10 +76,11 @@ export function ChangeInspector({
   };
 
   const close = () => {
-    run.current++;
-    setStep({ kind: "planning" });
+    const id = ++run.current;
     setAcknowledged(false);
     onOpenChange(false);
+    // After the dialog has faded out, so it doesn't flash the loading rows on the way.
+    setTimeout(() => id === run.current && setStep({ kind: "planning" }), EXIT_MS);
   };
 
   // Plans once per opening; the selection is fixed while the dialog is open.
@@ -118,10 +122,7 @@ export function ChangeInspector({
       <DialogContent className="max-h-[calc(100vh-4rem)] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Review changes</DialogTitle>
-          <DialogDescription>
-            Exactly these values will change. 2VX records each current value first, reads every new
-            value back, and puts everything back if any step fails.
-          </DialogDescription>
+          <DialogDescription className="sr-only">The values that will change.</DialogDescription>
         </DialogHeader>
 
         <div className="-mx-6 min-h-0 overflow-y-auto px-6">
@@ -204,9 +205,7 @@ function PlanView({
   return (
     <div className="flex flex-col gap-3">
       {plan.changes.length === 0 ? (
-        <Notice tone="neutral" title="Nothing to change">
-          Everything you selected is already in place.
-        </Notice>
+        <Notice tone="neutral" title="Nothing to change" />
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-muted-foreground">
@@ -214,10 +213,7 @@ function PlanView({
             {restart && <StatusPill tone="info">{restart}</StatusPill>}
           </div>
           {plan.needsElevation && (
-            <Notice tone="info" title="Windows will ask for administrator permission once">
-              Some values are machine-wide (HKLM). A short-lived helper writes only the values
-              listed here and exits.
-            </Notice>
+            <Notice tone="info" title="Windows will ask for administrator permission once" />
           )}
           {plan.tweakIds.map((id) => (
             <section key={id} className="rounded-md border">
@@ -250,8 +246,7 @@ function PlanView({
       )}
       {plan.alreadyApplied.length > 0 && (
         <p className="text-[12.5px] text-muted-foreground">
-          Already in place, not changed:{" "}
-          {plan.alreadyApplied.map((id) => names[id] ?? id).join(", ")}.
+          Already in place: {plan.alreadyApplied.map((id) => names[id] ?? id).join(", ")}.
         </p>
       )}
       {plan.skipped.length > 0 && (

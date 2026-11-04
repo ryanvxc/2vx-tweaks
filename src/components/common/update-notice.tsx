@@ -24,16 +24,11 @@ export function UpdateNotice() {
   return (
     <div
       role="status"
-      className="flex items-center gap-3 rounded-xl border border-primary/25 bg-primary/8 px-4 py-2.5"
+      className="flex animate-rise items-center gap-3 rounded-xl border border-primary/25 bg-primary/8 px-4 py-2.5"
     >
       <ArrowUpCircle className="size-4 shrink-0 text-primary" />
       <div className="min-w-0 flex-1 text-[13px]">
         <span className="font-medium">2VX Tweaks {info.version} is available</span>
-        <span className="text-muted-foreground">
-          {" "}
-          · you have {info.currentVersion}.
-          {state.kind === "ready" && " Downloaded and ready to install."}
-        </span>
       </div>
       <Button asChild size="xs">
         <Link to="/settings?tab=updates">

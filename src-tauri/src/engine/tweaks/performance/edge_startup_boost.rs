@@ -7,8 +7,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "performance.edge-startup-boost-off",
         name: "Turn off Microsoft Edge Startup boost",
-        description: "Stops Edge from starting in the background when you sign in and from staying loaded after its \
-                      last window closes.",
+        description: "Stops Edge loading in the background at sign-in.",
         details: "Sets the documented Edge policy StartupBoostEnabled to 0 (HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge). \
                   Edge processes no longer start at sign-in or stay resident after the last window closes, so they \
                   use no memory until you open Edge; the first Edge window then opens a little slower. Because this \

@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { useSlidingIndicator } from "@/hooks/use-motion";
 import { cn } from "@/lib/utils";
 
 export interface PageTab<T extends string> {
@@ -9,8 +10,8 @@ export interface PageTab<T extends string> {
 }
 
 /**
- * Section tabs under a page header: small icon + label, a brand underline on the active
- * one. Controlled; the page decides what each tab shows.
+ * Section tabs under a page header: small icon + label, and a brand underline that slides to
+ * the active one. Controlled; the page decides what each tab shows.
  */
 export function PageTabs<T extends string>({
   tabs,
@@ -23,8 +24,14 @@ export function PageTabs<T extends string>({
   onChange: (value: T) => void;
   label: string;
 }) {
+  const { container, indicator } = useSlidingIndicator<HTMLDivElement>('[aria-selected="true"]');
   return (
-    <div role="tablist" aria-label={label} className="flex items-center gap-1 border-b">
+    <div
+      ref={container}
+      role="tablist"
+      aria-label={label}
+      className="relative flex items-center gap-1 border-b"
+    >
       {tabs.map((t) => {
         const active = t.value === value;
         const Icon = t.icon;
@@ -45,15 +52,14 @@ export function PageTabs<T extends string>({
             {t.count !== undefined && (
               <span className="text-[11px] text-muted-foreground tabular">{t.count}</span>
             )}
-            <span
-              className={cn(
-                "absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-brand transition-opacity",
-                active ? "opacity-100" : "opacity-0",
-              )}
-            />
           </button>
         );
       })}
+      <span
+        ref={indicator}
+        aria-hidden
+        className="absolute -bottom-px left-0 h-0.5 w-[calc(var(--w)-1rem)] translate-x-[calc(var(--x)+0.5rem)] rounded-full bg-brand transition-[translate,width,opacity] duration-220 ease-arrive"
+      />
     </div>
   );
 }

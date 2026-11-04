@@ -47,11 +47,9 @@ fn update_support(debug_build: bool, endpoints: &[String]) -> UpdateSupport {
         .find(|e| e.starts_with("https://"))
         .cloned();
     let reason = if debug_build {
-        Some("Development builds don't update themselves. Install a release build to get updates.")
+        Some("Development builds don't update.")
     } else if endpoint.is_none() {
-        Some(
-            "This build has no update channel. Builds published by the release workflow check GitHub Releases.",
-        )
+        Some("This build has no update channel.")
     } else {
         None
     };

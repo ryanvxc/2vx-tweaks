@@ -125,7 +125,7 @@ describe("Change inspector", () => {
     );
     const { user, dialog } = await reviewUserTweak();
     await user.click(await within(dialog).findByRole("button", { name: "Apply 1 change" }));
-    expect(await within(dialog).findByText("Not applied: rolled back")).toBeInTheDocument();
+    expect(await within(dialog).findByText("Not applied")).toBeInTheDocument();
     expect(within(dialog).getByText(/reads back 1 instead of 0/)).toBeInTheDocument();
   });
 
@@ -138,18 +138,14 @@ describe("Change inspector", () => {
     expect(
       await within(dialog).findByText("Failed, and the rollback was incomplete"),
     ).toBeInTheDocument();
-    expect(
-      within(dialog).getByText(/revert this batch from the Restore Centre/),
-    ).toBeInTheDocument();
+    expect(within(dialog).getByText(/Undo it in the Restore Centre/)).toBeInTheDocument();
   });
 
   it("offers a fresh review after a conflict", async () => {
     mock.applyPlan.mockImplementation(() => reject("conflict", "a value changed since planning"));
     const { user, dialog } = await reviewUserTweak();
     await user.click(await within(dialog).findByRole("button", { name: "Apply 1 change" }));
-    expect(
-      await within(dialog).findByText("Something changed since you reviewed this"),
-    ).toBeInTheDocument();
+    expect(await within(dialog).findByText("Changed since you reviewed this")).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Review again" }));
     expect(await within(dialog).findByRole("button", { name: "Apply 1 change" })).toBeEnabled();
     expect(mock.planTweaks).toHaveBeenCalledTimes(2);
@@ -161,9 +157,7 @@ describe("Change inspector", () => {
     );
     const { user, dialog } = await reviewUserTweak();
     await user.click(await within(dialog).findByRole("button", { name: "Apply 1 change" }));
-    expect(
-      await within(dialog).findByText("Administrator permission was not granted"),
-    ).toBeInTheDocument();
+    expect(await within(dialog).findByText("Admin permission wasn't granted")).toBeInTheDocument();
     expect(within(dialog).getByText(/prompt was declined/)).toBeInTheDocument();
   });
 
@@ -204,7 +198,7 @@ describe("Engine banner", () => {
   it("points to the Restore Centre after an interrupted batch", async () => {
     mock.getEngineStatus.mockResolvedValue({ ...HEALTHY, interruptedSnapshots: 1 });
     renderList();
-    expect(await screen.findByText("1 batch of changes didn't finish")).toBeInTheDocument();
+    expect(await screen.findByText("1 change didn't finish")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Restore Centre" })).toHaveAttribute(
       "href",
       "/restore",

@@ -22,8 +22,7 @@ export function EngineBanner({
     if (!previewNotice) return null;
     return (
       <Notice tone="info" title="Browser preview">
-        The optimisation engine runs only in the desktop app. Tweaks shown here are samples, and
-        nothing in the preview can change this PC.
+        Tweaks are samples. Nothing here changes this PC.
       </Notice>
     );
   }
@@ -38,8 +37,7 @@ export function EngineBanner({
   if (!status.journalAvailable) {
     return (
       <Notice tone="destructive" title="Changes are disabled">
-        The change journal can't be opened, so 2VX can't back up values before changing them.{" "}
-        {status.journalError} The log folder in Settings has details.
+        The change journal can't be opened. {status.journalError}
       </Notice>
     );
   }
@@ -48,7 +46,7 @@ export function EngineBanner({
     return (
       <Notice
         tone="warning"
-        title={`${n} batch${n === 1 ? "" : "es"} of changes didn't finish`}
+        title={`${n} change${n === 1 ? "" : "s"} didn't finish`}
         action={
           showHistoryLink && (
             <Button asChild size="xs" variant="outline">
@@ -57,8 +55,7 @@ export function EngineBanner({
           )
         }
       >
-        The app closed while applying changes. Some values may have been changed; review and revert
-        them in the Restore Centre.
+        2VX closed while applying.
       </Notice>
     );
   }

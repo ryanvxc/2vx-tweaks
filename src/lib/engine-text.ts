@@ -63,7 +63,7 @@ export const CHANGE_STATUS: Record<ChangeStatus, { label: string; tone: Tone }> 
 export function restartNote(restart: RestartRequirement): string | null {
   switch (restart) {
     case "signOut":
-      return "Sign out and back in to finish.";
+      return "Sign out to finish.";
     case "reboot":
       return "Restart Windows to finish.";
     case "none":
@@ -74,8 +74,8 @@ export function restartNote(restart: RestartRequirement): string | null {
 /** For a tweak that is not applied yet: when its change takes effect. */
 export const RESTART_HINT: Record<RestartRequirement, string | null> = {
   none: null,
-  signOut: "Takes effect after you sign out and back in",
-  reboot: "Takes effect after a restart",
+  signOut: "Needs sign-out",
+  reboot: "Needs a restart",
 };
 
 /** Snapshots that still have changes on the system and can be undone. */
@@ -87,13 +87,12 @@ export function describeOutcome(outcome: OperationOutcome, kind: SnapshotKind): 
   const n = outcome.changes.length;
   const values = `${n} value${n === 1 ? "" : "s"}`;
   const restart = restartNote(outcome.restart);
-  const withRestart = (s: string) => (restart ? `${s} ${restart}` : s);
 
   if (outcome.snapshotId == null) {
     return {
       tone: "neutral",
       title: "Nothing to change",
-      description: "Everything was already in the requested state.",
+      description: "Already set.",
     };
   }
   if (kind === "revert") {
@@ -101,36 +100,32 @@ export function describeOutcome(outcome: OperationOutcome, kind: SnapshotKind): 
       ? {
           tone: "success",
           title: "Reverted",
-          description: withRestart("The previous values are back and were read back to confirm."),
+          description: restart ?? "",
         }
       : {
           tone: "warning",
           title: "Partly reverted",
-          description:
-            "Some values were changed by something else since 2VX set them, or could not be restored, and were left as is. The list shows which.",
+          description: "Some values changed since and were left as is.",
         };
   }
   switch (outcome.status) {
     case "completed":
       return {
         tone: "success",
-        title: "Applied and verified",
-        description: withRestart(
-          `${values} changed and read back. You can undo this from the Restore Centre at any time.`,
-        ),
+        title: "Applied",
+        description: restart ? `${values} changed. ${restart}` : `${values} changed.`,
       };
     case "rolledBack":
       return {
         tone: "warning",
-        title: "Not applied: rolled back",
-        description:
-          `A change failed, so every value was put back as it was. ${outcome.error ?? ""}`.trim(),
+        title: "Not applied",
+        description: `Everything was put back. ${outcome.error ?? ""}`.trim(),
       };
     default:
       return {
         tone: "destructive",
         title: "Failed, and the rollback was incomplete",
-        description: `${outcome.error ?? "A change failed."} Some values could not be restored automatically; revert this batch from the Restore Centre.`,
+        description: `${outcome.error ?? "A change failed."} Undo it in the Restore Centre.`,
       };
   }
 }
@@ -140,26 +135,26 @@ export function describeError(error: BackendError): Message {
     case "conflict":
       return {
         tone: "warning",
-        title: "Something changed since you reviewed this",
+        title: "Changed since you reviewed this",
         description: `Nothing was applied. ${error.message}`,
       };
     case "elevation_required":
       return {
         tone: "warning",
-        title: "Administrator permission was not granted",
+        title: "Admin permission wasn't granted",
         description: `Nothing was changed. ${error.message}`,
       };
     case "storage":
       return {
         tone: "destructive",
         title: "Change journal unavailable",
-        description: `2VX can't record a backup, so it changed nothing. ${error.message}`,
+        description: `Nothing was changed. ${error.message}`,
       };
     case "preview":
       return {
         tone: "info",
         title: "Not available in browser preview",
-        description: "Open the desktop app to review and apply real changes.",
+        description: "Open the desktop app to apply changes.",
       };
     case "policy":
       return {

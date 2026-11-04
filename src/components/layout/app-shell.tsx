@@ -23,7 +23,7 @@ export function AppShell() {
         <main ref={main} className="flex-1 overflow-y-auto">
           {/* Keyed by route so an error on one page doesn't stick after navigating away. */}
           <ErrorBoundary key={pathname}>
-            <div className="mx-auto w-full max-w-[1400px] animate-in px-7 pt-1 pb-7 duration-200 fade-in-0">
+            <div className="mx-auto w-full max-w-[1400px] animate-rise px-7 pt-1 pb-7">
               <Outlet />
             </div>
           </ErrorBoundary>

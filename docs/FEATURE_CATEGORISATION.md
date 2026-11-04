@@ -70,9 +70,8 @@ on Home a profile marks them unavailable and still works with the rest.
 | System report, Windows tools | Tools |
 | Update Centre, automatic check, Home notice preference | Settings › Updates |
 | Version, licences | Settings › About |
-| Privileges, log folder, review rule, Quickstart preference | Settings › General |
+| Privileges, log folder, journal state | Settings › General |
 | Compact sidebar, reduce motion, theme | Settings › Appearance |
-| Journal state, network use, safety rules | Settings › Security |
 
 ## Merged, moved, removed
 

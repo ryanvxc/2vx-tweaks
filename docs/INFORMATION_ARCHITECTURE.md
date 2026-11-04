@@ -19,7 +19,7 @@ Every feature has one primary location. Other pages may summarise it and link th
 
 | Page | Question | First screen | Behind a click |
 | --- | --- | --- | --- |
-| **Home** | Is my PC okay, and what should I do next? | Alerts, three headline numbers, live chart, health, quickstart, recommendations, this PC, recent changes | Everything else |
+| **Home** | Is my PC okay, and what should I do next? | Alerts, three headline numbers, live chart, health, recommendations, this PC, recent changes | Everything else |
 | **Monitoring** | What is it doing right now? | Four live tiles that choose the graph | Per-thread load (CPU only) |
 | **Hardware** | What's in this PC? | Spec cards: processor, graphics, memory, Windows, board, drives | – |
 | **Tweaks** | What can I change? | Tabs, search, filters, cards in named sections | Details dialog with values and sources |

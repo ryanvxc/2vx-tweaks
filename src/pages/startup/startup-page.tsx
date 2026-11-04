@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Copy, FolderOpen, KeyRound, RefreshCw, Rocket, SearchX } from "lucide-react";
-import { pageDescription, STARTUP_TABS } from "@/app/navigation";
+import { STARTUP_TABS } from "@/app/navigation";
 import { toast } from "sonner";
 import { FilterBar } from "@/components/common/filter-bar";
 import { Indicator } from "@/components/common/indicator";
 import { PageTabs } from "@/components/common/page-tabs";
-import { PlannedFeatures } from "@/components/common/planned-features";
 import { SectionCard } from "@/components/common/section-card";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { useStaggerIn } from "@/hooks/use-motion";
 import { useStartupItems } from "@/hooks/use-system";
 import { useTabParam } from "@/hooks/use-tab-param";
 import type { StartupItem } from "@/types/system";
@@ -30,6 +30,7 @@ export function StartupPage() {
     .filter((i) => tab === "all" || i.scope === tab)
     .filter((i) => !q || i.name.toLowerCase().includes(q) || i.command.toLowerCase().includes(q));
   const disabled = items.filter((i) => i.enabled === false).length;
+  const list = useStaggerIn<HTMLUListElement>(data ? tab : null);
 
   const tabs = STARTUP_TABS.map((t) => ({
     ...t,
@@ -40,7 +41,6 @@ export function StartupPage() {
     <>
       <PageHeader
         title="Startup"
-        description={pageDescription("/startup")}
         actions={
           <Button size="sm" variant="outline" onClick={refetch} disabled={loading}>
             <RefreshCw className={loading ? "animate-spin" : undefined} /> Refresh
@@ -55,9 +55,7 @@ export function StartupPage() {
           placeholder="Search name or command"
           end={
             data && (
-              <span className="text-[12px] text-muted-foreground tabular">
-                {disabled} disabled in Task Manager · read-only
-              </span>
+              <span className="text-[12px] text-muted-foreground tabular">{disabled} disabled</span>
             )
           }
         />
@@ -70,14 +68,9 @@ export function StartupPage() {
             <EmptyState
               icon={items.length === 0 ? Rocket : SearchX}
               title={items.length === 0 ? "Nothing starts with Windows" : "No entries match"}
-              description={
-                items.length === 0
-                  ? "No Run-key or Startup-folder entries were found."
-                  : "Try another search."
-              }
             />
           ) : (
-            <ul className="-mx-2 flex flex-col">
+            <ul ref={list} className="-mx-2 flex flex-col">
               {shown.map((i) => (
                 <StartupRow key={i.id} item={i} />
               ))}
@@ -89,14 +82,6 @@ export function StartupPage() {
             </p>
           )}
         </SectionCard>
-        <PlannedFeatures
-          features={[
-            "Disable and re-enable entries with an undo, through the change journal",
-            "Publisher and signature details for each entry",
-            "Scheduled tasks and services that start at sign-in",
-            "Startup impact where Windows reports it",
-          ]}
-        />
       </div>
     </>
   );
@@ -113,7 +98,10 @@ function StartupRow({ item }: { item: StartupItem }) {
     }
   };
   return (
-    <li className="group flex items-center gap-3 rounded-md px-2 py-2 hover:bg-accent/40">
+    <li
+      data-stagger
+      className="group flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent/40"
+    >
       <SourceIcon className="size-4 shrink-0 text-brand" aria-hidden />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
@@ -133,22 +121,16 @@ function StartupRow({ item }: { item: StartupItem }) {
         </code>
       </div>
       {item.enabled === false ? (
-        <Indicator icon={Rocket} tone="neutral" title="Disabled in Task Manager">
-          Listed here but turned off in Task Manager's Startup tab, so Windows skips it.
-        </Indicator>
+        <Indicator icon={Rocket} tone="neutral" title="Disabled in Task Manager" />
       ) : (
-        <Indicator icon={Rocket} tone="success" title="Starts with Windows">
-          {item.enabled === true
-            ? "Enabled in Task Manager's Startup tab."
-            : "Task Manager has no record for it, so it runs."}
-        </Indicator>
+        <Indicator icon={Rocket} tone="success" title="Starts with Windows" />
       )}
       <Button
         size="icon-xs"
         variant="ghost"
         aria-label={`Copy command for ${item.name}`}
         onClick={copy}
-        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+        className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
       >
         <Copy />
       </Button>

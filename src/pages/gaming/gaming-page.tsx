@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import { AlertTriangle, ArrowRight, Check, type LucideIcon } from "lucide-react";
-import { pageDescription } from "@/app/navigation";
 import { EngineBanner } from "@/components/common/engine-banner";
 import { StatusPill } from "@/components/common/notice";
-import { PlannedFeatures } from "@/components/common/planned-features";
 import { ErrorState, LoadingRows } from "@/components/common/states";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { useSlidingIndicator } from "@/hooks/use-motion";
 import { useEngineStatus, useTweakStatuses } from "@/hooks/use-system";
 import { COMPATIBILITY, isBlocked, RESTART_HINT } from "@/lib/engine-text";
 import { activeProfile, GAMING_PROFILES, profileProgress, type Profile } from "@/lib/profiles";
@@ -24,10 +22,12 @@ export function GamingPage() {
   const active = activeProfile(statuses);
   const [chosen, setChosen] = useState<string | null>(null);
   const selected = GAMING_PROFILES.find((p) => p.id === chosen) ?? active ?? GAMING_PROFILES[0]!;
+  const { container: cards, indicator: outline } =
+    useSlidingIndicator<HTMLDivElement>('[aria-checked="true"]');
 
   return (
     <>
-      <PageHeader title="Gaming" description={pageDescription("/gaming")} />
+      <PageHeader title="Gaming" />
       <div className="flex flex-col gap-4">
         <EngineBanner />
 
@@ -37,7 +37,12 @@ export function GamingPage() {
           <LoadingRows rows={5} />
         ) : (
           <>
-            <div role="radiogroup" aria-label="Profiles" className="grid grid-cols-3 gap-3">
+            <div
+              ref={cards}
+              role="radiogroup"
+              aria-label="Profiles"
+              className="relative grid grid-cols-3 gap-3"
+            >
               {GAMING_PROFILES.map((p) => (
                 <ProfileCard
                   key={p.id}
@@ -48,6 +53,11 @@ export function GamingPage() {
                   onSelect={() => setChosen(p.id)}
                 />
               ))}
+              <span
+                ref={outline}
+                aria-hidden
+                className="pointer-events-none absolute top-0 left-0 h-(--h) w-(--w) translate-x-(--x) translate-y-(--y) rounded-xl border border-primary/50 transition-[translate,width,height,opacity] duration-220"
+              />
             </div>
             {/* Keyed so leaving a tweak out of one profile doesn't carry into the next. */}
             <ProfilePanel key={selected.id} profile={selected} statuses={statuses} />
@@ -57,23 +67,7 @@ export function GamingPage() {
         <section className="flex flex-col gap-2.5">
           <h2 className="text-section-title">Gaming settings</h2>
           <TweakGrid categories={["gaming"]} />
-          <p className="text-[12.5px] text-muted-foreground">
-            Xbox services are under{" "}
-            <Link to="/tweaks?tab=services" className="text-brand hover:underline">
-              Tweaks › Services
-            </Link>
-            , because switching them off breaks Game Pass.
-          </p>
         </section>
-
-        <PlannedFeatures
-          features={[
-            "Windows Game Mode, Game Bar and capture settings",
-            "Hardware-accelerated GPU scheduling (where supported)",
-            "Per-game profiles applied on launch, reverted on exit",
-            "Before/after frame-time measurement, not promised FPS",
-          ]}
-        />
       </div>
     </>
   );
@@ -101,7 +95,7 @@ function ProfileCard({
       onClick={onSelect}
       className={cn(
         "flex flex-col gap-1.5 rounded-xl border bg-card px-4 py-3.5 text-left transition-colors outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring",
-        selected && "border-primary/50 bg-raised",
+        selected && "bg-raised",
       )}
     >
       <span className="flex items-center justify-between gap-2">
@@ -134,7 +128,7 @@ function ProfilePanel({ profile, statuses }: { profile: Profile; statuses: Tweak
   const restarts = open.some((t) => t.meta.restart !== "none");
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-card">
+    <div className="animate-rise overflow-hidden rounded-xl border bg-card">
       <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
         <h2 className="text-section-title">What {profile.name} changes</h2>
         <div className="flex items-center gap-3">
@@ -193,7 +187,7 @@ function ProfileRow({
   const { meta, state, compatibility } = tweak;
   const applied = state === "applied";
   const blocked = isBlocked(compatibility);
-  const restart = RESTART_HINT[meta.restart];
+  const note = blocked ? COMPATIBILITY[compatibility] : applied ? null : RESTART_HINT[meta.restart];
 
   return (
     <li className={cn("flex items-start gap-3 py-2.5", blocked && "opacity-60")}>
@@ -212,13 +206,7 @@ function ProfileRow({
       <Icon className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
       <div className="min-w-0 flex-1">
         <div className="text-[13px] leading-snug font-medium">{meta.name}</div>
-        <div className="text-[12.5px] leading-snug text-muted-foreground">
-          {blocked
-            ? COMPATIBILITY[compatibility]
-            : applied
-              ? "In effect"
-              : (restart ?? meta.description)}
-        </div>
+        {note && <div className="text-[12.5px] leading-snug text-muted-foreground">{note}</div>}
         {meta.warning && !blocked && (
           <div className="mt-0.5 flex items-start gap-1.5 text-[12.5px] leading-snug">
             <AlertTriangle className="mt-px size-3.5 shrink-0 text-destructive" />

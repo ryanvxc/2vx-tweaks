@@ -1,8 +1,9 @@
-import { NavLink } from "react-router";
+import { NavLink, useLocation } from "react-router";
 import { PanelLeftClose, PanelLeftOpen, Search, ShieldAlert, ShieldCheck } from "lucide-react";
 import logo from "@/assets/logo.svg";
 import { NAV_GROUPS, SETTINGS_ITEM, type NavItem } from "@/app/navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useSlidingIndicator } from "@/hooks/use-motion";
 import { useAppInfo } from "@/hooks/use-system";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
@@ -12,6 +13,10 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
   const toggle = useUiStore((s) => s.toggleSidebar);
   const { data: app } = useAppInfo();
+  // Only the links read the route on their own, and the pill has to move when it changes.
+  useLocation();
+  const { container: navBox, indicator: navPill } =
+    useSlidingIndicator<HTMLElement>('a[aria-current="page"]');
   const PrivilegeIcon = app?.isElevated ? ShieldAlert : ShieldCheck;
   const privilege = app?.isElevated ? "Administrator" : "Standard user";
   const privilegeTone = app?.isElevated ? "text-warning" : "text-success";
@@ -39,7 +44,7 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
   return (
     <aside
       className={cn(
-        "flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200",
+        "flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-220",
         collapsed ? "w-16" : "w-(--sidebar-width)",
       )}
     >
@@ -72,7 +77,16 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
         )}
       </div>
 
-      <nav className="flex flex-1 flex-col gap-3.5 overflow-y-auto px-2.5 pt-2.5" aria-label="Main">
+      <nav
+        ref={navBox}
+        className="relative isolate flex flex-1 flex-col gap-3.5 overflow-y-auto px-2.5 pt-2.5"
+        aria-label="Main"
+      >
+        <span
+          ref={navPill}
+          aria-hidden
+          className="absolute top-0 left-0 -z-10 h-(--h) w-(--w) translate-x-(--x) translate-y-(--y) rounded-md bg-sidebar-accent transition-[translate,width,height,opacity] duration-220"
+        />
         {NAV_GROUPS.map((group, i) => (
           <div key={group.label} className="flex flex-col gap-0.5">
             {!collapsed && (
@@ -82,7 +96,7 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
             )}
             {collapsed && i > 0 && <div className="mx-3 mb-2 h-px bg-sidebar-border" />}
             {group.items.map((item) => (
-              <SidebarLink key={item.to} item={item} collapsed={collapsed} />
+              <SidebarLink key={item.to} item={item} collapsed={collapsed} sliding />
             ))}
           </div>
         ))}
@@ -140,7 +154,16 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
   );
 }
 
-function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
+function SidebarLink({
+  item,
+  collapsed,
+  sliding = false,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  /** The nav's sliding pill marks the active link, so the link draws no background itself. */
+  sliding?: boolean;
+}) {
   const Icon = item.icon;
   const link = (
     <NavLink
@@ -150,8 +173,10 @@ function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean })
       className={({ isActive }) =>
         cn(
           "group relative flex h-8.5 items-center gap-2.5 rounded-md px-2.5 text-[13.5px] font-medium transition-colors",
-          "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-          isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
+          "text-sidebar-foreground hover:text-sidebar-accent-foreground",
+          !isActive && "hover:bg-sidebar-accent/60",
+          isActive && "text-sidebar-accent-foreground",
+          isActive && !sliding && "bg-sidebar-accent",
           collapsed && "justify-center px-0",
         )
       }
@@ -160,7 +185,7 @@ function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean })
         <>
           <Icon
             className={cn(
-              "size-4 shrink-0",
+              "size-4 shrink-0 transition-[color,scale] duration-200 group-hover:scale-110",
               isActive ? "text-brand" : "text-muted-foreground group-hover:text-foreground",
             )}
           />

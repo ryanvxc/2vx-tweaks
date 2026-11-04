@@ -7,7 +7,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "performance.foreground-boost",
         name: "Favour the app you're using",
-        description: "Gives the foreground app short, variable time slices and three times the CPU time of background apps.",
+        description: "Gives the active app three times the CPU time of background apps.",
         details: "Sets Win32PrioritySeparation to 38 under \
                   HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl. That is the value behind Performance \
                   Options > Adjust for best performance of: Programs, documented as short, variable intervals with \

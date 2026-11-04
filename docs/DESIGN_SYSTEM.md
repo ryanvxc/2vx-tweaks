@@ -50,19 +50,41 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 - Sidebar 224 px (`--sidebar-width`), 64 px when compact. Content max width follows the window;
   card grids are 2 columns, 3 at `xl` (1280 px), 4 at `2xl` (1536 px).
 - Minimum window 1080×700, default 1320×840 (`tauri.conf.json`). Layouts are checked at both sizes.
-- Page anatomy: title and one line of purpose; tabs; search, filter and sort on one row; content.
-- A page header's description is one short line from `pageDescription()`. Other subtext stays only where
-  something could confuse.
+- Page anatomy: title; tabs; search, filter and sort on one row; content.
+- Copy: a row is an icon, a title and at most one short line, and that line stays only if something could confuse.
+  Never explain how the app works or why it's safe. Tweak card descriptions fit two lines (aim for under 70 characters);
+  the detail goes in `details`.
 - Home fits the default window with no scrolling.
 
 ## Motion
 
-Transitions are 150 ms colour/opacity only. Everything is disabled by Settings › Reduce motion
-(`.reduce-motion` on `<html>`) and by the Windows "Show animations" setting (`prefers-reduced-motion`).
+Motion answers something the user just did or shows that something is live. It never decorates, never loops except
+the live dot and loading shimmer, and never makes anyone wait.
 
-The loading screen is the one exception to all of that. It follows Settings › Reduce motion, which gives a static logo
-for at least 1.2 s, but deliberately not the Windows setting: that is often off for speed on the PCs this app is for,
-and following it would hide the screen altogether (`.splash-leaving` keeps its fade working in that case). It's brief,
+**One switch.** Settings › Reduce motion (`.reduce-motion` on `<html>`) is the only control. The Windows animation setting
+is deliberately ignored: it's often off for speed on the PCs this app is for, and following it would remove all motion
+for the people most likely to use 2VX, who then couldn't turn it back on from here. CSS motion is stopped by the
+`.reduce-motion` rule; code-driven motion (`play` in `lib/motion.ts`, `AnimatedNumber`) reads the store. Test motion in
+the real app, because the browser preview can't show this difference.
+
+| Moment | Time | How |
+|---|---|---|
+| Press (button, switch thumb) | 120 ms | `active:scale-[0.97]`, thumb stretches |
+| Tooltip | 120 ms in, 75 out | fade with a small slide |
+| Dropdown | 140 ms in, 100 out | `ease-arrive` |
+| Dialog | 200 ms in, 130 out | rises slightly; exits faster than it enters |
+| Command palette | 100 ms in, 75 out | no slide, because it's opened from the keyboard all day |
+| Page, tab content, notices | 220 ms | `animate-rise` |
+| Sidebar pill, tab underline, chart filter, selection outline | ~200 ms | one shared element slides (`useSlidingIndicator`) |
+| List entry | 240 ms | `useStaggerIn`: 24 ms apart, capped at 6 steps and 24 items, once per tab, never while filtering |
+| Figures | 450–600 ms | `AnimatedNumber` counts up once, then ticks |
+| Apply succeeded | 1.1 s | the card's border and background pulse `--success` |
+
+Keep routine UI under 300 ms and ease out (`--ease-arrive`, the default timing function). Use the `--animate-*` tokens in
+`globals.css`. Tailwind 4's `translate-*` and `scale-*` use the CSS `translate` and `scale` properties, so transitions
+must name those, not `transform`. Don't add a motion library.
+
+The loading screen follows Settings › Reduce motion too, which gives a static logo for at least 1.2 s. It's brief,
 never flashes, and can be skipped or turned off. Otherwise a canvas of about 1,800 dots forms the logo as the real
 startup calls settle (`components/layout/splash-screen.tsx`, physics in `lib/splash-field.ts`). The bar and the stage
 text can run behind those calls but never ahead of them, a failed call counts as settled because its page reports the
@@ -86,7 +108,6 @@ skips. Moving the cursor holds it for up to 7 s. Settings › Appearance turns i
 | `SectionCard`, `DataSourceBadge` | Card with a title and the live/derived/sample/planned badge |
 | `ConfirmDialog` | Confirmation with `risk="high"` acknowledgement for dangerous actions |
 | `StatusPill`, `Notice`, states | Small status labels, inline notices, loading/empty/error states |
-| `PlannedFeatures` | Honest list of what a page will do but doesn't yet, collapsed by default |
 
 shadcn/ui primitives in `components/ui/` keep the shadcn API; only their colours and the tooltip style
 were adapted.

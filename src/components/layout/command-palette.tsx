@@ -107,7 +107,7 @@ export function CommandPalette({
     <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : close())}>
       <DialogContent
         showCloseButton={false}
-        className="top-[16%] translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-lg"
+        className="top-[16%] translate-y-0 gap-0 overflow-hidden p-0 duration-100 data-[state=closed]:duration-75 data-[state=open]:slide-in-from-bottom-0 sm:max-w-lg"
         onKeyDown={onKeyDown}
       >
         <DialogTitle className="sr-only">Search 2VX Tweaks</DialogTitle>

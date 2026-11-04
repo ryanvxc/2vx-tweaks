@@ -19,7 +19,10 @@ export function EmptyState({
 }) {
   return (
     <div
-      className={cn("flex flex-col items-center justify-center px-6 py-10 text-center", className)}
+      className={cn(
+        "flex animate-rise flex-col items-center justify-center px-6 py-10 text-center",
+        className,
+      )}
     >
       <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-muted">
         <Icon className="size-5 text-muted-foreground" />
@@ -50,7 +53,7 @@ export function ErrorState({
     <div
       role="alert"
       className={cn(
-        "flex items-start gap-3 rounded-lg border border-destructive/25 bg-destructive/8 p-4",
+        "flex animate-rise items-start gap-3 rounded-lg border border-destructive/25 bg-destructive/8 p-4",
         className,
       )}
     >

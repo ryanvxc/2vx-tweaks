@@ -7,7 +7,6 @@ import {
   Loader2,
   RefreshCw,
   RotateCcw,
-  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -17,7 +16,7 @@ import { formatTimestamp } from "@/lib/engine-text";
 import { cn } from "@/lib/utils";
 import type { UpdateInfo } from "@/services/updater";
 
-/** Every updater state with its explanation and the one action that moves it on. */
+/** Every updater state with the one action that moves it on. */
 export function UpdateCentre({ currentVersion }: { currentVersion: string | undefined }) {
   const updater = useUpdater();
   const { state } = updater;
@@ -29,7 +28,7 @@ export function UpdateCentre({ currentVersion }: { currentVersion: string | unde
       </StatusLine>
 
       {state.kind === "downloading" && (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex animate-rise flex-col gap-1.5">
           <Progress
             value={
               state.progress.total ? (state.progress.downloaded / state.progress.total) * 100 : 5
@@ -44,23 +43,6 @@ export function UpdateCentre({ currentVersion }: { currentVersion: string | unde
       )}
 
       {"info" in state && state.info && <ReleaseNotes info={state.info} />}
-
-      <div className="flex items-start gap-2 text-[11.5px] leading-snug text-muted-foreground">
-        <ShieldCheck className="mt-px size-3.5 shrink-0 text-success" />
-        <span>
-          Updates are signed. 2VX checks each download against its built-in public key and only
-          accepts versions newer than the one installed, so a tampered or older file is refused.
-          {updater.endpoint && (
-            <>
-              {" "}
-              Channel <b className="font-medium text-foreground">{updater.channel}</b>:{" "}
-              <code data-selectable className="font-mono break-all">
-                {updater.endpoint}
-              </code>
-            </>
-          )}
-        </span>
-      </div>
     </div>
   );
 }
@@ -81,8 +63,9 @@ function StatusLine({
   return (
     <div className="flex items-center gap-3">
       <Icon
+        key={state.kind}
         className={cn(
-          "size-5 shrink-0",
+          "size-5 shrink-0 animate-pop",
           tone,
           (state.kind === "checking" || state.kind === "installing") && "animate-spin",
         )}
@@ -101,8 +84,8 @@ function StatusLine({
 }
 
 function describe(state: UpdaterState, current: string | undefined, lastChecked: number | null) {
-  const version = current ? `You have version ${current}.` : "";
-  const checked = lastChecked ? ` Last checked ${formatTimestamp(lastChecked)}.` : "";
+  const version = current ? `Version ${current}` : "";
+  const checked = lastChecked ? ` · checked ${formatTimestamp(lastChecked)}` : "";
   switch (state.kind) {
     case "loading":
       return { icon: Loader2, tone: "text-muted-foreground", title: "Loading…", text: version };
@@ -110,8 +93,8 @@ function describe(state: UpdaterState, current: string | undefined, lastChecked:
       return {
         icon: AlertTriangle,
         tone: "text-muted-foreground",
-        title: "Updates aren't available for this build",
-        text: `${state.reason} ${version}`,
+        title: "Updates unavailable",
+        text: version,
       };
     case "idle":
       return {
@@ -126,7 +109,7 @@ function describe(state: UpdaterState, current: string | undefined, lastChecked:
       return {
         icon: CheckCircle2,
         tone: "text-success",
-        title: "2VX Tweaks is up to date",
+        title: "Up to date",
         text: `${version}${checked}`,
       };
     case "available":
@@ -147,22 +130,22 @@ function describe(state: UpdaterState, current: string | undefined, lastChecked:
       return {
         icon: CheckCircle2,
         tone: "text-success",
-        title: `Version ${state.info.version} is downloaded and verified`,
-        text: "Installing closes 2VX, runs the installer (Windows asks for administrator permission) and reopens the app.",
+        title: `Version ${state.info.version} is ready`,
+        text: "",
       };
     case "installing":
       return {
         icon: Loader2,
         tone: "text-brand",
         title: `Installing ${state.info.version}…`,
-        text: "2VX will close while the installer runs.",
+        text: "",
       };
     case "restartRequired":
       return {
         icon: RotateCcw,
         tone: "text-warning",
         title: "Restart to finish updating",
-        text: `Version ${state.info.version} is installed. Restart 2VX to start using it.`,
+        text: "",
       };
     case "error":
       return {
@@ -174,7 +157,7 @@ function describe(state: UpdaterState, current: string | undefined, lastChecked:
             : state.phase === "download"
               ? "The download didn't complete"
               : "The update couldn't be installed",
-        text: `${state.message}. Nothing was changed.`,
+        text: state.message,
       };
   }
 }
@@ -241,7 +224,7 @@ function Action({
 function ReleaseNotes({ info }: { info: UpdateInfo }) {
   const lines = info.notes.split("\n").filter((l) => l.trim());
   return (
-    <div className="rounded-lg border bg-background/40 px-4 py-3">
+    <div className="animate-rise rounded-lg border bg-background/40 px-4 py-3">
       <div className="mb-1.5 flex items-baseline justify-between gap-3">
         <div className="text-[12.5px] font-semibold">What's new in {info.version}</div>
         {info.date && (

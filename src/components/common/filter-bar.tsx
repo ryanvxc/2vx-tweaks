@@ -61,7 +61,7 @@ export function FilterBar({
             type="button"
             aria-label="Clear search"
             onClick={() => onSearch("")}
-            className="absolute top-1/2 right-1.5 flex size-5 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:text-foreground"
+            className="absolute top-1/2 right-1.5 flex size-5 -translate-y-1/2 animate-in items-center justify-center rounded text-muted-foreground duration-120 ease-arrive fade-in-0 zoom-in-75 hover:text-foreground"
           >
             <X className="size-3.5" />
           </button>
@@ -74,7 +74,10 @@ export function FilterBar({
             <Button variant="outline" size="sm" className={cn(active > 0 && "border-brand/40")}>
               <ListFilter /> Filter
               {active > 0 && (
-                <span className="rounded-full bg-brand/20 px-1.5 text-[10.5px] text-brand tabular">
+                <span
+                  key={active}
+                  className="animate-pop rounded-full bg-brand/20 px-1.5 text-[10.5px] text-brand tabular"
+                >
                   {active}
                 </span>
               )}

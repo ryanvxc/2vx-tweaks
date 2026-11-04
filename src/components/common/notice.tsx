@@ -42,7 +42,11 @@ export function Notice({
   return (
     <div
       role={tone === "destructive" || tone === "warning" ? "alert" : "status"}
-      className={cn("flex items-start gap-3 rounded-lg border p-3.5", t.box, className)}
+      className={cn(
+        "flex animate-rise items-start gap-3 rounded-lg border p-3.5",
+        t.box,
+        className,
+      )}
     >
       <Icon className={cn("mt-0.5 size-4 shrink-0", t.iconClass)} />
       <div className="min-w-0 flex-1">

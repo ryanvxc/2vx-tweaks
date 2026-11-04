@@ -111,6 +111,19 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Motion (docs/DESIGN_SYSTEM.md): quick to start, soft to settle. */
+  --ease-arrive: cubic-bezier(0.16, 1, 0.3, 1);
+  --default-transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-rise: rise 220ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-pop: pop 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-sheet-up: sheet-up 260ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-grow-x: grow-x 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-progress-in: progress-in 720ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-reveal: reveal 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-shimmer: shimmer 1.8s linear infinite;
+  --animate-ping-soft: ping-soft 1.5s ease-out 3;
+  --animate-live: live 2s ease-in-out infinite;
 }
 
 @layer base {
@@ -191,15 +204,75 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Settings > Appearance > Reduce motion, and the Windows animation setting. */
-/* Outranks the rules below, so the exit still fades with Windows animations off. */
 .splash-leaving {
   opacity: 0;
   scale: 1.04;
   transition:
     opacity 450ms,
-    scale 450ms !important;
+    scale 450ms;
 }
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes pop {
+  40% {
+    transform: scale(1.22);
+  }
+}
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes progress-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes ping-soft {
+  75%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+@keyframes live {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/*
+ * Settings > Appearance > Reduce motion is the one switch for all of this. The Windows animation
+ * setting is deliberately not followed: it is often off for speed on the PCs this app is for,
+ * and following it would leave the app with no motion at all.
+ */
 .reduce-motion *,
 .reduce-motion *::before,
 .reduce-motion *::after {
@@ -208,13 +281,12 @@
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+
+/* Sonner stops its toasts for the Windows setting with !important, so its transition comes back here. */
+html:not(.reduce-motion) [data-sonner-toast]:not([data-swiping="true"]) {
+  transition:
+    transform 400ms,
+    opacity 400ms,
+    height 400ms,
+    box-shadow 200ms !important;
 }

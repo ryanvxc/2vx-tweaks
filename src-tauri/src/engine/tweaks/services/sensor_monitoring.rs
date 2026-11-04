@@ -7,7 +7,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "services.sensor-monitoring-off",
         name: "Disable Sensor Monitoring",
-        description: "Turns off the service that adapts the PC to its sensors, such as ambient light.",
+        description: "Turns off the service that reacts to sensors, like ambient light.",
         details: "Sets the start type of the SensrSvc service to Disabled (Start = 4 under \
                   HKLM\\SYSTEM\\CurrentControlSet\\Services\\SensrSvc). It reacts to sensor readings, for example \
                   by changing screen brightness. Microsoft's guidance on this service was written for Windows \

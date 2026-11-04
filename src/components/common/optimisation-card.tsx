@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +19,7 @@ export function OptimisationCard({
   highlighted,
   muted,
   className,
+  ref,
 }: {
   icon: LucideIcon;
   title: string;
@@ -34,9 +35,12 @@ export function OptimisationCard({
   /** Not applicable on this PC. */
   muted?: boolean;
   className?: string;
+  ref?: Ref<HTMLDivElement>;
 }) {
   return (
     <div
+      ref={ref}
+      data-stagger
       className={cn(
         "group relative flex min-h-[136px] flex-col rounded-xl border bg-card px-4 pt-3.5 pb-3 transition-colors",
         "hover:border-white/12 hover:bg-raised",
@@ -46,7 +50,10 @@ export function OptimisationCard({
       )}
     >
       <div className="flex items-start gap-2.5">
-        <Icon className="mt-px size-[18px] shrink-0 text-brand" aria-hidden />
+        <Icon
+          className="mt-px size-[18px] shrink-0 text-brand transition-transform duration-200 group-hover:scale-110"
+          aria-hidden
+        />
         <div className="min-w-0 flex-1">
           {onOpen ? (
             <button

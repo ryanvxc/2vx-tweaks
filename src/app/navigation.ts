@@ -16,7 +16,6 @@ import {
   Rocket,
   Server,
   Settings,
-  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
   User,
@@ -35,6 +34,7 @@ export interface NavItem {
   to: string;
   label: string;
   icon: LucideIcon;
+  /** Extra words for the command palette. Never shown. */
   description: string;
   /** Sections of the page, chosen with `?tab=`. */
   tabs?: NavTab[];
@@ -48,7 +48,7 @@ export interface NavGroup {
 export type MonitoringTab = "cpu" | "memory" | "gpu" | "network";
 export type TweakTab = "windows" | "privacy" | "apps" | "services";
 export type StartupTab = "all" | "currentUser" | "allUsers";
-export type SettingsTab = "general" | "appearance" | "updates" | "security" | "about";
+export type SettingsTab = "general" | "appearance" | "updates" | "about";
 
 export const MONITORING_TABS: NavTab<MonitoringTab>[] = [
   { value: "cpu", label: "CPU", icon: Cpu },
@@ -74,7 +74,6 @@ export const SETTINGS_TABS: NavTab<SettingsTab>[] = [
   { value: "general", label: "General", icon: Settings },
   { value: "appearance", label: "Appearance", icon: Palette },
   { value: "updates", label: "Updates", icon: Bell },
-  { value: "security", label: "Security", icon: ShieldCheck },
   { value: "about", label: "About", icon: Info },
 ];
 
@@ -157,8 +156,3 @@ export const SETTINGS_ITEM: NavItem = {
 };
 
 export const ALL_NAV_ITEMS: NavItem[] = [...NAV_GROUPS.flatMap((g) => g.items), SETTINGS_ITEM];
-
-/** A page's header line, from the one place it's defined. */
-export function pageDescription(to: string) {
-  return ALL_NAV_ITEMS.find((i) => i.to === to)?.description;
-}

@@ -19,13 +19,14 @@ export function UpdateButton({ collapsed }: { collapsed: boolean }) {
       disabled={busy}
       aria-label={collapsed ? label : undefined}
       className={cn(
-        "relative flex h-8.5 w-full items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground disabled:pointer-events-none",
+        "group relative flex h-8.5 w-full items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground disabled:pointer-events-none",
         collapsed && "justify-center px-0",
       )}
     >
       <Icon
         className={cn(
-          "size-4 shrink-0",
+          "size-4 shrink-0 transition-[rotate] duration-300",
+          Icon === RefreshCw && "group-hover:rotate-90",
           attention ? "text-primary" : "text-muted-foreground",
           (state.kind === "checking" || state.kind === "installing") && "animate-spin",
         )}
@@ -35,9 +36,11 @@ export function UpdateButton({ collapsed }: { collapsed: boolean }) {
         <span
           className={cn(
             "size-1.5 rounded-full bg-primary",
-            collapsed ? "absolute top-1.5 right-2.5" : "ml-auto",
+            collapsed ? "absolute top-1.5 right-2.5" : "relative ml-auto",
           )}
-        />
+        >
+          <span className="absolute inset-0 animate-ping-soft rounded-full bg-primary" />
+        </span>
       )}
     </button>
   );

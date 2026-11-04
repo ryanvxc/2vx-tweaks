@@ -4,10 +4,9 @@ import { ErrorState } from "@/components/common/states";
 import { UpdateNotice } from "@/components/common/update-notice";
 import { useLiveMetrics } from "@/hooks/use-live-metrics";
 import { useSystemSnapshot } from "@/hooks/use-system";
-import { useUiStore } from "@/stores/ui-store";
 import { HardwareCard } from "./hardware-card";
 import { HealthPanel } from "./health-panel";
-import { HomeStats, Quickstart, RecommendedTweaks } from "./home-panels";
+import { HomeStats, RecommendedTweaks } from "./home-panels";
 import { RecentActivity } from "./recent-activity";
 import { UtilisationChart } from "./utilisation-chart";
 
@@ -15,7 +14,6 @@ import { UtilisationChart } from "./utilisation-chart";
 export function DashboardPage() {
   const snapshot = useSystemSnapshot();
   const metrics = useLiveMetrics();
-  const showQuickstart = useUiStore((s) => s.showQuickstart);
   const os = snapshot.data?.os;
 
   return (
@@ -62,8 +60,6 @@ export function DashboardPage() {
             <RecentActivity />
           </div>
         </div>
-
-        {showQuickstart && <Quickstart />}
       </div>
     </>
   );

@@ -38,7 +38,7 @@ export function MetricChart({
   if (rows.length < 2) return <LoadingRows rows={4} />;
   const id = series.map((s) => s.key).join("-");
   return (
-    <div style={{ height }}>
+    <div style={{ height }} className="animate-reveal">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={rows} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
           <defs>

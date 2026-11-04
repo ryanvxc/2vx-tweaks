@@ -1,4 +1,4 @@
-import { createElement } from "react";
+import { createElement, useState } from "react";
 import { AlertTriangle, ArrowRight, ExternalLink } from "lucide-react";
 import { StatusPill } from "@/components/common/notice";
 import { RiskBadge } from "@/components/common/risk-badge";
@@ -35,8 +35,12 @@ export function TweakDetails({
   onStage: (on: boolean) => void;
   disabled: boolean;
 }) {
-  if (!tweak) return null;
-  const { meta, state, compatibility } = tweak;
+  // Closing clears `tweak`; the last one stays so the dialog has content to fade out with.
+  const [last, setLast] = useState(tweak);
+  if (tweak && tweak !== last) setLast(tweak);
+  const shown = tweak ?? last;
+  if (!shown) return null;
+  const { meta, state, compatibility } = shown;
   const stateInfo = TWEAK_STATE[state];
   // The administrator pill below already says this.
   const note = compatibility === "needsElevation" ? null : COMPATIBILITY[compatibility];
@@ -44,7 +48,7 @@ export function TweakDetails({
   const blocked = isBlocked(compatibility);
 
   return (
-    <Dialog open onOpenChange={onOpenChange}>
+    <Dialog open={tweak !== null} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[calc(100vh-4rem)] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-xl">
         <DialogHeader>
           <div className="flex items-center gap-2.5">
@@ -66,9 +70,7 @@ export function TweakDetails({
             <StatusPill tone={stateInfo.tone}>{stateInfo.label}</StatusPill>
             <RiskBadge risk={meta.risk} />
             <StatusPill tone="neutral">{IMPACT_LABEL[meta.impact]}</StatusPill>
-            {meta.permission === "administrator" && (
-              <StatusPill tone="info">Administrator permission</StatusPill>
-            )}
+            {meta.permission === "administrator" && <StatusPill tone="info">Admin</StatusPill>}
             {restart && <StatusPill tone="neutral">{restart}</StatusPill>}
             {meta.recommended && <StatusPill tone="success">Recommended</StatusPill>}
           </div>
@@ -87,7 +89,7 @@ export function TweakDetails({
           <section>
             <h3 className="mb-1.5 text-[12.5px] font-semibold">Values on this PC</h3>
             <ul className="divide-y rounded-lg border">
-              {tweak.settings.map((s) => (
+              {shown.settings.map((s) => (
                 <li key={s.targetLabel} className="flex flex-col gap-1 px-3 py-2">
                   <code data-selectable className="font-mono text-[11.5px] break-all">
                     {s.targetLabel}
@@ -117,10 +119,9 @@ export function TweakDetails({
             </ul>
           </section>
 
-          {state === "applied" && !tweak.undoable && (
+          {state === "applied" && !shown.undoable && (
             <p className="text-[12.5px] text-muted-foreground">
-              This is already set on this PC, but not by 2VX, so there is no recorded value to go
-              back to.
+              Set outside 2VX, so there's nothing to undo.
             </p>
           )}
         </div>
@@ -134,7 +135,7 @@ export function TweakDetails({
               {staged ? "Deselect" : "Select for review"}
             </Button>
           )}
-          {state === "applied" && tweak.undoable && (
+          {state === "applied" && shown.undoable && (
             <Button
               variant="outline"
               disabled={disabled}

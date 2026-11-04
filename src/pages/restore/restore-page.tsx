@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ChevronDown, History, SlidersHorizontal, Undo2 } from "lucide-react";
-import { pageDescription } from "@/app/navigation";
 import { toast } from "sonner";
+import { AnimatedNumber } from "@/components/common/animated-number";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { EngineBanner } from "@/components/common/engine-banner";
 import { MessageNotice, StatusPill } from "@/components/common/notice";
@@ -37,7 +37,7 @@ export function RestorePage() {
 
   return (
     <>
-      <PageHeader title="Restore Centre" description={pageDescription("/restore")} />
+      <PageHeader title="Restore Centre" />
       <div className="flex flex-col gap-3">
         <EngineBanner showHistoryLink={false} />
         {data && data.length > 0 && <Summary snapshots={data} />}
@@ -47,11 +47,7 @@ export function RestorePage() {
           ) : loading && !data ? (
             <LoadingRows />
           ) : !data || data.length === 0 ? (
-            <EmptyState
-              icon={History}
-              title="No changes yet"
-              description="Every change 2VX makes is recorded here with its old value, so it can be undone."
-            />
+            <EmptyState icon={History} title="No changes yet" />
           ) : (
             <ul className="-mx-2 flex flex-col">
               {data.map((s) => (
@@ -76,14 +72,14 @@ function Summary({ snapshots }: { snapshots: SnapshotRecord[] }) {
   const last = snapshots[0]!;
   return (
     <dl className="grid grid-cols-3 gap-3">
-      <Figure label="Batches recorded" value={String(snapshots.length)} />
-      <Figure label="Can be undone" value={String(undoable)} />
+      <Figure label="Changes" value={<AnimatedNumber value={snapshots.length} />} />
+      <Figure label="Can be undone" value={<AnimatedNumber value={undoable} />} />
       <Figure label="Last change" value={formatTimestamp(last.createdAtMs)} />
     </dl>
   );
 }
 
-function Figure({ label, value }: { label: string; value: string }) {
+function Figure({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="rounded-xl border bg-card px-4 py-2.5">
       <dt className="text-[12.5px] text-muted-foreground">{label}</dt>
@@ -171,7 +167,6 @@ function SnapshotRow({
           <div className="text-[12px] leading-snug text-muted-foreground">
             {formatTimestamp(s.createdAtMs)} · {s.changeCount} value
             {s.changeCount === 1 ? "" : "s"}
-            {s.reverts != null && ` · undoes #${s.reverts}`} · #{s.id}
           </div>
         </div>
         <StatusPill tone={status.tone}>{status.label}</StatusPill>
@@ -198,50 +193,63 @@ function SnapshotRow({
         </Button>
       </div>
 
-      {expanded && (
-        <div id={detailsId} className="mt-2.5 ml-11 flex flex-col gap-2">
-          {s.error && (
-            <MessageNotice tone={status.tone} title={status.label} description={s.error} />
-          )}
-          {changesError ? (
-            <ErrorState message={changesError.message} />
-          ) : !changes ? (
-            <LoadingRows rows={2} />
-          ) : changes.length === 0 ? (
-            <p className="text-[12.5px] text-muted-foreground">No values were changed.</p>
-          ) : (
-            <ul className="divide-y rounded-md border">
-              {changes.map((c) => (
-                <li key={c.id} className="flex items-start gap-3 px-3 py-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[12px] text-muted-foreground">{tweakName(c.tweakId)}</div>
-                    <code data-selectable className="font-mono text-[11.5px] break-all">
-                      {c.targetLabel}
-                    </code>
-                    <div className="text-[12px]">
-                      {c.beforeLabel} → {c.afterLabel}
-                    </div>
-                    {c.error && <div className="text-[12px] text-warning">{c.error}</div>}
-                  </div>
-                  <StatusPill tone={CHANGE_STATUS[c.status].tone}>
-                    {CHANGE_STATUS[c.status].label}
-                  </StatusPill>
-                </li>
-              ))}
-            </ul>
+      {/* The list stays mounted after collapsing so it has something to close over. */}
+      <div
+        id={detailsId}
+        inert={!expanded}
+        className={cn(
+          "grid transition-[grid-template-rows] duration-220",
+          expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+        )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          {(expanded || changes) && (
+            <div className="mt-2.5 ml-11 flex flex-col gap-2">
+              {s.error && (
+                <MessageNotice tone={status.tone} title={status.label} description={s.error} />
+              )}
+              {changesError ? (
+                <ErrorState message={changesError.message} />
+              ) : !changes ? (
+                <LoadingRows rows={2} />
+              ) : changes.length === 0 ? (
+                <p className="text-[12.5px] text-muted-foreground">No values were changed.</p>
+              ) : (
+                <ul className="divide-y rounded-md border">
+                  {changes.map((c) => (
+                    <li key={c.id} className="flex items-start gap-3 px-3 py-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[12px] text-muted-foreground">
+                          {tweakName(c.tweakId)}
+                        </div>
+                        <code data-selectable className="font-mono text-[11.5px] break-all">
+                          {c.targetLabel}
+                        </code>
+                        <div className="text-[12px]">
+                          {c.beforeLabel} → {c.afterLabel}
+                        </div>
+                        {c.error && <div className="text-[12px] text-warning">{c.error}</div>}
+                      </div>
+                      <StatusPill tone={CHANGE_STATUS[c.status].tone}>
+                        {CHANGE_STATUS[c.status].label}
+                      </StatusPill>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       <ConfirmDialog
         open={confirming}
         onOpenChange={setConfirming}
         title={`Undo: ${title}`}
-        description="2VX puts back the values it recorded before this change."
+        description="Restores the recorded values."
         consequences={[
-          `Restores up to ${s.changeCount} value${s.changeCount === 1 ? "" : "s"} to what they were before.`,
-          "A value changed by something else since then is left as is and reported.",
-          "Machine-wide values ask for administrator permission once.",
+          `Up to ${s.changeCount} value${s.changeCount === 1 ? "" : "s"}`,
+          "Anything changed since is left as is",
         ]}
         risk={risk}
         confirmLabel="Undo"

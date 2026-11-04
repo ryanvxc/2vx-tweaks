@@ -12,31 +12,40 @@ const CONFIG: Record<DataSource | "preview", { label: string; className: string;
   live: {
     label: "Live",
     className: "text-success border-success/25 bg-success/8",
-    tip: "Measured from this PC by the 2VX backend.",
+    tip: "Measured on this PC.",
   },
   derived: {
     label: "Derived",
     className: "text-info border-info/25 bg-info/8",
-    tip: "Calculated in the app from live measurements.",
+    tip: "Calculated from live data.",
   },
   sample: {
     label: "Sample data",
     className: "text-warning border-warning/30 bg-warning/8",
-    tip: "Illustrative placeholder content. Not measured from this PC.",
+    tip: "Placeholder, not measured.",
   },
   planned: {
     label: "Planned",
     className: "text-muted-foreground border-border bg-muted/50",
-    tip: "This feature is not implemented yet.",
+    tip: "Not built yet.",
   },
   preview: {
     label: "Preview",
     className: "text-info border-info/25 bg-info/8",
-    tip: "Running in a browser without the desktop backend. Values are simulated.",
+    tip: "Simulated in the browser.",
   },
 };
 
-export function DataSourceBadge({ source, className }: { source: DataSource; className?: string }) {
+export function DataSourceBadge({
+  source,
+  pulse,
+  className,
+}: {
+  source: DataSource;
+  /** Breathing dot, for the one reading being watched. Too many of these are just noise. */
+  pulse?: boolean;
+  className?: string;
+}) {
   // Outside the desktop shell, "live" and "derived" values are simulated.
   const key = !isDesktop && (source === "live" || source === "derived") ? "preview" : source;
   const cfg = CONFIG[key];
@@ -50,7 +59,9 @@ export function DataSourceBadge({ source, className }: { source: DataSource; cla
             className,
           )}
         >
-          {key === "live" && <span className="size-1.5 rounded-full bg-current" />}
+          {key === "live" && (
+            <span className={cn("size-1.5 rounded-full bg-current", pulse && "animate-live")} />
+          )}
           {cfg.label}
         </span>
       </TooltipTrigger>

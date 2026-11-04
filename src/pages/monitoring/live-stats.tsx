@@ -1,14 +1,22 @@
 import type { ReactNode } from "react";
 import type { MonitoringTab } from "@/app/navigation";
 import { ArrowDown, ArrowUp, Cpu, Gpu, MemoryStick, Network, type LucideIcon } from "lucide-react";
+import { AnimatedNumber } from "@/components/common/animated-number";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { Sparkline } from "@/components/common/sparkline";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSlidingIndicator } from "@/hooks/use-motion";
 import { formatBytes, formatPercent, formatRate, percentOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { MetricsSample, SystemSnapshot } from "@/types/system";
 
 const SPARK_POINTS = 60;
+// Shorter than the one-second sample, so each reading lands before the next arrives.
+const TICK_MS = 450;
+
+const tick = (value: number, format: (v: number) => string) => (
+  <AnimatedNumber value={value} format={format} duration={TICK_MS} />
+);
 
 /** Four live numbers that also choose the graph below them, like a tab row with data. */
 export function LiveStats({
@@ -26,15 +34,17 @@ export function LiveStats({
   const latest = recent.at(-1);
   const gpu = latest?.gpus[0];
   const physical = snapshot?.cpu.physicalCores;
+  const { container: tiles, indicator: outline } =
+    useSlidingIndicator<HTMLDivElement>('[aria-selected="true"]');
 
   return (
-    <div role="tablist" aria-label="Metric" className="grid grid-cols-4 gap-3">
+    <div ref={tiles} role="tablist" aria-label="Metric" className="relative grid grid-cols-4 gap-3">
       <StatTile
         selected={selected === "cpu"}
         onSelect={() => onSelect("cpu")}
         icon={Cpu}
         label="CPU"
-        value={latest ? formatPercent(latest.cpuPercent) : undefined}
+        value={latest ? tick(latest.cpuPercent, formatPercent) : undefined}
         sub={
           snapshot ? `${physical ?? "?"} cores · ${snapshot.cpu.logicalCores} threads` : undefined
         }
@@ -48,7 +58,7 @@ export function LiveStats({
         label="Memory"
         value={
           latest
-            ? formatPercent(percentOf(latest.memoryUsedBytes, latest.memoryTotalBytes))
+            ? tick(percentOf(latest.memoryUsedBytes, latest.memoryTotalBytes), formatPercent)
             : undefined
         }
         sub={
@@ -65,7 +75,11 @@ export function LiveStats({
         icon={Gpu}
         label="GPU"
         value={
-          latest ? (gpu?.usagePercent != null ? formatPercent(gpu.usagePercent) : "—") : undefined
+          latest
+            ? gpu?.usagePercent != null
+              ? tick(gpu.usagePercent, formatPercent)
+              : "—"
+            : undefined
         }
         sub={
           latest
@@ -82,7 +96,7 @@ export function LiveStats({
         onSelect={() => onSelect("network")}
         icon={Network}
         label="Network"
-        value={latest ? formatRate(latest.networkRxBytesPerSec) : undefined}
+        value={latest ? tick(latest.networkRxBytesPerSec, formatRate) : undefined}
         valueIcon={<ArrowDown className="size-4 text-muted-foreground" />}
         sub={
           latest ? (
@@ -94,6 +108,11 @@ export function LiveStats({
         color="var(--chart-4)"
         series={recent.map((s) => s.networkRxBytesPerSec)}
         max="auto"
+      />
+      <span
+        ref={outline}
+        aria-hidden
+        className="pointer-events-none absolute top-0 left-0 h-(--h) w-(--w) translate-x-(--x) translate-y-(--y) rounded-xl border border-primary/50 transition-[translate,width,height,opacity] duration-220"
       />
     </div>
   );
@@ -115,7 +134,7 @@ function StatTile({
   onSelect: () => void;
   icon: LucideIcon;
   label: string;
-  value: string | undefined;
+  value: ReactNode;
   valueIcon?: ReactNode;
   sub: ReactNode | undefined;
   color: string;
@@ -130,7 +149,7 @@ function StatTile({
       onClick={onSelect}
       className={cn(
         "flex flex-col overflow-hidden rounded-xl border bg-card pt-3.5 text-left transition-colors outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring",
-        selected && "border-primary/50 bg-raised",
+        selected && "bg-raised",
       )}
     >
       <div className="flex w-full items-center justify-between px-4">
@@ -138,7 +157,7 @@ function StatTile({
           <Icon className="size-4" style={{ color }} />
           {label}
         </div>
-        <DataSourceBadge source="live" />
+        <DataSourceBadge source="live" pulse={selected} />
       </div>
       <div className="mt-2.5 px-4">
         {value === undefined ? (

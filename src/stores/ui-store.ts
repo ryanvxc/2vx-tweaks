@@ -9,9 +9,9 @@ interface UiState {
   showUpdateNotice: boolean;
   /** Version whose Home notice the user dismissed; a newer version shows again. */
   dismissedUpdateVersion: string | null;
-  /** Turn off non-essential animation (on top of the OS setting). */
+  /** Turn off non-essential animation. The one switch for it: the OS setting isn't followed. */
   reduceMotion: boolean;
-  /** Show the Quickstart list on Home. */
+  /** No longer read. Kept so stored preferences stay compatible. */
   showQuickstart: boolean;
   /** Show the loading screen at launch. */
   showSplash: boolean;

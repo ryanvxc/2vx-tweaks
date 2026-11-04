@@ -7,7 +7,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.inking-typing-collection-off",
         name: "Stop learning from typing and inking",
-        description: "Stops Windows collecting what you type and write to build a personal dictionary.",
+        description: "Stops Windows learning from what you type and write.",
         details: "Sets RestrictImplicitTextCollection and RestrictImplicitInkCollection to 1 under \
                   HKCU\\Software\\Microsoft\\InputPersonalization, as Microsoft documents in section 18.21 of its \
                   connections guide. It affects only your account. Sign out and back in so input services pick it \

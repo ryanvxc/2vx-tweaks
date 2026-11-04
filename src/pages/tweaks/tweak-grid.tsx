@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import {
   AlertTriangle,
@@ -28,6 +28,7 @@ import {
   useTweakStatuses,
   refreshEngineState,
 } from "@/hooks/use-system";
+import { useStaggerIn } from "@/hooks/use-motion";
 import { useTabParam } from "@/hooks/use-tab-param";
 import {
   COMPATIBILITY,
@@ -43,6 +44,7 @@ import {
   tweakIcon,
   tweakPlacement,
 } from "@/lib/tweak-presentation";
+import { play } from "@/lib/motion";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
 import type { Impact, RiskLevel, TweakCategory, TweakStatus } from "@/types/engine";
 import { ChangeInspector } from "./change-inspector";
@@ -86,6 +88,7 @@ export function TweakGrid({
   const [reviewing, setReviewing] = useState(false);
   const [undoing, setUndoing] = useState<TweakStatus | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const root = useStaggerIn<HTMLDivElement>(data ? tab : null);
 
   const all = useMemo(
     () => (data ?? []).filter((t) => categories.includes(t.meta.category)),
@@ -240,7 +243,7 @@ export function TweakGrid({
   const sectioned = browse && q === "" && sort === "recommended";
 
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={root} className="flex flex-col gap-4">
       {browse && (
         <>
           <PageTabs label="Topics" tabs={tabs} value={tab} onChange={setTab} />
@@ -288,8 +291,7 @@ export function TweakGrid({
       ) : all.length === 0 ? (
         <EmptyState
           icon={PackageOpen}
-          title="No optimisations in this section yet"
-          description="Each one is added only after its effect, risk and undo path are documented and tested."
+          title="Nothing here yet"
           className="rounded-xl border bg-card"
         />
       ) : shown.length === 0 ? (
@@ -306,11 +308,16 @@ export function TweakGrid({
       )}
 
       {staged.length > 0 && (
-        <div className="sticky bottom-4 z-10 mx-auto flex items-center gap-3 rounded-xl border border-primary/30 bg-popover/95 py-2 pr-2 pl-4 shadow-2xl shadow-black/50 backdrop-blur">
+        <div className="sticky bottom-4 z-10 mx-auto flex animate-sheet-up items-center gap-3 rounded-xl border border-primary/30 bg-popover/95 py-2 pr-2 pl-4 shadow-2xl shadow-black/50 backdrop-blur">
           <Sparkles className="size-4 text-primary" />
-          <span className="text-[13px]">
-            <b className="font-semibold tabular">{staged.length}</b> tweak
-            {staged.length === 1 ? "" : "s"} selected. Nothing changes until you review.
+          <span className="text-[13px] text-muted-foreground">
+            <b
+              key={staged.length}
+              className="inline-block animate-pop font-semibold text-foreground tabular"
+            >
+              {staged.length}
+            </b>{" "}
+            selected
           </span>
           <Button size="sm" variant="ghost" onClick={() => setStaged([])}>
             <X /> Clear
@@ -343,8 +350,8 @@ export function TweakGrid({
           open
           onOpenChange={(open) => !open && setUndoing(null)}
           title={`Undo: ${undoing.meta.name}`}
-          description="2VX puts back the values it recorded before it made this change. A value something else has changed since is left as it is."
-          consequences={undoing.settings.map((s) => `${s.targetLabel}: restore the recorded value`)}
+          description="Restores the recorded values."
+          consequences={undoing.settings.map((s) => s.targetLabel)}
           risk={undoing.meta.risk}
           confirmLabel="Undo"
           onConfirm={() => {
@@ -396,6 +403,26 @@ function TweakCard({
   const lockedOn = applied && !tweak.undoable;
   const restart = RESTART_HINT[meta.restart];
 
+  // The switch alone confirms an apply, so the card marks the moment it takes.
+  const card = useRef<HTMLDivElement>(null);
+  const wasApplied = useRef(applied);
+  useEffect(() => {
+    if (applied && !wasApplied.current) {
+      play(
+        card.current,
+        [
+          {
+            borderColor: "var(--success)",
+            backgroundColor: "color-mix(in oklch, var(--success) 14%, var(--card))",
+          },
+          {},
+        ],
+        { duration: 1100 },
+      );
+    }
+    wasApplied.current = applied;
+  }, [applied]);
+
   const switchControl = (
     <Switch
       checked={applied || staged}
@@ -408,6 +435,7 @@ function TweakCard({
 
   return (
     <OptimisationCard
+      ref={card}
       icon={tweakIcon(meta)}
       title={meta.name}
       description={meta.description}
@@ -424,22 +452,14 @@ function TweakCard({
               {meta.warning}
             </Indicator>
           )}
-          {restart && (
-            <Indicator icon={LogOut} tone="neutral" title={restart}>
-              {meta.restart === "reboot"
-                ? "Windows reads this value when it next starts."
-                : "Windows reads this value when you next sign in."}
-            </Indicator>
-          )}
+          {restart && <Indicator icon={LogOut} tone="neutral" title={restart} />}
           {blocked && (
             <Indicator icon={AlertTriangle} tone="neutral" title="Not for this PC">
               {COMPATIBILITY[compatibility]}
             </Indicator>
           )}
           {state === "partial" && (
-            <Indicator icon={CircleDashed} tone="warning" title="Partly in effect">
-              Some of its values match. Applying completes it.
-            </Indicator>
+            <Indicator icon={CircleDashed} tone="warning" title="Partly in effect" />
           )}
         </>
       }
@@ -449,10 +469,7 @@ function TweakCard({
             <TooltipTrigger asChild>
               <span tabIndex={0}>{switchControl}</span>
             </TooltipTrigger>
-            <TooltipContent className="max-w-60">
-              Already set on this PC, but not by 2VX, so there's no recorded value to go back to.
-              Change it in Windows if you want it off.
-            </TooltipContent>
+            <TooltipContent>Set outside 2VX, so there's nothing to undo.</TooltipContent>
           </Tooltip>
         ) : (
           switchControl

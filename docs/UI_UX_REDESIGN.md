@@ -49,7 +49,7 @@ only. The old `/monitoring` route redirects to `/hardware`.
   Centre. Pages scroll to the top when you navigate.
 - **"New" badge** on tweaks added in the current minor version (`TweakMeta.added_in`).
 - **Impact** is an estimate from the documentation, labelled as such; 2VX doesn't claim measured gains.
-- **Reduce motion** in Settings, and the Windows animation setting is honoured.
+- **Reduce motion** in Settings is the one control; see `DESIGN_SYSTEM.md`.
 
 ## Visual QA
 

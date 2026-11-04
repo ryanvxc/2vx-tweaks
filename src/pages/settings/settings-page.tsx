@@ -4,21 +4,16 @@ import {
   BookOpenCheck,
   Database,
   FolderOpen,
-  Globe,
   Info,
-  LayoutList,
-  ListChecks,
   Loader,
   Move,
   PanelLeft,
   Palette,
   RefreshCw,
-  ScrollText,
-  ShieldCheck,
   ShieldUser,
 } from "lucide-react";
 import { toast } from "sonner";
-import { pageDescription, SETTINGS_TABS, type SettingsTab } from "@/app/navigation";
+import { SETTINGS_TABS, type SettingsTab } from "@/app/navigation";
 import { StatusPill } from "@/components/common/notice";
 import { PageTabs } from "@/components/common/page-tabs";
 import { SettingsGroup, SettingsRow } from "@/components/common/settings-row";
@@ -39,7 +34,7 @@ const OLD_SECTIONS: Record<string, SettingsTab> = {
   appearance: "appearance",
   notifications: "updates",
   updates: "updates",
-  security: "security",
+  security: "general",
   about: "about",
 };
 
@@ -51,14 +46,13 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description={pageDescription("/settings")} />
+      <PageHeader title="Settings" />
       <div className="flex flex-col gap-4">
         <PageTabs label="Sections" tabs={SETTINGS_TABS} value={tab} onChange={setTab} />
-        <div className="max-w-3xl">
+        <div key={tab} className="max-w-3xl animate-rise">
           {tab === "general" && <GeneralTab />}
           {tab === "appearance" && <AppearanceTab />}
           {tab === "updates" && <UpdatesTab />}
-          {tab === "security" && <SecurityTab />}
           {tab === "about" && <AboutTab />}
         </div>
       </div>
@@ -68,13 +62,12 @@ export function SettingsPage() {
 
 function GeneralTab() {
   const { data: app } = useAppInfo();
-  const ui = useUiStore();
 
   const copyLogPath = async () => {
     if (!app) return;
     try {
       await navigator.clipboard.writeText(app.logDir);
-      toast.success("Log folder path copied");
+      toast.success("Path copied");
     } catch {
       toast.error("Couldn't access the clipboard");
     }
@@ -85,11 +78,6 @@ function GeneralTab() {
       <SettingsRow
         icon={ShieldUser}
         title="Privileges"
-        description={
-          app?.isElevated
-            ? "Running as administrator. 2VX only needs this for machine-wide changes."
-            : "Running as a standard user. Windows asks for permission only when a change needs it."
-        }
         control={
           app && (
             <StatusPill tone={app.isElevated ? "warning" : "success"}>
@@ -98,24 +86,7 @@ function GeneralTab() {
           )
         }
       />
-      <SettingsRow
-        icon={ListChecks}
-        title="Review before applying"
-        description="Every change shows the exact values first and is applied only after you confirm. This can't be turned off."
-        control={<StatusPill tone="success">Always on</StatusPill>}
-      />
-      <SettingsRow
-        icon={LayoutList}
-        title="Quickstart on Home"
-        htmlFor="pref-quickstart"
-        control={
-          <Switch
-            id="pref-quickstart"
-            checked={ui.showQuickstart}
-            onCheckedChange={(v) => ui.set({ showQuickstart: v })}
-          />
-        }
-      />
+      <EngineRows />
       <SettingsRow
         icon={FolderOpen}
         title="Log folder"
@@ -141,7 +112,6 @@ function AppearanceTab() {
       <SettingsRow
         icon={Palette}
         title="Theme"
-        description="A light theme isn't available yet."
         control={<StatusPill tone="neutral">Dark</StatusPill>}
       />
       <SettingsRow
@@ -159,7 +129,6 @@ function AppearanceTab() {
       <SettingsRow
         icon={Loader}
         title="Loading screen"
-        description="Shown when 2VX starts. Turn it off to open straight to Home."
         htmlFor="pref-splash"
         control={
           <Switch
@@ -172,7 +141,6 @@ function AppearanceTab() {
       <SettingsRow
         icon={Move}
         title="Reduce motion"
-        description="2VX also follows the Windows animation setting, except on the loading screen."
         htmlFor="pref-motion"
         control={
           <Switch
@@ -190,12 +158,11 @@ function UpdatesTab() {
   const { data: app } = useAppInfo();
   const ui = useUiStore();
   return (
-    <SettingsGroup description="2VX never downloads or installs an update without you choosing to.">
+    <SettingsGroup>
       <UpdateCentre currentVersion={app?.version} />
       <SettingsRow
         icon={RefreshCw}
-        title="Check for updates automatically"
-        description="Once each time 2VX starts. It sends no data about this PC beyond a normal web request."
+        title="Check automatically"
         htmlFor="pref-auto-update"
         control={
           <Switch
@@ -216,24 +183,6 @@ function UpdatesTab() {
             onCheckedChange={(v) => ui.set({ showUpdateNotice: v, dismissedUpdateVersion: null })}
           />
         }
-      />
-    </SettingsGroup>
-  );
-}
-
-function SecurityTab() {
-  return (
-    <SettingsGroup>
-      <EngineRows />
-      <SettingsRow
-        icon={Globe}
-        title="Network use"
-        description="The only network request 2VX makes is the update check (and a download when you choose one). No telemetry, no analytics."
-      />
-      <SettingsRow
-        icon={ShieldCheck}
-        title="Safety rules"
-        description="2VX never turns off Defender, the firewall, Windows Update, UAC or SmartScreen, and every tweak cites the documentation it is based on."
       />
     </SettingsGroup>
   );
@@ -260,16 +209,7 @@ function AboutTab() {
       <SettingsRow
         icon={BookOpenCheck}
         title="Open-source licences"
-        description="Icons: Lucide (ISC). Fonts: Inter and Manrope (SIL Open Font License 1.1), bundled with the app. Full list in docs/ICON_AND_FONT_LICENCES.md."
-      />
-      <SettingsRow
-        icon={ScrollText}
-        title="Change history"
-        control={
-          <Button asChild size="sm" variant="outline">
-            <Link to="/restore">Open Restore Centre</Link>
-          </Button>
-        }
+        description="Lucide (ISC), Inter and Manrope (OFL 1.1)"
       />
     </SettingsGroup>
   );
@@ -282,15 +222,8 @@ function EngineRows() {
       <SettingsRow
         icon={Database}
         title="Change journal"
-        description={
-          !isDesktop
-            ? "Not available in browser preview."
-            : error
-              ? error.message
-              : status?.journalAvailable
-                ? `Records every value before 2VX changes it. ${status.tweakCount} tweaks available.`
-                : (status?.journalError ?? "Checking…")
-        }
+        // Only a problem needs words; the pill covers the normal case.
+        description={!isDesktop ? undefined : error ? error.message : status?.journalError}
         control={
           status &&
           (!isDesktop ? (
@@ -298,15 +231,14 @@ function EngineRows() {
           ) : status.journalAvailable ? (
             <StatusPill tone="success">Available</StatusPill>
           ) : (
-            <StatusPill tone="destructive">Unavailable: changes disabled</StatusPill>
+            <StatusPill tone="destructive">Changes disabled</StatusPill>
           ))
         }
       />
       {status && status.interruptedSnapshots > 0 && (
         <SettingsRow
           icon={Database}
-          title="Interrupted batches"
-          description="2VX stopped while applying. Review them in the Restore Centre to restore the old values."
+          title="Interrupted changes"
           control={
             <Button asChild size="sm" variant="outline">
               <Link to="/restore">Review {status.interruptedSnapshots}</Link>

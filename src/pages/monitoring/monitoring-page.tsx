@@ -1,4 +1,4 @@
-import { MONITORING_TABS, pageDescription, type MonitoringTab } from "@/app/navigation";
+import { MONITORING_TABS, type MonitoringTab } from "@/app/navigation";
 import { MetricChart } from "@/components/common/metric-chart";
 import { SectionCard } from "@/components/common/section-card";
 import { ErrorState, LoadingRows } from "@/components/common/states";
@@ -32,20 +32,16 @@ export function MonitoringPage() {
 
   return (
     <>
-      <PageHeader title="Monitoring" description={pageDescription("/monitoring")} />
+      <PageHeader title="Monitoring" />
       <div className="flex flex-col gap-4">
         {metrics.error && samples.length === 0 && (
           <ErrorState title="Live metrics unavailable" message={metrics.error.message} />
         )}
         <LiveStats samples={samples} snapshot={snapshot.data} selected={tab} onSelect={setTab} />
-        <Graph tab={tab} samples={samples} snapshot={snapshot.data} />
-        {tab === "cpu" && <PerThread samples={samples} />}
-        {tab === "gpu" && (
-          <p className="px-1 text-[12.5px] text-muted-foreground">
-            GPU usage is the sum over all engines as Windows reports it, capped at 100%. Used video
-            memory isn't available system-wide yet, so it isn't shown.
-          </p>
-        )}
+        <div key={tab} className="flex animate-rise flex-col gap-4">
+          <Graph tab={tab} samples={samples} snapshot={snapshot.data} />
+          {tab === "cpu" && <PerThread samples={samples} />}
+        </div>
       </div>
     </>
   );
@@ -171,8 +167,8 @@ function PerThread({ samples }: { samples: MetricsSample[] }) {
             <div key={i} className="flex flex-col items-center gap-1 rounded-md border px-1 py-1.5">
               <div className="relative h-10 w-2.5 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="absolute inset-x-0 bottom-0 rounded-full bg-brand transition-[height] duration-500"
-                  style={{ height: `${Math.min(100, c)}%` }}
+                  className="size-full rounded-full bg-brand transition-[translate] duration-500"
+                  style={{ translate: `0 ${100 - Math.min(100, c)}%` }}
                 />
               </div>
               <div className="text-[11px] font-medium tabular">{formatPercent(c)}</div>

@@ -7,8 +7,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.language-list-opt-out",
         name: "Don't share your language list with websites",
-        description: "Turns off \"Let websites show me locally relevant content by accessing my language list\" for \
-                      your account.",
+        description: "Stops websites reading your language list.",
         details: "Sets HttpAcceptLanguageOptOut to 1 under HKCU\\Control Panel\\International\\User Profile, as Microsoft \
                   documents for this setting. Windows stops offering your installed language list to websites and \
                   apps, which then see only your primary display language and may pick a different language or \

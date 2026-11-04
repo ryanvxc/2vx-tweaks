@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { SectionCard } from "@/components/common/section-card";
 import { LoadingRows } from "@/components/common/states";
+import { useSlidingIndicator } from "@/hooks/use-motion";
 import { formatBytes, percentOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { MetricsSample, SystemSnapshot } from "@/types/system";
@@ -36,6 +37,8 @@ export function UtilisationChart({
   snapshot: SystemSnapshot | undefined;
 }) {
   const [view, setView] = useState<View>("all");
+  const { container: views, indicator: pill } =
+    useSlidingIndicator<HTMLDivElement>('[aria-checked="true"]');
   const shown = SERIES.filter((s) => view === "all" || s.key === view);
   const now = samples.at(-1)?.timestampMs ?? 0;
   const data = samples.map((s) => ({
@@ -51,7 +54,17 @@ export function UtilisationChart({
       source="live"
       className="h-full"
       actions={
-        <div role="radiogroup" aria-label="Series" className="flex rounded-md border p-0.5">
+        <div
+          ref={views}
+          role="radiogroup"
+          aria-label="Series"
+          className="relative isolate flex rounded-md border p-0.5"
+        >
+          <span
+            ref={pill}
+            aria-hidden
+            className="absolute top-0 left-0 -z-10 h-(--h) w-(--w) translate-x-(--x) translate-y-(--y) rounded bg-accent transition-[translate,width,height,opacity] duration-220"
+          />
           {VIEWS.map((v) => {
             const series = SERIES.find((x) => x.key === v.value);
             return (
@@ -64,7 +77,7 @@ export function UtilisationChart({
                 className={cn(
                   "flex h-6 items-center gap-1.5 rounded px-2 text-[11.5px] font-medium transition-colors",
                   view === v.value
-                    ? "bg-accent text-foreground"
+                    ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -83,7 +96,8 @@ export function UtilisationChart({
         <LoadingRows rows={5} />
       ) : (
         // Absolute so the graph takes whatever height the health panel beside it needs.
-        <div className="absolute inset-y-0 right-5 left-2">
+        // Keyed so choosing a series draws it in, while each new sample just updates.
+        <div key={view} className="absolute inset-y-0 right-5 left-2 animate-reveal">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
               <defs>

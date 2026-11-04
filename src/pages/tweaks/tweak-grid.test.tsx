@@ -13,6 +13,7 @@ import {
   outcome,
   plan,
 } from "@/test/engine-fixtures";
+import { useUiStore } from "@/stores/ui-store";
 import { TweakGrid } from "./tweak-grid";
 
 const mock = vi.hoisted(() => ({
@@ -115,6 +116,29 @@ describe("TweakGrid", () => {
     expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
   });
 
+  it("marks the moment a tweak takes effect on its card", async () => {
+    const animate = vi.fn();
+    Element.prototype.animate = animate;
+    useUiStore.setState({ reduceMotion: false });
+    mock.applyPlan.mockResolvedValue(outcome());
+    const user = userEvent.setup();
+    renderGrid();
+    await user.click(await screen.findByRole("switch", { name: `Turn on ${USER_TWEAK.name}` }));
+    await user.click(screen.getByRole("button", { name: "Review 1 change" }));
+    const dialog = await screen.findByRole("dialog");
+    animate.mockClear();
+
+    mock.getTweakStatuses.mockResolvedValue(
+      STATUSES.map((t) => (t.meta.id === USER_TWEAK.id ? { ...t, state: "applied" as const } : t)),
+    );
+    await user.click(await within(dialog).findByRole("button", { name: "Apply 1 change" }));
+    await waitFor(() => expect(animate).toHaveBeenCalledOnce());
+
+    const [keyframes] = animate.mock.calls[0] as [Keyframe[]];
+    expect(keyframes[0]).toHaveProperty("borderColor", "var(--success)");
+    delete (Element.prototype as Partial<Element>).animate;
+  });
+
   it("reminds about a restart after a clean apply", async () => {
     mock.applyPlan.mockResolvedValue(outcome({ restart: "reboot" }));
     const user = userEvent.setup();
@@ -134,7 +158,7 @@ describe("TweakGrid", () => {
     await user.click(screen.getByRole("button", { name: "Review 1 change" }));
     const dialog = await screen.findByRole("dialog");
     await user.click(await within(dialog).findByRole("button", { name: "Apply 1 change" }));
-    expect(await within(dialog).findByText("Not applied: rolled back")).toBeInTheDocument();
+    expect(await within(dialog).findByText("Not applied")).toBeInTheDocument();
   });
 
   it("undoes an applied tweak after confirmation", async () => {
