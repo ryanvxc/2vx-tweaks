@@ -20,12 +20,15 @@ export function PageTabs<T extends string>({
   onChange,
   label,
   end,
+  filled = false,
 }: {
   tabs: PageTab<T>[];
   value: T;
   onChange: (value: T) => void;
   label: string;
   end?: ReactNode;
+  /** Also gives the active tab a background, for tabs that split a whole page. */
+  filled?: boolean;
 }) {
   const { container, indicator } = useSlidingIndicator<HTMLDivElement>('[aria-selected="true"]');
   return (
@@ -43,6 +46,8 @@ export function PageTabs<T extends string>({
               onClick={() => onChange(t.value)}
               className={cn(
                 "relative flex h-9 items-center gap-2 rounded-t-md px-3 text-[13px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                filled && "mr-1 rounded-b-md px-4",
+                filled && active && "bg-raised",
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >

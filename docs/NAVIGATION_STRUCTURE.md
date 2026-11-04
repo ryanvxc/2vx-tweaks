@@ -18,13 +18,12 @@ Optimisations
   Privacy          /tweaks?tab=privacy
   Services         /tweaks?tab=services
   Hardware         /hardware
-  Startup          /startup             ?tab=all | currentUser | allUsers
-  PC Cleaner       /cleaner
+  PC Cleaner       /cleaner             ?tab=system | services | uninstall | autoruns
 
 [Account card]     opens the account menu
 ```
 
-Eleven rows in three groups. Rows and groups share out the sidebar's height, so the list ends just above the account
+Ten rows in three groups. Rows and groups share out the sidebar's height, so the list ends just above the account
 card at any window size. A row stops growing at 64 px; on a taller window the spare height goes between the groups. The
 rows for Windows, Privacy and Services are the Tweaks page's tabs (`tabsInSidebar`), so they stay in step with the tabs
 on the page, and Search still lists the page as Tweaks. Settings has no sidebar row: it's in the account menu, Search and the title of its
@@ -66,7 +65,7 @@ Log out.
 
 ## Search
 
-Solves one real problem: 35 tweaks across five tabs. It searches pages, tabs and tweak names and descriptions.
+Solves one real problem: 37 tweaks across five tabs. It searches pages, tabs and tweak names and descriptions.
 Selecting a tweak opens its details in the right tab. Recent items and quick actions weren't added: with this few
 pages they'd solve nothing.
 

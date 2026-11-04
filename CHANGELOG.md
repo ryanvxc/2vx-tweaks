@@ -5,6 +5,16 @@ notes come from commit subjects. This file records the larger milestones.
 
 ## 0.2.0 (unreleased)
 
+### PC Cleaner
+- PC Cleaner now has four tabs: System Cleaner, Services, Uninstall and Autoruns.
+- System Cleaner shows what each location holds. Tick what you want, or pick Recommended, then Start cleaning. Files are
+  deleted for good, and temp folders keep anything from the last 24 hours.
+- Services has two presets, Basic and Advanced, built from tweaks you can review and undo one at a time. Neither touches
+  Windows Update, Defender or networking.
+- Uninstall removes built-in Windows apps and brings them back while Windows keeps a copy.
+- Autoruns replaces the Startup page. Every entry shows its path, publisher and description, and has a switch.
+- Two new tweaks turn off the Telemetry and Geolocation services.
+
 ### Home
 - Home is rebuilt: a greeting by account name, three cards that light up with rising dots on hover, a 60-second chart
   with CPU, GPU and RAM tabs, a Quickstart checklist, and Updates below the fold.

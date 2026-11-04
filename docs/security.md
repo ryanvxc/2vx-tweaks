@@ -28,9 +28,12 @@ against.
   - The app accepts exactly one client and checks its PID is the process it launched. The broker checks the pipe
     server's PID is the parent it was told about.
   - The broker opens the pipe at `SECURITY_IDENTIFICATION`, so the unelevated app can't impersonate the admin token.
-  - The broker's vocabulary is `Write { target, value }` and `Done`. It writes a target only if it passes the policy
-    denylist **and** is declared by a built-in tweak. It accepts no commands, paths or code, holds no state and keeps
-    no journal (the app journals every change).
+  - The broker's vocabulary is `Write { target, value }`, `Clean { id }`, `MoveStartup { key, name, enabled }` and
+    `Done` (guard: `broker_vocabulary_is_fixed`). It writes a target only if it passes the policy denylist **and** is
+    declared by a built-in tweak. `Clean` takes an ID from the table in `engine/cleanup.rs` and refuses any location
+    that doesn't need admin. `MoveStartup` takes a fixed Run key and a value name, and reads the value itself, so a
+    command line never crosses the pipe. The broker accepts no commands, paths or code, holds no state and keeps no
+    journal (the app journals every tweak).
   - A declined UAC prompt returns `elevation_required`; nothing is changed.
   - Residual risk: another process running as the same user could start the broker itself, but that still needs the
     user to accept a UAC prompt, and it can only touch targets that 2VX tweaks declare.
@@ -73,21 +76,35 @@ Changing any of these requires updating this document and the guard test in the 
 ## Rules for system changes
 
 1. Never disable Defender, Firewall, Windows Update, UAC, SmartScreen, VBS/HVCI, Secure Boot or similar protections.
-2. Never bulk-disable services. Service changes are individual, explained and reversible.
+2. Never bulk-disable services. Service changes are individual, explained and reversible. A preset is a short, fixed
+   list of reviewed tweaks (`lib/service-presets.ts`): it shows every change first, and leaves out anything protected.
+   Revised 2026-11-04 for the PC Cleaner's Services tab, with no guard change, because each entry is still its own
+   tweak with its own warning, journal entry and undo.
 3. Only documented settings, with references in `TweakMeta.references`.
 4. Back up before every change. If any step fails, roll back the earlier steps, then report the error (implemented
    once in the engine, see § Change safety).
 5. Deletion only inside a fixed allowlist of locations (temp, caches). Scan first, show results, delete on confirmation.
+   Each location is cleared by the same rule it was measured with (`engine/cleanup.rs`), reparse points are never
+   followed, and the temp folders keep anything from the last 24 hours. Files are deleted, not moved to the Recycle
+   Bin, because moving a cache there frees nothing. The confirmation says so.
 6. Boot configuration (`bcdedit`) and security settings need a `High` risk confirmation with explicit acknowledgement.
 7. Never apply anything silently. Presets show the full list of changes before applying.
 8. No performance claims without measurement on the user's machine.
+9. Apps are removed only from a fixed table (`engine/apps.rs`), through `PackageManager`, for the current account.
+   Microsoft Store, App Installer, Windows Security, Edge, Xbox identity components and frameworks aren't in it.
 
 ## Decisions (backlog P0-8, decided by the owner on 2026-11-03)
 
-**(a) Disabling startup entries** (P1-5): remove the `Run`/`RunOnce` value and journal it, so Undo restores the exact
-value. Task Manager's `StartupApproved` values are not used (undocumented, `REG_BINARY`). Consequence to tell users:
-a disabled entry disappears from Task Manager's Startup tab rather than showing "Disabled". Startup-folder shortcuts
-need a file primitive with the same journal guarantees before they can be disabled. No guard change.
+**(a) Disabling startup entries** (P1-5): ~~remove the `Run`/`RunOnce` value and journal it~~ **revised 2026-11-04**:
+the value moves unchanged to `Software\2VX Tweaks\DisabledStartup` in the same hive, and a shortcut in the user's Startup
+folder moves to `%LOCALAPPDATA%\com.twovx.tweaks\disabled-startup`. Reason: restoring an HKLM value from the journal would
+mean sending a command line to the elevated side, and the broker must never take a value from the unelevated app.
+Each move is copy, verify, remove, with rollback. The held copy is the backup and the switch is the undo, so these
+moves are audit-logged but not listed in the Restore Centre. If a program registered itself again meanwhile, its new
+entry wins. The all-users Startup folder is read-only. Task Manager's `StartupApproved` values are read but never
+written (undocumented, `REG_BINARY`), so an entry turned off there can only be turned back on there. Consequence to
+tell users: a disabled entry disappears from Task Manager's Startup tab rather than showing "Disabled". Guard added:
+`broker_vocabulary_is_fixed`.
 
 **(b) Updates** (P1-11): ~~no in-app updater~~ **superseded for 0.2** at the owner's request (the redesign
 brief asked for an in-app Tauri updater). The updater is allowed under these conditions, all enforced by

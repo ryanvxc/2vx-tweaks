@@ -79,6 +79,15 @@ pub async fn revert_tweak(
     blocking(&engine, move |e| e.revert_tweak(&tweak_id)).await
 }
 
+/// `revert_tweak` for several tweaks as one batch, so one prompt covers them all.
+#[tauri::command]
+pub async fn revert_tweaks(
+    engine: State<'_, Arc<Engine>>,
+    tweak_ids: Vec<String>,
+) -> AppResult<OperationOutcome> {
+    blocking(&engine, move |e| e.revert_tweaks(&tweak_ids)).await
+}
+
 /// Most recent snapshots first.
 #[tauri::command]
 pub async fn list_snapshots(

@@ -6,6 +6,9 @@ import { HeaderSlot } from "./header-slot";
 import { Sidebar } from "./sidebar";
 import { TitleBar } from "./title-bar";
 
+/** Pages that carry their own title (`PageHero`), so the title bar stays thin. */
+const OWN_TITLE = ["/", "/gaming", "/cleaner"];
+
 export function AppShell() {
   const { pathname, search } = useLocation();
   const tab = new URLSearchParams(search).get("tab");
@@ -23,7 +26,7 @@ export function AppShell() {
     <div className="flex h-full">
       <Sidebar onSearch={() => setSearching(true)} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <TitleBar slot={setHeaderSlot} thin={pathname === "/" || pathname === "/gaming"} />
+        <TitleBar slot={setHeaderSlot} thin={OWN_TITLE.includes(pathname)} />
         <main ref={main} className="flex-1 overflow-y-auto">
           {/* Keyed by route so an error on one page doesn't stick after navigating away. */}
           <ErrorBoundary key={pathname}>

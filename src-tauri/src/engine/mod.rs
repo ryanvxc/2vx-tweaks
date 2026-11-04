@@ -8,13 +8,19 @@
 //! Every tweak lives in its own module under `engine/tweaks/` and is registered in
 //! [`TweakRegistry::with_builtin_tweaks`]. See `docs/optimisation-modules.md` for the
 //! review checklist.
+//!
+//! `cleanup`, `startup` and `apps` change things that aren't settings: files, Run entries and
+//! packages. Each takes IDs only and checks them against its own fixed list or a fresh scan.
 
+pub mod apps;
 pub mod broker;
+pub mod cleanup;
 pub mod journal;
 pub mod plan;
 pub mod policy;
 pub mod service;
 pub mod setting;
+pub mod startup;
 pub mod store;
 mod tweaks;
 

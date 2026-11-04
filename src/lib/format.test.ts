@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatAgo,
   formatBytes,
   formatFrequency,
   formatPercent,
@@ -41,6 +42,16 @@ describe("other formatters", () => {
     expect(formatFrequency(3500)).toBe("3.50 GHz");
     expect(formatFrequency(800)).toBe("800 MHz");
     expect(formatFrequency(0)).toBe("—");
+  });
+
+  it("says how long ago, in the largest whole unit", () => {
+    const now = 1_000_000_000;
+    expect(formatAgo(now - 30_000, now)).toBe("just now");
+    expect(formatAgo(now + 5_000, now)).toBe("just now");
+    expect(formatAgo(now - 60_000, now)).toBe("1 minute ago");
+    expect(formatAgo(now - 59 * 60_000, now)).toBe("59 minutes ago");
+    expect(formatAgo(now - 3 * 3_600_000, now)).toBe("3 hours ago");
+    expect(formatAgo(now - 49 * 3_600_000, now)).toBe("2 days ago");
   });
 
   it("clamps percentOf", () => {

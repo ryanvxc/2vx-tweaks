@@ -81,6 +81,23 @@ fn backend_never_spawns_shells_or_processes() {
     }
 }
 
+/// The elevated side stays a short, typed list. A new request needs its own review here and in
+/// docs/security.md, and none of them may carry a path, a command or a value to restore.
+#[test]
+fn broker_vocabulary_is_fixed() {
+    let source = read("src/engine/broker.rs");
+    let variants: Vec<&str> = source
+        .lines()
+        .skip_while(|line| !line.contains("pub enum Request {"))
+        .skip(1)
+        .take_while(|line| *line != "}")
+        .filter_map(|line| line.strip_prefix("    "))
+        .filter(|line| line.starts_with(|c: char| c.is_ascii_uppercase()))
+        .map(|line| line.trim_end_matches([' ', '{', ',']))
+        .collect();
+    assert_eq!(variants, ["Write", "Clean", "MoveStartup", "Done"]);
+}
+
 /// No network clients, analytics, crash reporters or remote-control crates. The updater
 /// plugin is the one reviewed exception (docs/security.md, decision P0-8b revised); its own
 /// guard is `updater_is_signed_https_and_opt_in`.

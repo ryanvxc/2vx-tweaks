@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-clean-locations"
+description = "Enables the clean_locations command without any pre-configured scope."
+commands.allow = ["clean_locations"]
+
+[[permission]]
+identifier = "deny-clean-locations"
+description = "Denies the clean_locations command without any pre-configured scope."
+commands.deny = ["clean_locations"]

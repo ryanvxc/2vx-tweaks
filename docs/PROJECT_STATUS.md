@@ -5,9 +5,9 @@ Reviewed at commit `a961def` (2026-11-03); rows are updated for stage 3 and the 
 plans. Priorities point to [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md); stages to
 [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md).
 
-**Verification (0.2, 2026-11-04):** `npm run check:all` passes: typecheck, lint, Prettier, 112 Vitest tests in 20 files
-(including the updater state machine and the release scripts), `cargo fmt`, clippy with `-D warnings`, 68 Rust unit
-tests (1 ignored real-registry test) and 7 policy guard tests. The GitHub workflows have not run (no remote). The
+**Verification (0.2, 2026-11-04):** `npm run check:all` passes: typecheck, lint, Prettier, 165 Vitest tests in 29 files
+(including the updater state machine and the release scripts), `cargo fmt`, clippy with `-D warnings`, 99 Rust unit
+tests (2 ignored real-system tests) and 8 policy guard tests. The GitHub workflows have run (see Updates and CI below). The
 makeover was also toured on the desktop debug build with the real catalogue: every page, every Tweaks tab, a tweak review
 and a gaming profile review, with no console errors. Nothing was applied, so applying through the new screens is
 covered by unit tests only. The later layout pass (shorter window, title in the title bar, full-height pages) was
@@ -27,11 +27,11 @@ checked at 1280×720, 1024×600 and maximised. The window has since been fixed a
 ## Summary
 
 Version 0.2: the app was restructured and restyled (`INFORMATION_ARCHITECTURE.md`, `REDESIGN_ROADMAP.md`,
-`DESIGN_SYSTEM.md`). 35 documented tweaks ship with per-tweak undo, grouped under Tweaks, with Game Mode and its
-presets built from those same tweaks. Monitoring, Hardware, Startup (read-only), PC Cleaner (read-only scan), the
+`DESIGN_SYSTEM.md`). 37 documented tweaks ship with per-tweak undo, grouped under Tweaks, with Game Mode and its
+presets built from those same tweaks. Monitoring, Hardware, PC Cleaner (System Cleaner, Services, Uninstall, Autoruns), the
 Restore Centre and Tools are real pages,
-and a signed Tauri updater with an Update Centre is built (`UPDATE_SYSTEM.md`). The release pipeline is written but
-has never run: there is no GitHub remote and the signing secrets aren't configured (`UPDATE_SETUP_GUIDE.md`). The
+and a signed Tauri updater with an Update Centre is built (`UPDATE_SYSTEM.md`). The repository is public at `ryanvxc/2vx-tweaks`,
+the signing secrets are set, and the pipeline published prerelease v0.2.0 with its update feed. The
 broker's real UAC path (P0-7) and a real update install still need a VM.
 
 ## Status by area
@@ -49,8 +49,7 @@ broker's real UAC path (P0-7) and a real update install still need a VM.
 | Monitoring page | **Implemented** (Hardware page, 0.2) | `/monitoring` redirects to `/hardware`. Per-thread CPU, GPU, memory, storage, network tabs from the existing sampler. No disk throughput or persisted history. | Extend sampler | P1-3 |
 | Game Mode page | **Implemented** (detection, ring, Configure, Add a Game) | Turning on reviews and applies the chosen tweaks; turning off reverts that batch. Stays on until turned off: session-scoped automatic undo is P2-2 | Automatic undo on game exit | P2-2 |
 | Tweaks page | **Implemented** (topic tabs, 33 tweaks, card grid, filters, switch-off undo, break warnings) | Desktop flow not yet run on a VM | VM checklist | P0-7 |
-| Startup page | **Partial** (read-only inventory) | Lists Run/RunOnce values and Startup-folder shortcuts with Task Manager state. Disabling (journaled Run-value removal, P0-8a) not built. | Build disable/undo | P1-5 |
-| PC Cleaner page | **Partial** (read-only scan) | Measures allowlisted locations and the Recycle Bin. Cleaning not built. | Build journaled deletion | P1-6 |
+| PC Cleaner page | **Implemented, not exercised on the dev PC** | Four tabs. Checked read-only in the real app, with every dialog opened and cancelled; cleaning, uninstalling, reinstalling, switching entries and the UAC path have only unit tests | Run them on a VM | P0-7, P1-5, P1-6 |
 | Resources page | **Partial** | Copyable system report and Windows tool commands to copy; nothing is launched (no process spawning). | SFC/DISM per P0-8c | P2-8 |
 | Settings page | **Implemented** (row-based sections, Update Centre) | No journal export or log viewer yet | Journal export, log viewer | P1-10 |
 | Hardware detection (`system/hardware.rs`, `os.rs`, `power.rs`, `privilege.rs`)                                    | **Implemented** (snapshot once per session)                          | No hybrid-core topology, chassis type, HVCI or Secure Boot state. `TweakContext` has build, elevation and battery only.                                                             | Extend detection                                            | P1-2        |
@@ -58,7 +57,7 @@ broker's real UAC path (P0-7) and a real update install still need a VM.
 | Logging (`logging.rs`, `services/logger.ts`)                                                                      | **Implemented**                                                      | No in-app log viewer                                                                                                                                                                | Log viewer in Settings                                      | P1-10       |
 | Error model (`error.rs`, `BackendError`)                                                                          | **Implemented**                                                      | –                                                                                                                                                                                   | Keep                                                        | –           |
 | Engine contract, registry, metadata gate (`engine/mod.rs`)                                                        | **Implemented**                                                      | –                                                                                                                                                                                   | Keep                                                        | –           |
-| Tweak catalogue (`engine/tweaks/`) | **Implemented** (35 tweaks with impact, `added_in` and break warnings; not yet VM-tested) | 27 from the pack review; 10 are Pro and above, 11 are single services guarded by `requires` | More documented tweaks | P0-7, P2-10 |
+| Tweak catalogue (`engine/tweaks/`) | **Implemented** (37 tweaks with impact, `added_in` and break warnings; not yet VM-tested) | 27 from the pack review; 10 are Pro and above, 11 are single services guarded by `requires` | More documented tweaks | P0-7, P2-10 |
 | Registry primitive (`engine/setting.rs`, `store.rs`)                                                              | **Implemented**                                                      | Only DWORD, QWORD, SZ and EXPAND_SZ, by design                                                                                                                                      | Keep                                                        | –           |
 | Other primitives (power, services, AppX, QoS, files)                                                              | **Not started**                                                      | The journal's `changes.target` column stores a JSON `RegTarget`, so a second primitive needs a schema migration and a generalised target type                                       | Generalise the target before adding power plans             | P1-4        |
 | Policy denylist (`engine/policy.rs`)                                                                              | **Implemented**, checked at registration, planning and in the broker | –                                                                                                                                                                                   | Keep                                                        | –           |
@@ -70,12 +69,12 @@ broker's real UAC path (P0-7) and a real update install still need a VM.
 | Restore points                                                                                                    | **Not started**                                                      | –                                                                                                                                                                                   | `SRSetRestorePointW` before Medium+ batches                 | P1-7        |
 | Restart handling                                                                                                  | **Partial** (`RestartRequirement` in metadata and plans)             | No pending-restart UI                                                                                                                                                               | Tray and countdown                                          | P1-7        |
 | Onboarding / first run                                                                                            | **Not started**                                                      | –                                                                                                                                                                                   | First-run flow                                              | P1-8        |
-| Updates | **Implemented, not yet published** (Tauri updater, Update Centre) | Superseded P0-8b. Needs a GitHub remote and the signing secrets (`UPDATE_SETUP_GUIDE.md`); a real update has never run | Configure secrets, VM test | P1-11 |
+| Updates | **Implemented, published, not yet tested end to end** (Tauri updater, Update Centre) | Superseded P0-8b. v0.2.0 and the `updater-main` feed are live; a real update has never run | Install v0.2.0 once, then a VM test | P1-11 |
 | Code signing, installer                                                                                           | **Partial** (NSIS/MSI bundles configured; unsigned)                  | SmartScreen warnings; no revert-all on uninstall                                                                                                                                    | Release readiness                                           | P1-11       |
 | Unit and component tests | **Implemented** | Counts in the verification line above | Grows with each feature | – |
 | Policy guard tests (`src-tauri/tests/policy.rs`)                                                                  | **Implemented**                                                      | –                                                                                                                                                                                   | Keep                                                        | –           |
 | End-to-end tests                                                                                                  | **Not started**                                                      | `docs/testing.md` lists Playwright as planned; it is used manually only                                                                                                             | `e2e/` suite against the preview                            | P1-9        |
-| CI | **Written, never run** | `ci.yml` and `release.yml` exist; no remote repository yet | Push to GitHub, add secrets | P1-9, P1-11 |
+| CI | **Implemented** | `release.yml` run 41884400627 passed its checks and published v0.2.0 | Keep | P1-9, P1-11 |
 | Documentation                                                                                                     | **Partial**                                                          | Several stale statements (below)                                                                                                                                                    | Fixed in this update                                        | –           |
 
 ## Inconsistencies found

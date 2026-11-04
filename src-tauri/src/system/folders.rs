@@ -4,8 +4,8 @@ use std::path::PathBuf;
 
 use windows::Win32::System::Com::CoTaskMemFree;
 use windows::Win32::UI::Shell::{
-    FOLDERID_CommonStartup, FOLDERID_LocalAppData, FOLDERID_Startup, FOLDERID_Windows,
-    KNOWN_FOLDER_FLAG, SHGetKnownFolderPath,
+    FOLDERID_CommonStartup, FOLDERID_LocalAppData, FOLDERID_Recent, FOLDERID_Startup,
+    FOLDERID_Windows, KNOWN_FOLDER_FLAG, SHGetKnownFolderPath,
 };
 use windows::core::GUID;
 
@@ -16,6 +16,8 @@ pub enum Folder {
     /// The all-users Startup folder.
     CommonStartup,
     LocalAppData,
+    /// The shortcuts behind Recent files.
+    Recent,
     Windows,
 }
 
@@ -24,6 +26,7 @@ pub fn known(folder: Folder) -> Option<PathBuf> {
         Folder::Startup => FOLDERID_Startup,
         Folder::CommonStartup => FOLDERID_CommonStartup,
         Folder::LocalAppData => FOLDERID_LocalAppData,
+        Folder::Recent => FOLDERID_Recent,
         Folder::Windows => FOLDERID_Windows,
     };
     // SAFETY: `id` is a valid known-folder GUID; on success the returned buffer is a

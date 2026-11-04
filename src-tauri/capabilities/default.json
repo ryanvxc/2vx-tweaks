@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window: system information, logging, custom window chrome, the local account, the tweak engine (IDs only: plan, apply, revert, history), and the signed updater (check, download, install, relaunch).",
+  "description": "Main window: system information, logging, custom window chrome, the local account, the tweak engine (IDs only: plan, apply, revert, history), PC Cleaner actions (IDs only: clear allowlisted locations, switch startup entries, remove or restore listed apps), and the signed updater (check, download, install, relaunch).",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -21,6 +21,11 @@
     "allow-get-running-programs",
     "allow-list-startup-items",
     "allow-scan-cleanup-locations",
+    "allow-clean-locations",
+    "allow-set-startup-enabled",
+    "allow-list-removable-apps",
+    "allow-uninstall-app",
+    "allow-reinstall-app",
     "allow-list-tweaks",
     "allow-get-engine-status",
     "allow-get-tweak-statuses",
@@ -28,6 +33,7 @@
     "allow-apply-plan",
     "allow-revert-snapshot",
     "allow-revert-tweak",
+    "allow-revert-tweaks",
     "allow-list-snapshots",
     "allow-get-snapshot-changes"
   ]

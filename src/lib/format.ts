@@ -34,6 +34,17 @@ export function formatFrequency(mhz: number | null | undefined): string {
   return mhz >= 1000 ? `${(mhz / 1000).toFixed(2)} GHz` : `${mhz} MHz`;
 }
 
+/** "3 hours ago", to the largest whole unit. */
+export function formatAgo(thenMs: number, nowMs = Date.now()): string {
+  const minutes = Math.floor(Math.max(0, nowMs - thenMs) / 60_000);
+  const unit = (n: number, name: string) => `${n} ${name}${n === 1 ? "" : "s"} ago`;
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return unit(minutes, "minute");
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return unit(hours, "hour");
+  return unit(Math.floor(hours / 24), "day");
+}
+
 export function percentOf(part: number, whole: number): number {
   if (!whole) return 0;
   return Math.min(100, Math.max(0, (part / whole) * 100));

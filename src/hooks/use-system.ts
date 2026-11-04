@@ -10,6 +10,7 @@ export const useEngineStatus = () => useBackendQuery("engine-status", backend.ge
 export const useTweakStatuses = () => useBackendQuery("tweak-statuses", backend.getTweakStatuses);
 export const useStartupItems = () => useBackendQuery("startup-items", backend.listStartupItems);
 export const useCleanupScan = () => useBackendQuery("cleanup-scan", backend.scanCleanupLocations);
+export const useRemovableApps = () => useBackendQuery("removable-apps", backend.listRemovableApps);
 export const useSnapshots = () => useBackendQuery("snapshots", () => backend.listSnapshots(50));
 
 export const refreshAccount = () => invalidateQueries(["account"]);

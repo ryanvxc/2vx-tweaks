@@ -1,5 +1,7 @@
 pub mod bluetooth;
 pub mod compat_assistant;
+pub mod diagtrack;
+pub mod geolocation;
 pub mod maps_broker;
 pub mod print_notify;
 pub mod print_spooler;

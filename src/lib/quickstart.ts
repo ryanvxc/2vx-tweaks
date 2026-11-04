@@ -48,7 +48,7 @@ export const QUICKSTART_STEPS: QuickstartStep[] = [
     id: "startup",
     title: "Check your startup apps",
     text: "See what starts with Windows.",
-    to: "/startup",
+    to: "/cleaner?tab=autoruns",
     done: visited("startup"),
   },
   {

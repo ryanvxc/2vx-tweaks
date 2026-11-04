@@ -4,6 +4,7 @@ import type {
   AppInfo,
   BackendError,
   CleanupLocation,
+  RemovableApp,
   MetricsSample,
   StartupInventory,
   SystemSnapshot,
@@ -323,10 +324,16 @@ function startup(): StartupInventory {
     id: `${location}\\${name}`,
     name: `Preview sample: ${name}`,
     command,
+    path: command.replace(/^"|".*$| [-/].*$/g, ""),
     source,
     scope: location.startsWith("HKLM") ? "allUsers" : "currentUser",
     location,
     enabled,
+    offInTaskManager: false,
+    changeable: true,
+    origin: location.startsWith("HKLM") ? "microsoft" : "thirdParty",
+    description: "Preview sample",
+    publisher: null,
   });
   return {
     items: [
@@ -358,12 +365,29 @@ async function cleanup(): Promise<CleanupLocation[]> {
     status,
   });
   return [
-    loc("user-temp", "Your temporary files", 1840 * MiB, 5210),
-    loc("windows-temp", "Windows temporary files", 0, 0, "denied"),
-    loc("directx-shader-cache", "DirectX shader cache", 412 * MiB, 380),
-    loc("nvidia-shader-cache", "NVIDIA shader cache", 0, 0, "missing"),
-    loc("edge-cache", "Microsoft Edge cache", 655 * MiB, 9120),
-    loc("recycle-bin", "Recycle Bin", 3.2 * 1024 * MiB, 214),
+    loc("user-temp", "Clear Temp Files", 1840 * MiB, 5210),
+    loc("windows-temp", "Clear Windows Temp Files", 0, 0, "denied"),
+    loc("prefetch", "Clear Prefetch", 0, 0, "denied"),
+    loc("directx-shader-cache", "Clear DirectX Shader Cache", 412 * MiB, 380),
+    loc("nvidia-shader-cache", "Clear NVIDIA Shader Cache", 0, 0, "missing"),
+    loc("edge-cache", "Clear Edge Cache", 655 * MiB, 9120),
+    loc("recycle-bin", "Empty Recycle Bin", 3.2 * 1024 * MiB, 214),
+  ];
+}
+
+function apps(): RemovableApp[] {
+  const app = (id: string, name: string, installed: boolean): RemovableApp => ({
+    id,
+    name,
+    description: "Preview sample",
+    installed,
+    icon: null,
+  });
+  return [
+    app("alarms", "Alarms & Clock", true),
+    app("camera", "Camera", true),
+    app("clipchamp", "Clipchamp", false),
+    app("photos", "Photos", true),
   ];
 }
 
@@ -386,5 +410,6 @@ export const preview = {
   engineStatus,
   startup,
   cleanup,
+  apps,
   refuse,
 };

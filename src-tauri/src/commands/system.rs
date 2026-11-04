@@ -1,11 +1,11 @@
 use tauri::State;
 
+use crate::engine::cleanup::{self, CleanupLocation};
+use crate::engine::startup::{self, StartupInventory};
 use crate::error::{AppError, AppResult};
-use crate::system::cleanup::{self, CleanupLocation};
 use crate::system::hardware::{self, SystemSnapshot};
 use crate::system::metrics::{MetricsSample, MetricsSampler};
 use crate::system::processes::{self, RunningProgram};
-use crate::system::startup::{self, StartupInventory};
 
 #[tauri::command]
 pub async fn get_system_snapshot() -> AppResult<SystemSnapshot> {

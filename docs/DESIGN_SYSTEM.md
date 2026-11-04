@@ -117,7 +117,7 @@ skips. Moving the cursor holds it for up to 7 s. Settings › Appearance turns i
 | `OptimisationCard`, `CardGrid`, `NewBadge` | The fixed-height card used by Tweaks: icon, title, description, then indicators and one control |
 | `Indicator`, `ImpactMeter` | Bare 24 px icons with tooltips (warning, restart, blocked, partial) and the 3-bar impact estimate |
 | `FilterBar` | Search box, filter and sort menus on one row |
-| `PageTabs` | Accessible tab list (`role="tablist"`) used by Monitoring, Tweaks and Startup, with an `end` slot for that page's filters; `useTabParam` keeps the tab in the URL |
+| `PageTabs` | Accessible tab list (`role="tablist"`) used by Monitoring, Tweaks and PC Cleaner (`filled` raises the active tab), with an `end` slot for that page's filters; `useTabParam` keeps the tab in the URL |
 | `SettingsGroup`, `SettingsRow` | Rows under a heading for Settings: icon, title, optional line, control on the right. Groups sit inside a shared `panel` |
 | `MetricChart` | Recharts area chart for live metrics with a fixed time window |
 | `CommandPalette` (`components/layout/`) | Ctrl K search over pages, tabs and tweaks. It only navigates |

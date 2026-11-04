@@ -132,6 +132,8 @@ page, not the script, where the two differ (`PeriodInNanoSeconds` is set to 0, n
 | `privacy.online-speech-off` | `HKCU\Software\Microsoft\Speech_OneCore\Settings\OnlineSpeechPrivacy\HasAccepted` = `0` | Low | Low | All | Voice typing and other cloud speech features stop working. |
 | `services.bluetooth-off` | `HKLM\SYSTEM\CurrentControlSet\Services\bthserv\Start` = `4` | Moderate | Low | All | Bluetooth headsets, mice, keyboards and controllers stop working. |
 | `services.compat-assistant-off` | `HKLM\SYSTEM\CurrentControlSet\Services\PcaSvc\Start` = `4` | Moderate | Low | All | Windows stops offering compatibility fixes for older programs. |
+| `services.diagtrack-off` | `HKLM\SYSTEM\CurrentControlSet\Services\DiagTrack\Start` = `4` | Moderate | Low | All | Windows Insider builds and problem reports can stop working. |
+| `services.geolocation-off` | `HKLM\SYSTEM\CurrentControlSet\Services\lfsvc\Start` = `4` | Moderate | Low | All | Location, Find my device and automatic time zone stop working. |
 | `services.maps-broker-off` | `HKLM\SYSTEM\CurrentControlSet\Services\MapsBroker\Start` = `4` | Moderate | Low | All | Offline maps stop updating in apps that use them. |
 | `services.print-notify-off` | `HKLM\SYSTEM\CurrentControlSet\Services\PrintNotify\Start` = `4` | Moderate | Low | All | Printer notifications and extensions stop working. |
 | `services.print-spooler-off` | `HKLM\SYSTEM\CurrentControlSet\Services\Spooler\Start` = `4` | Moderate | Low | All | All printing stops, including printing to PDF. |

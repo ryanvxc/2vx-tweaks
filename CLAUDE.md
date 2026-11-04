@@ -39,8 +39,9 @@ src/                         React frontend
   lib/                       pure helpers (format, health, profiles, tweak-presentation) with unit tests
 src-tauri/src/
   commands/                  Tauri command handlers: thin, validated
-  system/                    read-only system info (os, hardware, metrics sampler, privilege)
-  engine/                    declarative tweaks, policy, journal, plan/apply/revert, elevation broker
+  system/                    read-only system info (os, hardware, metrics sampler, privilege, file_info)
+  engine/                    declarative tweaks, policy, journal, plan/apply/revert, elevation broker,
+                             and the PC Cleaner's fixed actions (cleanup, startup, apps)
   account.rs                 the local account: one email in a file, no server or sign-in
   logging.rs, error.rs
 scripts/                     release helpers for CI: next-version, release-notes, check-update-feed (+ tests)
@@ -85,19 +86,20 @@ of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_
 
 In short (0.2): the app was restructured (`docs/INFORMATION_ARCHITECTURE.md`, `docs/NAVIGATION_STRUCTURE.md`,
 `docs/DESIGN_SYSTEM.md`). Every feature has one primary location; pages and tabs live in `src/app/navigation.ts`, and
-`/system` and `/history` redirect. 35 documented tweaks ship (`engine/tweaks/`, table in `docs/optimisation-modules.md`)
+`/system` and `/history` redirect. 37 documented tweaks ship (`engine/tweaks/`, table in `docs/optimisation-modules.md`)
 with per-tweak undo (`revert_tweak`), an impact rating, and a `warning` only when a named feature can break. A new tweak
 needs an icon and a section in `lib/tweak-presentation.ts`; a test reads the Rust catalogue to enforce it. Gaming
 profiles (`lib/profiles.ts`) are named lists of existing tweaks: "active" is derived from detected state, never stored,
 and they make no FPS claims. Game Mode (`pages/gaming/`) applies a chosen list through the normal review and undoes that
 batch with `revert_snapshot`; the game list stays in the UI because commands never take process names. Home and Game Mode keep their title in the page (`PageHero`), with a thin
 title bar; the window is a fixed 1280×820 with only minimise and close; Quickstart's ticks are derived where the PC can say (`lib/quickstart.ts`) and Patch Notes reads `CHANGELOG.md`, so write its
-newest section for users. Monitoring, Hardware, Startup (read-only), PC Cleaner (read-only scan), the Restore Centre
-and Tools are real pages.
+newest section for users. Monitoring, Hardware, the Restore Centre and Tools are real pages. PC Cleaner has four tabs (`pages/cleaner/`):
+System Cleaner, Services (two presets over existing tweaks), Uninstall (fixed app table) and Autoruns (which replaced
+Startup; `/startup` redirects).
 A signed Tauri updater with an Update Centre is built (`docs/UPDATE_SYSTEM.md`); the feed URL
 is injected only by `.github/workflows/release.yml`, so local builds never update. P0-8b (no updater) is superseded;
-P0-8a/c stand. Still open: the broker's real UAC path on a VM (P0-7), GitHub remote + signing secrets
-(`docs/UPDATE_SETUP_GUIDE.md`), a real update test on a VM. `HKCU\Software\Policies` is admin-only on Windows: never
+P0-8a/c stand. The repo is public at `ryanvxc/2vx-tweaks` and v0.2.0 is released. Still open: the broker's real UAC path on a VM
+(P0-7), a real update test on a VM. `HKCU\Software\Policies` is admin-only on Windows: never
 target it from a `User` tweak. The updater private key lives in `%USERPROFILE%\.tauri\`, never in the repo.
 Known limitations: GPU usage is sysinfo's sum over all engines (clamped 100); used VRAM not available system-wide yet.
 Build: cargo can run out of memory at default parallelism here; set `CARGO_BUILD_JOBS=2` (or 1).

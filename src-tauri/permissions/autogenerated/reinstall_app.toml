@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-reinstall-app"
+description = "Enables the reinstall_app command without any pre-configured scope."
+commands.allow = ["reinstall_app"]
+
+[[permission]]
+identifier = "deny-reinstall-app"
+description = "Denies the reinstall_app command without any pre-configured scope."
+commands.deny = ["reinstall_app"]

@@ -12,6 +12,9 @@
 //!   pipe at `SECURITY_IDENTIFICATION` so the unelevated server cannot impersonate it.
 //! - The elevated side writes only targets declared by a built-in tweak, after the same
 //!   policy check the engine uses. It accepts no commands, paths or code.
+//! - Clearing a location takes its allowlist ID. Moving a Run entry takes a key from a fixed
+//!   list and a value name; the value itself never crosses the pipe, so the elevated side
+//!   can only put back what it took out.
 //! - The journal stays in the unelevated app; the broker holds no state and exits when done.
 
 use std::fs::File;
@@ -39,9 +42,11 @@ use windows::Win32::UI::WindowsAndMessaging::SW_HIDE;
 use windows::core::{HSTRING, PCWSTR, w};
 
 use crate::engine::TweakRegistry;
+use crate::engine::cleanup::{self, CleanupResult};
 use crate::engine::plan::new_plan_id;
 use crate::engine::policy;
-use crate::engine::setting::{RegTarget, RegValue};
+use crate::engine::setting::{Hive, RegTarget, RegValue};
+use crate::engine::startup::{self, RunKey};
 use crate::engine::store::{LocalWriter, SettingStore, SettingWriter, WindowsRegistry};
 use crate::error::{AppError, AppResult};
 
@@ -61,6 +66,16 @@ pub enum Request {
         target: RegTarget,
         value: Option<RegValue>,
     },
+    /// Clears one administrator location from the cleanup allowlist.
+    Clean {
+        id: String,
+    },
+    /// Moves one HKLM entry between its Run key and 2VX's holding key.
+    MoveStartup {
+        key: RunKey,
+        name: String,
+        enabled: bool,
+    },
     Done,
 }
 
@@ -68,6 +83,8 @@ pub enum Request {
 #[serde(tag = "result", rename_all = "camelCase")]
 pub enum Response {
     Written { read_back: Option<RegValue> },
+    Cleaned { outcome: CleanupResult },
+    Moved,
     Error { code: String, message: String },
 }
 
@@ -126,15 +143,21 @@ pub fn serve<S: Read + Write>(
         let response = match request {
             Request::Done => return Ok(()),
             Request::Write { target, value } => {
-                match handle_write(registry, store, &target, value.as_ref()) {
-                    Ok(read_back) => Response::Written { read_back },
-                    Err(e) => Response::Error {
-                        code: e.code().into(),
-                        message: e.to_string(),
-                    },
-                }
+                handle_write(registry, store, &target, value.as_ref())
+                    .map(|read_back| Response::Written { read_back })
+            }
+            Request::Clean { id } => {
+                cleanup::clean_elevated(&id).map(|outcome| Response::Cleaned { outcome })
+            }
+            Request::MoveStartup { key, name, enabled } => {
+                startup::move_value(Hive::LocalMachine, key, &name, enabled)
+                    .map(|()| Response::Moved)
             }
         };
+        let response = response.unwrap_or_else(|e| Response::Error {
+            code: e.code().into(),
+            message: e.to_string(),
+        });
         write_frame(stream, &response)?;
     }
 }
@@ -343,6 +366,43 @@ fn pipe_raw(file: &File) -> *mut core::ffi::c_void {
     file.as_raw_handle()
 }
 
+impl BrokerSession {
+    fn exchange(&mut self, request: &Request) -> AppResult<Response> {
+        write_frame(&mut self.pipe, request)?;
+        match read_frame::<_, Response>(&mut self.pipe)? {
+            Response::Error { code, message } => Err(match code.as_str() {
+                "policy" => AppError::Policy(message),
+                "elevation_required" => AppError::ElevationRequired(message),
+                _ => AppError::System(message),
+            }),
+            response => Ok(response),
+        }
+    }
+
+    pub fn clean(&mut self, id: &str) -> AppResult<CleanupResult> {
+        match self.exchange(&Request::Clean { id: id.into() })? {
+            Response::Cleaned { outcome } => Ok(outcome),
+            _ => Err(unexpected_reply()),
+        }
+    }
+
+    pub fn move_startup(&mut self, key: RunKey, name: &str, enabled: bool) -> AppResult<()> {
+        let request = Request::MoveStartup {
+            key,
+            name: name.into(),
+            enabled,
+        };
+        match self.exchange(&request)? {
+            Response::Moved => Ok(()),
+            _ => Err(unexpected_reply()),
+        }
+    }
+}
+
+fn unexpected_reply() -> AppError {
+    AppError::System("the elevated helper sent an unexpected reply".into())
+}
+
 impl SettingWriter for BrokerSession {
     fn write(
         &mut self,
@@ -353,14 +413,9 @@ impl SettingWriter for BrokerSession {
             target: target.clone(),
             value: value.cloned(),
         };
-        write_frame(&mut self.pipe, &request)?;
-        match read_frame::<_, Response>(&mut self.pipe)? {
+        match self.exchange(&request)? {
             Response::Written { read_back } => Ok(read_back),
-            Response::Error { code, message } => Err(match code.as_str() {
-                "policy" => AppError::Policy(message),
-                "elevation_required" => AppError::ElevationRequired(message),
-                _ => AppError::System(message),
-            }),
+            _ => Err(unexpected_reply()),
         }
     }
 }

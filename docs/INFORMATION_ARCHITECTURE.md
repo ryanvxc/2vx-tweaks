@@ -24,8 +24,7 @@ Every feature has one primary location. Other pages may summarise it and link th
 | **Hardware** | What's in this PC? | One specification sheet: processor, graphics, memory, Windows, board, drives | – |
 | **Tweaks** | What can I change? | Tabs (each also a sidebar row), search, filters, a grid of cards | Details dialog with values and sources |
 | **Game Mode** | Is a game running, and what should change for it? | Ring, detected game, live CPU and GPU | Configure (what it turns on), Add a Game |
-| **Startup** | What runs at sign-in? | Count, tabs, entries | Command (copy) |
-| **PC Cleaner** | What's using space? | Total, ranked list | Paths on hover |
+| **PC Cleaner** | What can I clear, turn off or remove? | Four tabs: System Cleaner, Services, Uninstall, Autoruns | The review before each change |
 | **Restore Centre** | What did 2VX change, and can I undo it? | One table of batches | Exact old and new values |
 | **Resources** | How do I get a report or open a Windows tool? | Report, tools | – |
 | **Settings** | How do I change the app? | Everything on one page | – |

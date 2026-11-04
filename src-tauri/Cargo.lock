@@ -4201,6 +4201,7 @@ dependencies = [
  "tracing-appender",
  "tracing-subscriber",
  "windows",
+ "windows-collections",
  "windows-registry 0.100.0",
  "windows-result 0.100.0",
 ]

@@ -97,19 +97,27 @@ export interface AppInfo {
   debugBuild: boolean;
 }
 
-// Mirrors src-tauri/src/system/startup.rs.
+// Mirrors src-tauri/src/engine/startup.rs.
 export type StartupSource = "runKey" | "runOnceKey" | "startupFolder";
 export type StartupScope = "currentUser" | "allUsers";
+export type StartupOrigin = "microsoft" | "thirdParty" | "unknown";
 
 export interface StartupItem {
   id: string;
   name: string;
   command: string;
+  path: string;
   source: StartupSource;
   scope: StartupScope;
   location: string;
-  /** `false` when Task Manager has it disabled; `null` when it has no record. */
+  /** `false` when it won't run: switched off here or in Task Manager. */
   enabled: boolean | null;
+  offInTaskManager: boolean;
+  changeable: boolean;
+  /** Who the program says made it. Self-reported, so a label and never a safety verdict. */
+  origin: StartupOrigin;
+  description: string | null;
+  publisher: string | null;
 }
 
 export interface StartupInventory {
@@ -117,7 +125,7 @@ export interface StartupInventory {
   unreadable: string[];
 }
 
-// Mirrors src-tauri/src/system/cleanup.rs.
+// Mirrors src-tauri/src/engine/cleanup.rs.
 export type ScanStatus = "measured" | "partial" | "missing" | "denied";
 
 export interface CleanupLocation {
@@ -128,6 +136,25 @@ export interface CleanupLocation {
   bytes: number;
   files: number;
   status: ScanStatus;
+}
+
+export interface CleanupResult {
+  id: string;
+  freedBytes: number;
+  removedFiles: number;
+  /** Files left behind, nearly always because something has them open. */
+  skippedFiles: number;
+  error: string | null;
+}
+
+// Mirrors src-tauri/src/engine/apps.rs.
+export interface RemovableApp {
+  id: string;
+  name: string;
+  description: string;
+  installed: boolean;
+  /** The logo from the installed package, as a data URL. */
+  icon: string | null;
 }
 
 /** Mirrors `UpdateSupport` in src-tauri/src/commands/app.rs. */

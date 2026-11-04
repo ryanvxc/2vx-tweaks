@@ -48,6 +48,8 @@ const ALL: &[SettingsTweak] = &[
     services::print_notify::TWEAK,
     services::xbox_auth::TWEAK,
     services::xbox_save::TWEAK,
+    services::diagtrack::TWEAK,
+    services::geolocation::TWEAK,
 ];
 
 pub fn register_all(registry: &mut TweakRegistry) -> AppResult<()> {

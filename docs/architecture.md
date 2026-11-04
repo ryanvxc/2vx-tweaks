@@ -21,6 +21,9 @@
 │   │             service.rs  Engine: plan → apply → verify → rollback │
 │   │             journal.rs  SQLite change journal (write-ahead)      │
 │   │             broker.rs   elevated helper over a private pipe      │
+│   │             cleanup.rs  allowlisted scan and clear               │
+│   │             startup.rs  startup inventory and on/off moves       │
+│   │             apps.rs     fixed table of removable Store apps      │
 │   └── logging.rs (tracing → rolling file), error.rs                  │
 └──────────────────────────────────────────────────────────────────────┘
          ▲ named pipe (typed writes only)
@@ -36,7 +39,7 @@ The nine areas from the project brief map like this:
 | UI and presentation | `src/pages`, `src/components` |
 | App state and settings | `src/stores` (UI prefs). Durable engine state in the SQLite journal |
 | System information | `src-tauri/src/system` |
-| Optimisation engine | `src-tauri/src/engine/` (`service.rs` is the only path that changes the system) |
+| Optimisation engine | `src-tauri/src/engine/` (`service.rs` is the only path for tweaks; `cleanup.rs`, `startup.rs` and `apps.rs` hold the PC Cleaner's own fixed actions) |
 | Optimisation modules | `src-tauri/src/engine/tweaks/<category>/<tweak>.rs` (first tweaks: backlog P0-6) |
 | Windows API integrations | `system/*`, `engine/store.rs`, `engine/broker.rs`. See `windows-integration.md` |
 | Backup and restore | `engine/journal.rs`: `%LOCALAPPDATA%\com.twovx.tweaks\journal.db` |

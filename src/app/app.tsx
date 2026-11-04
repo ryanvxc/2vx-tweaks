@@ -11,7 +11,6 @@ import { HardwarePage } from "@/pages/hardware/hardware-page";
 import { MonitoringPage } from "@/pages/monitoring/monitoring-page";
 import { RestorePage } from "@/pages/restore/restore-page";
 import { SettingsPage } from "@/pages/settings/settings-page";
-import { StartupPage } from "@/pages/startup/startup-page";
 import { ToolsPage } from "@/pages/tools/tools-page";
 import { TweaksPage } from "@/pages/tweaks/tweaks-page";
 import { useUiStore } from "@/stores/ui-store";
@@ -46,7 +45,7 @@ export function App() {
               <Route path="tweaks" element={<TweaksPage />} />
               <Route path="system" element={<Moved to="/tweaks" />} />
               <Route path="gaming" element={<GamingPage />} />
-              <Route path="startup" element={<StartupPage />} />
+              <Route path="startup" element={<Navigate to="/cleaner?tab=autoruns" replace />} />
               <Route path="cleaner" element={<CleanerPage />} />
               <Route path="restore" element={<RestorePage />} />
               <Route path="history" element={<Moved to="/restore" />} />

@@ -20,6 +20,7 @@ import {
   Layers,
   Map as MapIcon,
   MapPin,
+  MapPinOff,
   Megaphone,
   MessageSquareOff,
   MessagesSquare,
@@ -31,6 +32,7 @@ import {
   Power,
   Printer,
   Puzzle,
+  Radio,
   RefreshCcw,
   Rocket,
   RotateCw,
@@ -93,6 +95,8 @@ export const TWEAK_ICON: Record<string, LucideIcon> = {
   "privacy.online-speech-off": MicOff,
   "services.bluetooth-off": BluetoothOff,
   "services.compat-assistant-off": Puzzle,
+  "services.diagtrack-off": Radio,
+  "services.geolocation-off": MapPinOff,
   "services.maps-broker-off": MapIcon,
   "services.print-notify-off": BellRing,
   "services.print-spooler-off": Printer,
@@ -167,6 +171,8 @@ export const TWEAK_SECTIONS: Record<TweakTab, { title: string; ids: string[] }[]
     {
       title: "Other",
       ids: [
+        "services.diagtrack-off",
+        "services.geolocation-off",
         "services.maps-broker-off",
         "services.wap-push-off",
         "services.compat-assistant-off",

@@ -3,7 +3,7 @@
 A Windows 10/11 optimisation suite for gamers and enthusiasts, built with Tauri 2, Rust and React.
 Every change is documented, backed up, verifiable and reversible.
 
-**Status: in development.** 35 documented tweaks with per-tweak undo, Game Mode, live monitoring and a Restore Centre.
+**Status: in development.** 37 documented tweaks with per-tweak undo, Game Mode, a PC Cleaner, live monitoring and a Restore Centre.
 See [project status](docs/PROJECT_STATUS.md).
 
 ```bash

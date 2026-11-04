@@ -1,7 +1,7 @@
 //! The engine service: detect → plan → apply (journal, write, verify, roll back) → revert.
 //!
-//! This is the only code path that changes the system. Commands call it with tweak IDs,
-//! plan IDs or snapshot IDs, never with targets or values.
+//! This is the only code path that changes settings. Commands call it with tweak IDs, plan
+//! IDs or snapshot IDs, never with targets or values.
 
 use std::sync::{Mutex, MutexGuard};
 
@@ -638,21 +638,33 @@ impl Engine {
     /// Per target only the newest record counts: it holds the value from before 2VX's latest
     /// change. Older records for that target are superseded and closed with it.
     pub fn revert_tweak(&self, tweak_id: &str) -> AppResult<OperationOutcome> {
-        let restart = self
-            .registry
-            .get(tweak_id)
-            .ok_or_else(|| AppError::InvalidInput(format!("unknown tweak `{tweak_id}`")))?
-            .meta()
-            .restart;
+        self.revert_tweaks(&[tweak_id.to_string()])
+    }
+
+    /// [`Self::revert_tweak`] for several tweaks as one batch, so one prompt covers them all.
+    /// A tweak with nothing recorded is passed over unless none has anything.
+    pub fn revert_tweaks(&self, tweak_ids: &[String]) -> AppResult<OperationOutcome> {
+        let mut restart = RestartRequirement::None;
+        for id in tweak_ids {
+            let tweak = self
+                .registry
+                .get(id)
+                .ok_or_else(|| AppError::InvalidInput(format!("unknown tweak `{id}`")))?;
+            restart = restart.max(tweak.meta().restart);
+        }
         let mut guard = self.journal()?;
         let journal = guard.as_mut().expect("checked by journal()");
-        let rows = journal.undoable_changes(tweak_id)?;
+        let mut rows = vec![];
+        for id in tweak_ids {
+            rows.extend(journal.undoable_changes(id)?);
+        }
         if rows.is_empty() {
             return Err(AppError::InvalidInput(
                 "2VX has no record of changing this tweak, so there is nothing to undo".into(),
             ));
         }
         let mut originals: Vec<i64> = rows.iter().map(|c| c.snapshot_id).collect();
+        originals.sort_unstable();
         originals.dedup();
         let mut pending: Vec<(ChangeRecord, Vec<i64>)> = Vec::new();
         for row in rows {
@@ -670,8 +682,7 @@ impl Engine {
             !ctx.is_elevated && pending.iter().any(|(c, _)| c.target.hive.needs_elevation());
         let mut writer = self.elevation.writer(self.store.as_ref(), needs_admin)?;
         let reverts = (originals.len() == 1).then(|| originals[0]);
-        let snapshot =
-            journal.begin_snapshot(SnapshotKind::Revert, &[tweak_id.to_string()], reverts)?;
+        let snapshot = journal.begin_snapshot(SnapshotKind::Revert, tweak_ids, reverts)?;
         let all_done = self.restore(journal, writer.as_mut(), snapshot, &pending)?;
         drop(writer);
 
@@ -691,11 +702,11 @@ impl Engine {
         journal.finish_snapshot(snapshot, status, error.as_deref())?;
         journal.audit(
             "tweak_revert_finished",
-            serde_json::json!({ "snapshot": snapshot, "tweak": tweak_id, "status": status.as_str() }),
+            serde_json::json!({ "snapshot": snapshot, "tweaks": tweak_ids, "status": status.as_str() }),
         )?;
         tracing::info!(
             snapshot,
-            tweak = tweak_id,
+            tweaks = tweak_ids.len(),
             status = status.as_str(),
             "tweak revert finished"
         );
@@ -711,6 +722,19 @@ impl Engine {
                 RestartRequirement::None
             },
         })
+    }
+
+    /// Records work that doesn't pass through the journal's snapshots: cleaning, startup
+    /// switches, removing apps. That work is already done, so a failure here is only logged.
+    pub fn audit(&self, event: &str, detail: serde_json::Value) {
+        let Ok(mut guard) = self.journal.lock() else {
+            return;
+        };
+        if let Ok(journal) = guard.as_mut()
+            && let Err(e) = journal.audit(event, detail)
+        {
+            tracing::warn!(event, error = %e, "couldn't record an audit event");
+        }
     }
 
     pub fn history(&self, limit: u32) -> AppResult<Vec<SnapshotRecord>> {

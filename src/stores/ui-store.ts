@@ -22,6 +22,8 @@ interface UiState {
   gameModeTweaks: string[] | null;
   /** The batch Game Mode applied, so turning it off undoes that and nothing else. */
   gameModeSnapshot: number | null;
+  /** When PC Cleaner last cleared anything. */
+  cleanerLastRun: number | null;
   /** Quickstart steps that were opened, for those with nothing to read from the PC. */
   quickstartOpened: string[];
   toggleSidebar: () => void;
@@ -43,6 +45,7 @@ export const useUiStore = create<UiState>()(
       games: [],
       gameModeTweaks: null,
       gameModeSnapshot: null,
+      cleanerLastRun: null,
       quickstartOpened: [],
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       set: (patch) => set(patch),

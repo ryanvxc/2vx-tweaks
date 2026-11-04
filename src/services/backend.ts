@@ -14,6 +14,8 @@ import type {
   BackendError,
   MetricsSample,
   CleanupLocation,
+  CleanupResult,
+  RemovableApp,
   StartupInventory,
   SystemSnapshot,
   UpdateSupport,
@@ -83,6 +85,23 @@ export const backend = {
   scanCleanupLocations: (): Promise<CleanupLocation[]> =>
     isDesktop ? call("scan_cleanup_locations") : preview.cleanup(),
 
+  /** Clears allowlisted locations. Can't be undone, and may show one UAC prompt. */
+  cleanLocations: (ids: string[]): Promise<CleanupResult[]> =>
+    isDesktop ? call("clean_locations", { ids }) : preview.refuse(),
+
+  /** Switches a startup entry by the ID a scan gave it. May show one UAC prompt. */
+  setStartupEnabled: (id: string, enabled: boolean): Promise<void> =>
+    isDesktop ? call("set_startup_enabled", { id, enabled }) : preview.refuse(),
+
+  listRemovableApps: (): Promise<RemovableApp[]> =>
+    isDesktop ? call("list_removable_apps") : Promise.resolve(preview.apps()),
+
+  uninstallApp: (appId: string): Promise<void> =>
+    isDesktop ? call("uninstall_app", { appId }) : preview.refuse(),
+
+  reinstallApp: (appId: string): Promise<void> =>
+    isDesktop ? call("reinstall_app", { appId }) : preview.refuse(),
+
   listTweaks: (): Promise<TweakMeta[]> =>
     isDesktop ? call("list_tweaks") : Promise.resolve(preview.tweaks()),
 
@@ -107,6 +126,10 @@ export const backend = {
   /** Undoes 2VX's recorded changes for one tweak, whichever batches made them. */
   revertTweak: (tweakId: string): Promise<OperationOutcome> =>
     isDesktop ? call("revert_tweak", { tweakId }) : preview.refuse(),
+
+  /** One batch, so one prompt covers them all. */
+  revertTweaks: (tweakIds: string[]): Promise<OperationOutcome> =>
+    isDesktop ? call("revert_tweaks", { tweakIds }) : preview.refuse(),
 
   /** Newest first; the backend defaults to 50. */
   listSnapshots: (limit?: number): Promise<SnapshotRecord[]> =>

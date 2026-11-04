@@ -2,22 +2,21 @@ import {
   Activity,
   AppWindow,
   ArchiveRestore,
+  Brush,
   Cpu,
   EyeOff,
   Gamepad2,
   Gauge,
   Gpu,
   House,
-  Layers,
   MemoryStick,
   Network,
   Package,
+  PackageX,
   Rocket,
   Server,
   Settings,
   Trash2,
-  User,
-  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -48,7 +47,7 @@ export interface NavGroup {
 
 export type MonitoringTab = "cpu" | "memory" | "gpu" | "network";
 export type TweakTab = "windows" | "privacy" | "services";
-export type StartupTab = "all" | "currentUser" | "allUsers";
+export type CleanerTab = "system" | "services" | "uninstall" | "autoruns";
 
 export const MONITORING_TABS: NavTab<MonitoringTab>[] = [
   { value: "cpu", label: "CPU", icon: Cpu },
@@ -63,10 +62,11 @@ export const TWEAK_TABS: NavTab<TweakTab>[] = [
   { value: "services", label: "Services", icon: Server },
 ];
 
-export const STARTUP_TABS: NavTab<StartupTab>[] = [
-  { value: "all", label: "All", icon: Layers },
-  { value: "currentUser", label: "Your account", icon: User },
-  { value: "allUsers", label: "All users", icon: Users },
+export const CLEANER_TABS: NavTab<CleanerTab>[] = [
+  { value: "system", label: "System Cleaner", icon: Brush },
+  { value: "services", label: "Services", icon: Server },
+  { value: "uninstall", label: "Uninstall", icon: PackageX },
+  { value: "autoruns", label: "Autoruns", icon: Rocket },
 ];
 
 export const NAV_GROUPS: NavGroup[] = [
@@ -125,17 +125,11 @@ export const NAV_GROUPS: NavGroup[] = [
         description: "What's inside this PC",
       },
       {
-        to: "/startup",
-        label: "Startup",
-        icon: Rocket,
-        description: "What starts with Windows",
-        tabs: STARTUP_TABS,
-      },
-      {
         to: "/cleaner",
         label: "PC Cleaner",
         icon: Trash2,
-        description: "What temporary files and caches use",
+        description: "Clean files, services, apps and startup",
+        tabs: CLEANER_TABS,
       },
     ],
   },
