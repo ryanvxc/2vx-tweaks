@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** A group of settings rows, titled when a tab holds more than one. */
+/** Settings rows under a heading. Several share one `panel` on the Settings page. */
 export function SettingsGroup({
   title,
   description,
@@ -15,14 +15,14 @@ export function SettingsGroup({
   id?: string;
 }) {
   return (
-    <section id={id} className="scroll-mt-4">
+    <section id={id}>
       {(title || description) && (
-        <div className="mb-2 px-1">
+        <div className="px-4 pt-3 pb-2">
           {title && <h2 className="text-section-title">{title}</h2>}
           {description && <p className="mt-0.5 text-[13px] text-muted-foreground">{description}</p>}
         </div>
       )}
-      <div className="divide-y overflow-hidden rounded-xl border bg-card">{children}</div>
+      <div className="divide-y border-t">{children}</div>
     </section>
   );
 }
@@ -51,14 +51,13 @@ export function SettingsRow({
   return (
     <div
       className={cn(
-        "flex gap-3.5 px-4 py-3.5",
+        // Taller with the window, up to a point: a toggle in a 120 px row reads as a gap.
+        "flex min-h-[clamp(3.25rem,10.5vh,5rem)] gap-3 px-4 py-2.5",
         children ? "items-start" : "items-center",
         className,
       )}
     >
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand/12 text-brand">
-        <Icon className="size-4" aria-hidden />
-      </div>
+      <Icon className="size-[18px] shrink-0 text-brand" aria-hidden />
       <div className="min-w-0 flex-1">
         <Title htmlFor={htmlFor} className="block text-card-title">
           {title}

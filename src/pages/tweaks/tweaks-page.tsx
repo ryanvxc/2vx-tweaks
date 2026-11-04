@@ -6,7 +6,7 @@ export function TweaksPage() {
   return (
     <>
       <PageHeader title="Tweaks" />
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-1 flex-col gap-3">
         <EngineBanner />
         <TweakGrid
           browse

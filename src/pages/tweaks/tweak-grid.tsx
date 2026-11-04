@@ -37,13 +37,7 @@ import {
   isBlocked,
   RESTART_HINT,
 } from "@/lib/engine-text";
-import {
-  isNewTweak,
-  MORE_SECTION,
-  TWEAK_SECTIONS,
-  tweakIcon,
-  tweakPlacement,
-} from "@/lib/tweak-presentation";
+import { isNewTweak, TWEAK_SECTIONS, tweakIcon, tweakPlacement } from "@/lib/tweak-presentation";
 import { play } from "@/lib/motion";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
 import type { Impact, RiskLevel, TweakCategory, TweakStatus } from "@/types/engine";
@@ -239,45 +233,53 @@ export function TweakGrid({
     />
   );
 
-  // Sections only make sense in catalogue order, in one tab.
-  const sectioned = browse && q === "" && sort === "recommended";
+  // Related tweaks stay together unless the user asked for another order.
+  const catalogueOrder = browse && q === "" && sort === "recommended";
 
   return (
-    <div ref={root} className="flex flex-col gap-4">
+    <div ref={root} className="flex flex-1 flex-col gap-3">
       {browse && (
-        <>
-          <PageTabs label="Topics" tabs={tabs} value={tab} onChange={setTab} />
-          <FilterBar
-            search={search}
-            onSearch={setSearch}
-            placeholder="Search tweaks"
-            filters={filters}
-            sort={{
-              value: sort,
-              onChange: (v) => setSort(v as Sort),
-              options: [
-                { value: "recommended", label: "Recommended first" },
-                { value: "name", label: "Name" },
-                { value: "impact", label: "Expected effect" },
-                { value: "newest", label: "Newest" },
-              ],
-            }}
-            end={
-              recommendedOpen.length > 0 && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={changesDisabled}
-                  onClick={() =>
-                    setStaged((s) => [...new Set([...s, ...recommendedOpen.map((t) => t.meta.id)])])
-                  }
-                >
-                  <Wand2 /> Select recommended ({recommendedOpen.length})
-                </Button>
-              )
-            }
-          />
-        </>
+        <PageTabs
+          label="Topics"
+          tabs={tabs}
+          value={tab}
+          onChange={setTab}
+          end={
+            <FilterBar
+              search={search}
+              onSearch={setSearch}
+              placeholder="Search tweaks"
+              filters={filters}
+              sort={{
+                value: sort,
+                onChange: (v) => setSort(v as Sort),
+                options: [
+                  { value: "recommended", label: "Recommended first" },
+                  { value: "name", label: "Name" },
+                  { value: "impact", label: "Expected effect" },
+                  { value: "newest", label: "Newest" },
+                ],
+              }}
+              end={
+                recommendedOpen.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={changesDisabled}
+                    aria-label={`Select recommended (${recommendedOpen.length})`}
+                    onClick={() =>
+                      setStaged((s) => [
+                        ...new Set([...s, ...recommendedOpen.map((t) => t.meta.id)]),
+                      ])
+                    }
+                  >
+                    <Wand2 /> Recommended {recommendedOpen.length}
+                  </Button>
+                )
+              }
+            />
+          }
+        />
       )}
 
       {error ? (
@@ -285,30 +287,22 @@ export function TweakGrid({
       ) : loading && !data ? (
         <CardGrid>
           {Array.from({ length: 6 }, (_, i) => (
-            <Skeleton key={i} className="h-[136px] rounded-xl" />
+            <Skeleton key={i} className="h-[168px] rounded-xl" />
           ))}
         </CardGrid>
       ) : all.length === 0 ? (
-        <EmptyState
-          icon={PackageOpen}
-          title="Nothing here yet"
-          className="rounded-xl border bg-card"
-        />
+        <EmptyState icon={PackageOpen} title="Nothing here yet" className="flex-1 panel" />
       ) : shown.length === 0 ? (
-        <EmptyState icon={SearchX} title="No tweaks match" className="rounded-xl border bg-card" />
-      ) : sectioned ? (
-        sections(tab, shown).map(([title, tweaks]) => (
-          <section key={title} className="flex flex-col gap-2.5">
-            <h2 className="text-section-title">{title}</h2>
-            <CardGrid>{tweaks.map(card)}</CardGrid>
-          </section>
-        ))
+        <EmptyState icon={SearchX} title="No tweaks match" className="flex-1 panel" />
       ) : (
-        <CardGrid>{shown.map(card)}</CardGrid>
+        // A catalogue keeps its column width; a short fixed list spreads across the row.
+        <CardGrid className={browse ? undefined : "grid-cols-[repeat(auto-fit,minmax(19rem,1fr))]"}>
+          {(catalogueOrder ? inCatalogueOrder(tab, shown) : shown).map(card)}
+        </CardGrid>
       )}
 
       {staged.length > 0 && (
-        <div className="sticky bottom-4 z-10 mx-auto flex animate-sheet-up items-center gap-3 rounded-xl border border-primary/30 bg-popover/95 py-2 pr-2 pl-4 shadow-2xl shadow-black/50 backdrop-blur">
+        <div className="sticky bottom-3 z-10 mx-auto mt-auto flex animate-sheet-up items-center gap-3 rounded-xl border border-primary/30 bg-popover/95 py-2 pr-2 pl-4 shadow-2xl shadow-black/50 backdrop-blur">
           <Sparkles className="size-4 text-primary" />
           <span className="text-[13px] text-muted-foreground">
             <b
@@ -365,18 +359,14 @@ export function TweakGrid({
   );
 }
 
-/** A tab's tweaks under their headings, in catalogue order; anything unplaced goes last. */
-function sections(tab: TweakTab, tweaks: TweakStatus[]) {
-  const titles = [...TWEAK_SECTIONS[tab].map((s) => s.title), MORE_SECTION];
+/** A tab's tweaks section by section; anything unplaced goes last. */
+function inCatalogueOrder(tab: TweakTab, tweaks: TweakStatus[]) {
   const order = TWEAK_SECTIONS[tab].flatMap((s) => s.ids);
-  return titles
-    .map((title): [string, TweakStatus[]] => [
-      title,
-      tweaks
-        .filter((t) => tweakPlacement(t.meta).section === title)
-        .sort((a, b) => order.indexOf(a.meta.id) - order.indexOf(b.meta.id)),
-    ])
-    .filter(([, list]) => list.length > 0);
+  const place = (t: TweakStatus) => {
+    const i = order.indexOf(t.meta.id);
+    return i < 0 ? order.length : i;
+  };
+  return [...tweaks].sort((a, b) => place(a) - place(b));
 }
 
 function TweakCard({

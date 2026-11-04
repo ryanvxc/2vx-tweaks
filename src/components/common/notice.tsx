@@ -43,7 +43,7 @@ export function Notice({
     <div
       role={tone === "destructive" || tone === "warning" ? "alert" : "status"}
       className={cn(
-        "flex animate-rise items-start gap-3 rounded-lg border p-3.5",
+        "flex animate-rise items-start gap-3 rounded-lg border px-3.5 py-2.5",
         t.box,
         className,
       )}
@@ -73,32 +73,35 @@ export function MessageNotice({ tone, title, description }: Message) {
   );
 }
 
-const PILL: Record<Tone, string> = {
-  success: "text-success border-success/25 bg-success/8",
-  warning: "text-warning border-warning/30 bg-warning/8",
-  destructive: "text-destructive border-destructive/30 bg-destructive/10",
-  info: "text-info border-info/25 bg-info/8",
-  neutral: "text-muted-foreground border-border bg-muted/50",
+const DOT: Record<Tone, string> = {
+  success: "bg-success",
+  warning: "bg-warning",
+  destructive: "bg-destructive",
+  info: "bg-info",
+  neutral: "bg-muted-foreground/50",
 };
 
-/** Small state label, same shape as `RiskBadge`. */
-export function StatusPill({
+/** A state in words, with a dot for its tone. Plain text, so it never reads as a button. */
+export function StatusLabel({
   tone,
   children,
   className,
+  title,
 }: {
   tone: Tone;
   children: ReactNode;
   className?: string;
+  title?: string;
 }) {
   return (
     <span
+      title={title}
       className={cn(
-        "inline-flex h-5 shrink-0 items-center rounded-full border px-2 text-[10.5px] font-medium tracking-wide whitespace-nowrap",
-        PILL[tone],
+        "inline-flex shrink-0 items-center gap-1.5 text-[12px] whitespace-nowrap text-muted-foreground",
         className,
       )}
     >
+      <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", DOT[tone])} />
       {children}
     </span>
   );

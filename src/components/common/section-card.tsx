@@ -29,12 +29,12 @@ export function SectionCard({
   contentClassName?: string;
 }) {
   return (
-    <Card className={cn("gap-4", className)}>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="text-section-title">{title}</CardTitle>
-        {description && <CardDescription className="text-[12.5px]">{description}</CardDescription>}
+        {description && <CardDescription className="text-[12px]">{description}</CardDescription>}
         {(source || actions) && (
-          <CardAction className="flex items-center gap-2">
+          <CardAction className="flex h-5 items-center gap-3">
             {actions}
             {source && <DataSourceBadge source={source} />}
           </CardAction>

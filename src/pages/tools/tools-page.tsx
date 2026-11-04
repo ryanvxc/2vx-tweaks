@@ -1,4 +1,4 @@
-import { ClipboardCopy, MonitorCog, Terminal } from "lucide-react";
+import { ClipboardCopy, Copy, MonitorCog } from "lucide-react";
 import { toast } from "sonner";
 import { SectionCard } from "@/components/common/section-card";
 import { LoadingRows } from "@/components/common/states";
@@ -39,53 +39,63 @@ export function ToolsPage() {
   return (
     <>
       <PageHeader title="Tools" />
-      <div className="grid grid-cols-12 gap-3">
-        <div className="col-span-7">
-          <SectionCard
-            title="System report"
-            source="live"
-            actions={
-              <Button size="xs" disabled={!report} onClick={() => report && copy(report, "Report")}>
-                <ClipboardCopy /> Copy
-              </Button>
-            }
-          >
-            {!report ? (
-              <LoadingRows rows={8} />
-            ) : (
-              <pre
-                data-selectable
-                className="max-h-[400px] overflow-auto rounded-lg border bg-background/50 p-3 font-mono text-[11.5px] leading-relaxed text-muted-foreground"
-              >
-                {report}
-              </pre>
-            )}
-          </SectionCard>
-        </div>
-        <div className="col-span-5">
-          <SectionCard title="Windows tools" description="Win+R, paste, Enter">
-            <ul className="-mx-2 flex flex-col">
-              {WINDOWS_TOOLS.map((t) => (
-                <li
-                  key={t.run}
-                  className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-accent/40"
+      <div className="grid flex-1 grid-cols-12 gap-3">
+        <SectionCard
+          title="System report"
+          source="live"
+          className="col-span-7"
+          contentClassName="relative min-h-[280px]"
+          actions={
+            <Button
+              size="xs"
+              variant="ghost"
+              disabled={!report}
+              onClick={() => report && copy(report, "Report")}
+            >
+              <ClipboardCopy /> Copy
+            </Button>
+          }
+        >
+          {!report ? (
+            <LoadingRows rows={8} />
+          ) : (
+            <pre
+              data-selectable
+              className="absolute inset-x-4 inset-y-0 overflow-auto rounded-lg bg-background/50 p-3 font-mono text-[11.5px] leading-relaxed text-muted-foreground"
+            >
+              {report}
+            </pre>
+          )}
+        </SectionCard>
+
+        <SectionCard
+          title="Windows tools"
+          description="Win+R, paste, Enter"
+          className="col-span-5"
+          contentClassName="flex flex-col"
+        >
+          {/* Rows share the height, so the list ends level with the report beside it. */}
+          <ul className="-mx-2 flex flex-1 flex-col">
+            {WINDOWS_TOOLS.map((t) => (
+              <li key={t.run} className="flex flex-1">
+                <button
+                  type="button"
+                  aria-label={`Copy ${t.run}`}
+                  onClick={() => copy(t.run, `"${t.run}"`)}
+                  className="group flex min-h-9 w-full items-center gap-3 rounded-md px-2 text-left transition-colors outline-none hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <MonitorCog className="size-4 shrink-0 text-brand" />
-                  <div className="min-w-0 flex-1 truncate text-[13px] font-medium">{t.name}</div>
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    className="font-mono"
-                    aria-label={`Copy ${t.run}`}
-                    onClick={() => copy(t.run, `"${t.run}"`)}
-                  >
-                    <Terminal /> {t.run}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </SectionCard>
-        </div>
+                  <MonitorCog className="size-4 shrink-0 text-brand" aria-hidden />
+                  <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{t.name}</span>
+                  <code className="font-mono text-[11.5px] text-muted-foreground">{t.run}</code>
+                  <Copy
+                    className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                    aria-hidden
+                  />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
       </div>
     </>
   );

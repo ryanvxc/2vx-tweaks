@@ -23,12 +23,12 @@ Every feature has one primary location. Other pages may summarise it and link th
 | **Monitoring** | What is it doing right now? | Four live tiles that choose the graph | Per-thread load (CPU only) |
 | **Hardware** | What's in this PC? | Spec cards: processor, graphics, memory, Windows, board, drives | – |
 | **Tweaks** | What can I change? | Tabs, search, filters, cards in named sections | Details dialog with values and sources |
-| **Gaming** | What should I set for games? | Three profiles with what each changes | Each profile's tweaks; gaming settings |
+| **Gaming** | What should I set for games? | Three profile columns, each listing what it changes | Gaming settings |
 | **Startup** | What runs at sign-in? | Count, tabs, entries | Command (copy) |
 | **PC Cleaner** | What's using space? | Total, ranked list | Paths on hover |
-| **Restore Centre** | What did 2VX change, and can I undo it? | Summary, batches | Exact old and new values |
+| **Restore Centre** | What did 2VX change, and can I undo it? | One table of batches | Exact old and new values |
 | **Tools** | How do I get a report or open a Windows tool? | Report, tools | – |
-| **Settings** | How do I change the app? | Tabs of rows | – |
+| **Settings** | How do I change the app? | Everything on one page | – |
 
 ## Progressive disclosure
 
@@ -60,4 +60,4 @@ A profile is a named list of tweak IDs in `src/lib/profiles.ts`. It adds no new 
 ## URLs
 
 Tabs live in the URL (`?tab=`), so the back button, search and deep links work. Old URLs redirect:
-`/system` → `/tweaks`, `/history` → `/restore`, `/settings#updates` → `/settings?tab=updates`.
+`/system` → `/tweaks`, `/history` → `/restore`. Settings has no tabs, so old `/settings?tab=…` links land on the page.

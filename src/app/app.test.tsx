@@ -48,7 +48,7 @@ describe("App shell", () => {
     const nav = screen.getByRole("navigation", { name: "Main" });
     await user.click(within(nav).getByRole("link", { name: /gaming/i }));
     expect(await screen.findByRole("heading", { name: "Gaming" })).toBeInTheDocument();
-    expect(await screen.findByRole("radio", { name: /^Responsive/ })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Responsive" })).toBeInTheDocument();
     // The preview never claims an engine is connected.
     expect(screen.getByText("Browser preview")).toBeInTheDocument();
   });
@@ -63,10 +63,7 @@ describe("App shell", () => {
   it("opens the Update Centre from the old section link", async () => {
     window.location.hash = "#/settings#updates";
     render(<App />);
-    expect(await screen.findByRole("tab", { name: "Updates" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(await screen.findByRole("heading", { name: "Updates" })).toBeInTheDocument();
   });
 
   it("finds a page with Ctrl K and opens it", async () => {

@@ -8,32 +8,16 @@ import { cn } from "@/lib/utils";
  */
 export type DataSource = "live" | "derived" | "sample" | "planned";
 
-const CONFIG: Record<DataSource | "preview", { label: string; className: string; tip: string }> = {
-  live: {
-    label: "Live",
-    className: "text-success border-success/25 bg-success/8",
-    tip: "Measured on this PC.",
-  },
+const CONFIG: Record<DataSource | "preview", { label: string; tip: string; tone: string }> = {
+  live: { label: "Live", tip: "Measured on this PC.", tone: "bg-success" },
   derived: {
     label: "Derived",
-    className: "text-info border-info/25 bg-info/8",
     tip: "Calculated from live data.",
+    tone: "border border-muted-foreground/70",
   },
-  sample: {
-    label: "Sample data",
-    className: "text-warning border-warning/30 bg-warning/8",
-    tip: "Placeholder, not measured.",
-  },
-  planned: {
-    label: "Planned",
-    className: "text-muted-foreground border-border bg-muted/50",
-    tip: "Not built yet.",
-  },
-  preview: {
-    label: "Preview",
-    className: "text-info border-info/25 bg-info/8",
-    tip: "Simulated in the browser.",
-  },
+  sample: { label: "Sample data", tip: "Placeholder, not measured.", tone: "text-warning" },
+  planned: { label: "Planned", tip: "Not built yet.", tone: "text-muted-foreground" },
+  preview: { label: "Preview", tip: "Simulated in the browser.", tone: "text-muted-foreground" },
 };
 
 export function DataSourceBadge({
@@ -49,24 +33,36 @@ export function DataSourceBadge({
   // Outside the desktop shell, "live" and "derived" values are simulated.
   const key = !isDesktop && (source === "live" || source === "derived") ? "preview" : source;
   const cfg = CONFIG[key];
+  // Real numbers get a quiet dot. Anything that isn't real says so in words.
+  const dot = key === "live" || key === "derived";
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span
+          role="img"
+          aria-label={cfg.label}
           className={cn(
-            "inline-flex h-5 cursor-default items-center gap-1 rounded-full border px-2 text-[10.5px] font-medium tracking-wide",
-            cfg.className,
+            "inline-flex h-4 min-w-4 cursor-default items-center justify-center",
+            !dot && "text-[11px] font-medium",
+            !dot && cfg.tone,
             className,
           )}
         >
-          {key === "live" && (
-            <span className={cn("size-1.5 rounded-full bg-current", pulse && "animate-live")} />
+          {dot ? (
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                cfg.tone,
+                pulse && key === "live" && "animate-live",
+              )}
+            />
+          ) : (
+            cfg.label
           )}
-          {cfg.label}
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-60">
-        {cfg.tip}
+        {cfg.label}: {cfg.tip}
       </TooltipContent>
     </Tooltip>
   );

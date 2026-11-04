@@ -31,26 +31,34 @@ Chart series use `chart-1…5` (violet, blue, green, amber, magenta).
 
 ## Typography
 
-Headings use Manrope Variable (`@fontsource-variable/manrope`, OFL 1.1) and body text uses Inter Variable
-(`@fontsource-variable/inter`, OFL 1.1), with Segoe UI Variable as the fallback. Both are bundled.
+Everything uses Geist Variable (`@fontsource-variable/geist`, OFL 1.1), bundled, with Segoe UI Variable as the fallback.
 Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 
 | Utility | Size / weight | Use |
 | --- | --- | --- |
-| `text-page-title` | Manrope 24 px / 700 | One per page (`PageHeader`) |
-| `text-section-title` | Manrope 15 px / 700 | Card and group headings |
-| `text-card-title` | Manrope 14 px / 700 | Optimisation card titles, rows |
+| `text-page-title` | 22 px / 600 | One per page (`PageHeader`), in the title bar |
+| `text-section-title` | 14 px / 600 | Card and group headings |
+| `text-card-title` | 13.5 px / 600 | Optimisation card titles, rows |
 | `text-body` | 13 px / 1.45 | Descriptions |
 | `text-caption` | 11.5 px | Metadata, hints, badges |
 
 ## Spacing, radius, layout
 
-- Radius `--radius` 10 px; cards use `rounded-xl`, controls `rounded-md`.
-- Page padding 28 px, card padding 16 px, grid gap 12 px.
-- Sidebar 224 px (`--sidebar-width`), 64 px when compact. Content max width follows the window;
-  card grids are 2 columns, 3 at `xl` (1280 px), 4 at `2xl` (1536 px).
-- Minimum window 1080×700, default 1320×840 (`tauri.conf.json`). Layouts are checked at both sizes.
-- Page anatomy: title; tabs; search, filter and sort on one row; content.
+- Radius `--radius` 10 px; panels use `rounded-xl`, controls `rounded-md`.
+- A surface is the `panel` utility: `--card` fill with a faint `--hairline` edge. Separation comes from the fill, not a
+  visible outline, and panels are never nested.
+- Page padding 20 px, panel padding 16 px, every gap 12 px.
+- Sidebar 224 px (`--sidebar-width`), 64 px when compact. Content uses the full window width; `CardGrid` fits as many
+  19rem columns as there's room for.
+- Minimum window 1024×600, default 1280×720 (`tauri.conf.json`). Layouts are checked at both sizes and maximised.
+- Page anatomy: title in the title bar (`PageHeader` portals into it through `HeaderSlot`, which is about 60 px saved on
+  every page); tabs with search, filter and sort on their right; content.
+- Pages fill the window: the page root is `flex flex-1 flex-col`, and something on it takes the spare height, usually a
+  chart or one full-height table panel. Rows in such a panel may share the height (`flex-1`) so a short list still
+  reaches the bottom.
+- Lists are tables, not stacks of cards: one panel, an `h-9` header row, single-line rows, columns shared through a
+  `COLUMNS` constant.
+- No pill boxes. State is a dot and a word (`StatusLabel`); a label with nothing to report isn't shown at all.
 - Copy: a row is an icon, a title and at most one short line, and that line stays only if something could confuse.
   Never explain how the app works or why it's safe. Tweak card descriptions fit two lines (aim for under 70 characters);
   the detail goes in `details`.
@@ -97,17 +105,17 @@ skips. Moving the cursor holds it for up to 7 s. Settings › Appearance turns i
 
 | Component | Purpose |
 | --- | --- |
-| `OptimisationCard`, `CardGrid`, `NewBadge` | The card used by Tweaks and Gaming: icon, title, description, a dashed hairline, then indicators and one control |
-| `Indicator`, `ImpactMeter` | 28 px bordered tiles with tooltips (warning, restart, blocked, partial) and the 3-bar impact estimate |
+| `OptimisationCard`, `CardGrid`, `NewBadge` | The fixed-height card used by Tweaks and Gaming: icon, title, description, then indicators and one control |
+| `Indicator`, `ImpactMeter` | Bare 24 px icons with tooltips (warning, restart, blocked, partial) and the 3-bar impact estimate |
 | `FilterBar` | Search box, filter and sort menus on one row |
-| `PageTabs` | Accessible tab list (`role="tablist"`) used by Tweaks, Startup and Settings; `useTabParam` keeps the tab in the URL |
-| `SettingsGroup`, `SettingsRow` | Row layout for Settings: icon, title, description, control on the right |
+| `PageTabs` | Accessible tab list (`role="tablist"`) used by Monitoring, Tweaks and Startup, with an `end` slot for that page's filters; `useTabParam` keeps the tab in the URL |
+| `SettingsGroup`, `SettingsRow` | Rows under a heading for Settings: icon, title, optional line, control on the right. Groups sit inside a shared `panel` |
 | `MetricChart` | Recharts area chart for live metrics with a fixed time window |
 | `CommandPalette` (`components/layout/`) | Ctrl K search over pages, tabs and tweaks. It only navigates |
 | `UpdateNotice` | Dismissible Home banner when an update is available |
-| `SectionCard`, `DataSourceBadge` | Card with a title and the live/derived/sample/planned badge |
+| `SectionCard`, `DataSourceBadge` | Card with a title and the data source: solid dot `live`, hollow dot `derived`, plain text `sample`/`planned`/`Preview`. The name and meaning are in the tooltip and `aria-label` |
 | `ConfirmDialog` | Confirmation with `risk="high"` acknowledgement for dangerous actions |
-| `StatusPill`, `Notice`, states | Small status labels, inline notices, loading/empty/error states |
+| `StatusLabel`, `Notice`, states | A dot and a word for state, inline notices, loading/empty/error states |
 
 shadcn/ui primitives in `components/ui/` keep the shadcn API; only their colours and the tooltip style
 were adapted.

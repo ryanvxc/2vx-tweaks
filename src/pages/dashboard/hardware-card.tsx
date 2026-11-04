@@ -20,9 +20,11 @@ export function HardwareCard({
     <SectionCard
       title="This PC"
       source="live"
-      className="h-full"
       actions={
-        <Link to="/hardware" className="text-[12px] font-medium text-brand hover:underline">
+        <Link
+          to="/hardware"
+          className="text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+        >
           Details
         </Link>
       }

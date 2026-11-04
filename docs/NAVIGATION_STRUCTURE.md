@@ -11,7 +11,7 @@ Overview
   Hardware         /hardware
 
 Optimise
-  Tweaks           /tweaks              ?tab=windows | privacy | apps | services
+  Tweaks           /tweaks              ?tab=windows | privacy | services
   Gaming           /gaming
 
 Maintain
@@ -22,7 +22,7 @@ Maintain
 
 ───────
 Check for updates
-Settings           /settings            ?tab=general | appearance | updates | security | about
+Settings           /settings
 [Privilege chip · version · collapse]
 ```
 
@@ -45,9 +45,8 @@ Nine top-level items plus Settings, in three groups named after what you're doin
 | --- | --- |
 | Sidebar | Top-level places |
 | Tabs (`PageTabs`) | Sections of one page; URL-backed |
-| Section headings | Groups inside a tab |
 | Search (Ctrl K) | Jump to any page, tab or tweak |
-| Title bar breadcrumb | Where you are (`Settings › Updates`); read-only, the path is one level deep |
+| Page title | In the title bar, where the sidebar's active item already says the same; no breadcrumb |
 | Contextual links | Hardware → Monitoring, Home → primary locations |
 
 ## Search
@@ -67,4 +66,4 @@ its shield.
 | --- | --- |
 | `/system`, `/system?tweak=…` | `/tweaks`, keeping the query |
 | `/history` | `/restore` |
-| `/settings#updates` | `/settings?tab=updates` |
+| `/settings#updates`, `/settings?tab=…` | `/settings` (one page) |

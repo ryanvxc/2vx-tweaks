@@ -6,7 +6,7 @@ import { PlannedFeatures } from "@/components/common/planned-features";
 import { SectionCard } from "@/components/common/section-card";
 import { ErrorState, LoadingRows } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
-import { StatusPill } from "@/components/common/notice";
+import { StatusLabel } from "@/components/common/notice";
 import { useAppInfo, useEngineStatus } from "@/hooks/use-system";
 import { isDesktop } from "@/services/backend";
 
@@ -94,14 +94,14 @@ function EngineCard() {
           <Item label="Tweaks available">{status.tweakCount}</Item>
           <Item label="Change journal">
             {!isDesktop ? (
-              <StatusPill tone="info">Not in browser preview</StatusPill>
+              <StatusLabel tone="info">Not in browser preview</StatusLabel>
             ) : status.journalAvailable ? (
-              <StatusPill tone="success">Available</StatusPill>
+              <StatusLabel tone="success">Available</StatusLabel>
             ) : (
               <span className="flex flex-col gap-1">
-                <StatusPill tone="destructive" className="self-start">
+                <StatusLabel tone="destructive" className="self-start">
                   Unavailable: changes are disabled
-                </StatusPill>
+                </StatusLabel>
                 <span data-selectable className="text-[12px] text-muted-foreground">
                   {status.journalError}
                 </span>
@@ -112,9 +112,9 @@ function EngineCard() {
             {status.interruptedSnapshots === 0 ? (
               "None"
             ) : (
-              <StatusPill tone="warning">
+              <StatusLabel tone="warning">
                 {status.interruptedSnapshots} to review in History
-              </StatusPill>
+              </StatusLabel>
             )}
           </Item>
         </dl>

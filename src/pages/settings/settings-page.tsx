@@ -1,4 +1,4 @@
-import { Link, Navigate, useLocation } from "react-router";
+import { Link } from "react-router";
 import {
   Bell,
   BookOpenCheck,
@@ -13,54 +13,37 @@ import {
   ShieldUser,
 } from "lucide-react";
 import { toast } from "sonner";
-import { SETTINGS_TABS, type SettingsTab } from "@/app/navigation";
-import { StatusPill } from "@/components/common/notice";
-import { PageTabs } from "@/components/common/page-tabs";
+import { StatusLabel } from "@/components/common/notice";
 import { SettingsGroup, SettingsRow } from "@/components/common/settings-row";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useAppInfo, useEngineStatus } from "@/hooks/use-system";
-import { useTabParam } from "@/hooks/use-tab-param";
 import { isDesktop } from "@/services/backend";
 import { useUiStore } from "@/stores/ui-store";
 import { UpdateCentre } from "./update-centre";
 
-// Sections of the old single-page Settings, so `/settings#updates` links keep working.
-const OLD_SECTIONS: Record<string, SettingsTab> = {
-  general: "general",
-  behaviour: "general",
-  appearance: "appearance",
-  notifications: "updates",
-  updates: "updates",
-  security: "general",
-  about: "about",
-};
-
+/** Everything on one screen: there are too few settings to hide any behind tabs. */
 export function SettingsPage() {
-  const [tab, setTab] = useTabParam(SETTINGS_TABS, "general");
-  const { hash } = useLocation();
-  const moved = OLD_SECTIONS[hash.slice(1)];
-  if (moved) return <Navigate to={`/settings?tab=${moved}`} replace />;
-
   return (
     <>
       <PageHeader title="Settings" />
-      <div className="flex flex-col gap-4">
-        <PageTabs label="Sections" tabs={SETTINGS_TABS} value={tab} onChange={setTab} />
-        <div key={tab} className="max-w-3xl animate-rise">
-          {tab === "general" && <GeneralTab />}
-          {tab === "appearance" && <AppearanceTab />}
-          {tab === "updates" && <UpdatesTab />}
-          {tab === "about" && <AboutTab />}
+      <div className="grid flex-1 animate-rise grid-cols-2 gap-3">
+        <div className="divide-y overflow-hidden panel">
+          <GeneralGroup />
+          <AppearanceGroup />
+        </div>
+        <div className="divide-y overflow-hidden panel">
+          <UpdatesGroup />
+          <AboutGroup />
         </div>
       </div>
     </>
   );
 }
 
-function GeneralTab() {
+function GeneralGroup() {
   const { data: app } = useAppInfo();
 
   const copyLogPath = async () => {
@@ -74,15 +57,15 @@ function GeneralTab() {
   };
 
   return (
-    <SettingsGroup>
+    <SettingsGroup title="General">
       <SettingsRow
         icon={ShieldUser}
         title="Privileges"
         control={
           app && (
-            <StatusPill tone={app.isElevated ? "warning" : "success"}>
+            <StatusLabel tone={app.isElevated ? "warning" : "success"}>
               {app.isElevated ? "Administrator" : "Standard user"}
-            </StatusPill>
+            </StatusLabel>
           )
         }
       />
@@ -91,12 +74,16 @@ function GeneralTab() {
         icon={FolderOpen}
         title="Log folder"
         description={
-          <code data-selectable className="font-mono text-[11.5px] break-all">
+          <code
+            data-selectable
+            className="block truncate font-mono text-[11.5px]"
+            title={app?.logDir}
+          >
             {app?.logDir ?? "…"}
           </code>
         }
         control={
-          <Button size="sm" variant="outline" onClick={copyLogPath} disabled={!app}>
+          <Button size="xs" variant="ghost" onClick={copyLogPath} disabled={!app}>
             Copy path
           </Button>
         }
@@ -105,14 +92,14 @@ function GeneralTab() {
   );
 }
 
-function AppearanceTab() {
+function AppearanceGroup() {
   const ui = useUiStore();
   return (
-    <SettingsGroup>
+    <SettingsGroup title="Appearance">
       <SettingsRow
         icon={Palette}
         title="Theme"
-        control={<StatusPill tone="neutral">Dark</StatusPill>}
+        control={<span className="text-[12.5px] text-muted-foreground">Dark</span>}
       />
       <SettingsRow
         icon={PanelLeft}
@@ -154,11 +141,11 @@ function AppearanceTab() {
   );
 }
 
-function UpdatesTab() {
+function UpdatesGroup() {
   const { data: app } = useAppInfo();
   const ui = useUiStore();
   return (
-    <SettingsGroup>
+    <SettingsGroup title="Updates">
       <UpdateCentre currentVersion={app?.version} />
       <SettingsRow
         icon={RefreshCw}
@@ -188,28 +175,30 @@ function UpdatesTab() {
   );
 }
 
-function AboutTab() {
+function AboutGroup() {
   const { data: app } = useAppInfo();
   return (
-    <SettingsGroup>
+    <SettingsGroup title="About">
       <SettingsRow
         icon={Info}
         title="Version"
-        description={
+        control={
           app ? (
-            <>
-              2VX Tweaks {app.version}
-              {app.debugBuild && " (development build)"}
-            </>
+            <span className="text-[12.5px] text-muted-foreground tabular">
+              {app.version}
+              {app.debugBuild && " (development)"}
+            </span>
           ) : (
-            <Skeleton className="h-3.5 w-24" />
+            <Skeleton className="h-3.5 w-16" />
           )
         }
       />
       <SettingsRow
         icon={BookOpenCheck}
         title="Open-source licences"
-        description="Lucide (ISC), Inter and Manrope (OFL 1.1)"
+        control={
+          <span className="text-[12.5px] text-muted-foreground">Lucide (ISC), Geist (OFL 1.1)</span>
+        }
       />
     </SettingsGroup>
   );
@@ -222,16 +211,16 @@ function EngineRows() {
       <SettingsRow
         icon={Database}
         title="Change journal"
-        // Only a problem needs words; the pill covers the normal case.
+        // Only a problem needs words; the label covers the normal case.
         description={!isDesktop ? undefined : error ? error.message : status?.journalError}
         control={
           status &&
           (!isDesktop ? (
-            <StatusPill tone="info">Preview</StatusPill>
+            <StatusLabel tone="info">Preview</StatusLabel>
           ) : status.journalAvailable ? (
-            <StatusPill tone="success">Available</StatusPill>
+            <StatusLabel tone="success">Available</StatusLabel>
           ) : (
-            <StatusPill tone="destructive">Changes disabled</StatusPill>
+            <StatusLabel tone="destructive">Changes disabled</StatusLabel>
           ))
         }
       />
@@ -240,7 +229,7 @@ function EngineRows() {
           icon={Database}
           title="Interrupted changes"
           control={
-            <Button asChild size="sm" variant="outline">
+            <Button asChild size="xs" variant="ghost">
               <Link to="/restore">Review {status.interruptedSnapshots}</Link>
             </Button>
           }

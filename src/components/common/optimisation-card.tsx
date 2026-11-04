@@ -3,9 +3,9 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * The card for anything the user can switch: icon and title on top, a two-line description,
- * a hairline, then indicators on the left and the control on the right. Clicking the body
- * (not the control) opens details.
+ * The card for anything the user can switch: icon and title on top, a short description, then
+ * indicators on the left and the control on the right. Clicking the body (not the control)
+ * opens details.
  */
 export function OptimisationCard({
   icon: Icon,
@@ -42,16 +42,16 @@ export function OptimisationCard({
       ref={ref}
       data-stagger
       className={cn(
-        "group relative flex min-h-[136px] flex-col rounded-xl border bg-card px-4 pt-3.5 pb-3 transition-colors",
-        "hover:border-white/12 hover:bg-raised",
+        "group relative flex min-h-[168px] flex-col panel px-4 pt-4 pb-3 transition-colors",
+        "hover:bg-raised",
         highlighted && "border-primary/50",
         muted && "opacity-60",
         className,
       )}
     >
-      <div className="flex items-start gap-2.5">
+      <div className="flex items-center gap-2.5">
         <Icon
-          className="mt-px size-[18px] shrink-0 text-brand transition-transform duration-200 group-hover:scale-110"
+          className="size-[18px] shrink-0 text-brand transition-transform duration-200 group-hover:scale-110"
           aria-hidden
         />
         <div className="min-w-0 flex-1">
@@ -70,12 +70,14 @@ export function OptimisationCard({
         </div>
         {badge && <div className="relative shrink-0">{badge}</div>}
       </div>
-      <p className="mt-1.5 line-clamp-2 text-[13px] leading-snug text-muted-foreground">
+      <p className="mt-2.5 line-clamp-3 text-[13px] leading-normal text-muted-foreground">
         {description}
       </p>
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-dashed pt-2.5">
+      <div className="mt-auto flex items-center justify-between gap-2 pt-2">
         {/* Raised above the stretched open-button so tooltips and the control stay usable. */}
-        <div className="relative flex min-w-0 flex-wrap items-center gap-1">{indicators}</div>
+        <div className="relative -ml-1 flex min-w-0 flex-wrap items-center gap-0.5">
+          {indicators}
+        </div>
         {control && <div className="relative shrink-0">{control}</div>}
       </div>
     </div>
@@ -83,17 +85,13 @@ export function OptimisationCard({
 }
 
 export function NewBadge() {
-  return (
-    <span className="inline-flex h-5 items-center rounded-full bg-success/15 px-2 text-[10.5px] font-semibold text-success">
-      New
-    </span>
-  );
+  return <span className="text-[11px] font-medium text-success">New</span>;
 }
 
-/** Grid that keeps cards readable from the 1080px minimum window to wide screens. */
+/** Fills the width at any window size, adding columns rather than stretching cards. */
 export function CardGrid({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("grid grid-cols-2 gap-3 xl:grid-cols-3 2xl:grid-cols-4", className)}>
+    <div className={cn("grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-3", className)}>
       {children}
     </div>
   );

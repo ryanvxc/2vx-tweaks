@@ -11,6 +11,10 @@ change, so the journal's history stays valid.
 | --- | --- |
 | Responsiveness | `performance.foreground-boost`, `windows.window-animations-off` |
 | Storage | `performance.last-access-off`, `windows.storage-sense-off` |
+| Microsoft Edge | `performance.edge-background-mode-off`, `performance.edge-startup-boost-off`, `privacy.edge-shopping-off`, `windows.edge-recommendations-off`, `windows.edge-sidebar-off` |
+
+Sections set the order on the page; they no longer show as headings. All five Edge settings sit together here: Windows
+had four tweaks on its own and Apps only had Edge, so the two tabs became one.
 
 ### Tweaks › Privacy
 
@@ -18,14 +22,6 @@ change, so the journal's history stays valid.
 | --- | --- |
 | Windows data | `privacy.diagnostic-data-minimum`, `privacy.activity-history-off`, `privacy.feedback-requests-off`, `privacy.advertising-id-off`, `privacy.app-launch-tracking-off`, `privacy.language-list-opt-out`, `privacy.online-speech-off`, `privacy.inking-typing-collection-off` |
 | App permissions | `privacy.app-location-off`, `privacy.app-account-info-off`, `privacy.app-diagnostics-off`, `privacy.app-notification-access-off`, `privacy.background-apps-off` |
-
-### Tweaks › Apps
-
-| Section | Tweak |
-| --- | --- |
-| Microsoft Edge | `performance.edge-background-mode-off`, `performance.edge-startup-boost-off`, `privacy.edge-shopping-off`, `windows.edge-recommendations-off`, `windows.edge-sidebar-off` |
-
-All five Edge settings now sit together, where before they were spread over three tabs.
 
 ### Tweaks › Services
 

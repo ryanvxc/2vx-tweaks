@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AlertTriangle, ArrowRight, ChevronDown, PackageOpen, ShieldCheck } from "lucide-react";
-import { StatusPill } from "@/components/common/notice";
+import { StatusLabel } from "@/components/common/notice";
 import { RiskBadge } from "@/components/common/risk-badge";
 import { SectionCard } from "@/components/common/section-card";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
@@ -136,7 +136,7 @@ function TweakRow({
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <StatusPill tone={stateInfo.tone}>{stateInfo.label}</StatusPill>
+          <StatusLabel tone={stateInfo.tone}>{stateInfo.label}</StatusLabel>
           <RiskBadge risk={meta.risk} />
           <Button
             size="icon"

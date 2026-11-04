@@ -1,17 +1,10 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
-import {
-  CheckCircle2,
-  ChevronRight,
-  Gamepad2,
-  History,
-  SlidersHorizontal,
-  type LucideIcon,
-} from "lucide-react";
+import { Gamepad2, History, SlidersHorizontal, type LucideIcon } from "lucide-react";
 import { AnimatedNumber } from "@/components/common/animated-number";
 import { ImpactMeter } from "@/components/common/indicator";
 import { SectionCard } from "@/components/common/section-card";
-import { EmptyState, LoadingRows } from "@/components/common/states";
+import { LoadingRows } from "@/components/common/states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSnapshots, useTweakStatuses } from "@/hooks/use-system";
 import { isBlocked } from "@/lib/engine-text";
@@ -79,23 +72,20 @@ function StatCard({
   return (
     <Link
       to={to}
-      className="group flex items-center gap-3 rounded-xl border bg-card px-4 py-2 transition-colors outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring"
+      className="group flex items-center justify-between gap-3 panel px-4 py-2.5 transition-colors outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/12 text-brand">
-        <Icon className="size-[18px] transition-transform duration-200 group-hover:scale-110" />
-      </div>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0">
         <div className="text-[12.5px] text-muted-foreground">{label}</div>
         {value === undefined ? (
-          <Skeleton className="mt-1 h-5 w-16" />
+          <Skeleton className="mt-1 h-6 w-20" />
         ) : (
-          <div className="truncate font-heading text-[18px] leading-tight font-bold tabular">
+          <div className="truncate text-[21px] leading-snug font-semibold tracking-tight tabular">
             {value}
           </div>
         )}
         {hint && <div className="truncate text-[11.5px] text-muted-foreground">{hint}</div>}
       </div>
-      <ChevronRight className="size-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5" />
+      <Icon className="size-5 shrink-0 text-brand transition-transform duration-200 group-hover:scale-110" />
     </Link>
   );
 }
@@ -109,15 +99,19 @@ export function RecommendedTweaks() {
   const open = (data ?? []).filter(
     (t) => t.meta.recommended && t.state !== "applied" && !isBlocked(t.compatibility),
   );
+  // With nothing to suggest, the panels beside it take the room.
+  if (data && open.length === 0) return null;
 
   return (
     <SectionCard
-      title="Recommended for this PC"
+      title="Recommended"
       source="derived"
-      className="h-full"
       actions={
         open.length > 3 && (
-          <Link to="/tweaks" className="text-[12px] font-medium text-brand hover:underline">
+          <Link
+            to="/tweaks"
+            className="text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+          >
             All {open.length}
           </Link>
         )
@@ -125,8 +119,6 @@ export function RecommendedTweaks() {
     >
       {loading && !data ? (
         <LoadingRows rows={3} />
-      ) : open.length === 0 ? (
-        <EmptyState icon={CheckCircle2} title="Nothing to recommend" className="py-2" />
       ) : (
         <ul className="-mx-2 flex flex-col">
           {open.slice(0, 3).map((t) => {

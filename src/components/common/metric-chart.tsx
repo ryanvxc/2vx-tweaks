@@ -7,6 +7,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { cn } from "@/lib/utils";
 import { LoadingRows } from "./states";
 
 export interface ChartSeries {
@@ -22,13 +23,14 @@ export interface ChartSeries {
 export function MetricChart({
   rows,
   series,
-  height = 220,
+  height,
   max = 100,
   format = (v) => `${v}%`,
   windowSecs = 300,
 }: {
   rows: Record<string, number | null>[];
   series: ChartSeries[];
+  /** Leave out to fill a positioned parent. */
   height?: number;
   /** `undefined` scales to the data. */
   max?: number;
@@ -38,7 +40,10 @@ export function MetricChart({
   if (rows.length < 2) return <LoadingRows rows={4} />;
   const id = series.map((s) => s.key).join("-");
   return (
-    <div style={{ height }} className="animate-reveal">
+    <div
+      style={height ? { height } : undefined}
+      className={cn("animate-reveal", !height && "absolute inset-y-0 right-3 left-1")}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={rows} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
           <defs>

@@ -1,26 +1,18 @@
-import { cn } from "@/lib/utils";
+import type { Tone } from "@/lib/engine-text";
 import type { RiskLevel } from "@/types/engine";
+import { StatusLabel } from "./notice";
 
-const STYLES: Record<RiskLevel, { label: string; className: string }> = {
-  low: { label: "Low risk", className: "text-success border-success/25 bg-success/8" },
-  moderate: { label: "Moderate risk", className: "text-warning border-warning/30 bg-warning/8" },
-  high: {
-    label: "High risk",
-    className: "text-destructive border-destructive/30 bg-destructive/10",
-  },
+const STYLES: Record<RiskLevel, { label: string; tone: Tone }> = {
+  low: { label: "Low risk", tone: "success" },
+  moderate: { label: "Moderate risk", tone: "warning" },
+  high: { label: "High risk", tone: "destructive" },
 };
 
 export function RiskBadge({ risk, className }: { risk: RiskLevel; className?: string }) {
   const s = STYLES[risk];
   return (
-    <span
-      className={cn(
-        "inline-flex h-5 items-center rounded-full border px-2 text-[10.5px] font-medium tracking-wide",
-        s.className,
-        className,
-      )}
-    >
+    <StatusLabel tone={s.tone} className={className}>
       {s.label}
-    </span>
+    </StatusLabel>
   );
 }

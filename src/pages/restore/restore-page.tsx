@@ -1,11 +1,10 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, History, SlidersHorizontal, Undo2 } from "lucide-react";
 import { toast } from "sonner";
-import { AnimatedNumber } from "@/components/common/animated-number";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { EngineBanner } from "@/components/common/engine-banner";
-import { MessageNotice, StatusPill } from "@/components/common/notice";
-import { SectionCard } from "@/components/common/section-card";
+import { MessageNotice, StatusLabel } from "@/components/common/notice";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,9 @@ import { backend, toBackendError } from "@/services/backend";
 import type { ChangeRecord, RiskLevel, SnapshotRecord } from "@/types/engine";
 import type { BackendError } from "@/types/system";
 
+// Shared by the header and every row, so the columns line up.
+const COLUMNS = "grid grid-cols-[minmax(0,1fr)_9.5rem_3.25rem_4.5rem_1.5rem] items-center gap-3";
+
 export function RestorePage() {
   const { data, error, loading, refetch } = useSnapshots();
   const { data: tweaks } = useTweaks();
@@ -37,55 +39,57 @@ export function RestorePage() {
 
   return (
     <>
-      <PageHeader title="Restore Centre" />
-      <div className="flex flex-col gap-3">
+      <PageHeader title="Restore Centre" description={summary(data)} />
+      <div className="flex flex-1 flex-col gap-3">
         <EngineBanner showHistoryLink={false} />
-        {data && data.length > 0 && <Summary snapshots={data} />}
-        <SectionCard title="Changes" source="live">
+        <div className="flex flex-1 flex-col overflow-hidden panel">
           {error ? (
-            <ErrorState message={error.message} onRetry={refetch} />
+            <div className="p-4">
+              <ErrorState message={error.message} onRetry={refetch} />
+            </div>
           ) : loading && !data ? (
-            <LoadingRows />
+            <div className="p-4">
+              <LoadingRows />
+            </div>
           ) : !data || data.length === 0 ? (
-            <EmptyState icon={History} title="No changes yet" />
+            <EmptyState icon={History} title="No changes yet" className="flex-1" />
           ) : (
-            <ul className="-mx-2 flex flex-col">
-              {data.map((s) => (
-                <SnapshotRow
-                  key={s.id}
-                  snapshot={s}
-                  title={names(s.tweakIds)}
-                  risk={riskOf(s.tweakIds)}
-                  tweakName={(id) => meta[id]?.name ?? id}
-                />
-              ))}
-            </ul>
+            <>
+              <div
+                className={cn(
+                  COLUMNS,
+                  "h-9 shrink-0 border-b px-4 text-[12px] text-muted-foreground",
+                )}
+              >
+                <span>Change</span>
+                <span>Date</span>
+                <span className="text-right">Values</span>
+                <span />
+                <DataSourceBadge source="live" />
+              </div>
+              <ul className="divide-y">
+                {data.map((s) => (
+                  <SnapshotRow
+                    key={s.id}
+                    snapshot={s}
+                    title={names(s.tweakIds)}
+                    risk={riskOf(s.tweakIds)}
+                    tweakName={(id) => meta[id]?.name ?? id}
+                  />
+                ))}
+              </ul>
+            </>
           )}
-        </SectionCard>
+        </div>
       </div>
     </>
   );
 }
 
-function Summary({ snapshots }: { snapshots: SnapshotRecord[] }) {
+function summary(snapshots: SnapshotRecord[] | undefined) {
+  if (!snapshots || snapshots.length === 0) return undefined;
   const undoable = snapshots.filter((s) => canRevert(s.kind, s.status)).length;
-  const last = snapshots[0]!;
-  return (
-    <dl className="grid grid-cols-3 gap-3">
-      <Figure label="Changes" value={<AnimatedNumber value={snapshots.length} />} />
-      <Figure label="Can be undone" value={<AnimatedNumber value={undoable} />} />
-      <Figure label="Last change" value={formatTimestamp(last.createdAtMs)} />
-    </dl>
-  );
-}
-
-function Figure({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="rounded-xl border bg-card px-4 py-2.5">
-      <dt className="text-[12.5px] text-muted-foreground">{label}</dt>
-      <dd className="truncate font-heading text-[18px] leading-tight font-bold tabular">{value}</dd>
-    </div>
-  );
+  return `${snapshots.length} change${snapshots.length === 1 ? "" : "s"} · ${undoable} can be undone`;
 }
 
 function SnapshotRow({
@@ -106,6 +110,7 @@ function SnapshotRow({
   const [changesError, setChangesError] = useState<BackendError | null>(null);
   const status = SNAPSHOT_STATUS[s.status];
   const revertable = canRevert(s.kind, s.status);
+  const Icon = s.kind === "apply" ? SlidersHorizontal : Undo2;
 
   // Reload the change list whenever the snapshot itself changes (e.g. after a revert).
   useEffect(() => {
@@ -151,34 +156,32 @@ function SnapshotRow({
 
   const detailsId = `snapshot-${s.id}`;
   return (
-    <li className="rounded-md px-2 py-2.5">
-      <div className="flex items-center gap-3">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
-          {s.kind === "apply" ? (
-            <SlidersHorizontal className="size-4 text-muted-foreground" />
-          ) : (
-            <Undo2 className="size-4 text-muted-foreground" />
-          )}
+    <li>
+      <div className={cn(COLUMNS, "min-h-11 px-4 transition-colors hover:bg-raised")}>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="truncate text-[13px] font-medium" title={title}>
+            {s.kind === "apply" ? title : `Undid ${title}`}
+          </span>
+          {s.status !== "completed" && <StatusLabel tone={status.tone}>{status.label}</StatusLabel>}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[13px] leading-snug font-medium">
-            {s.kind === "apply" ? "Applied" : "Undid"}: {title}
-          </div>
-          <div className="text-[12px] leading-snug text-muted-foreground">
-            {formatTimestamp(s.createdAtMs)} · {s.changeCount} value
-            {s.changeCount === 1 ? "" : "s"}
-          </div>
-        </div>
-        <StatusPill tone={status.tone}>{status.label}</StatusPill>
-        {revertable && (
+        <span className="text-[12.5px] text-muted-foreground tabular">
+          {formatTimestamp(s.createdAtMs)}
+        </span>
+        <span className="text-right text-[12.5px] text-muted-foreground tabular">
+          {s.changeCount}
+        </span>
+        {revertable ? (
           <Button
             size="xs"
-            variant="outline"
+            variant="ghost"
             disabled={reverting}
             onClick={() => setConfirming(true)}
           >
             <Undo2 /> Undo
           </Button>
+        ) : (
+          <span />
         )}
         <Button
           size="icon"
@@ -204,7 +207,7 @@ function SnapshotRow({
       >
         <div className="min-h-0 overflow-hidden">
           {(expanded || changes) && (
-            <div className="mt-2.5 ml-11 flex flex-col gap-2">
+            <div className="flex flex-col gap-2 px-4 pb-3 pl-[2.625rem]">
               {s.error && (
                 <MessageNotice tone={status.tone} title={status.label} description={s.error} />
               )}
@@ -215,7 +218,7 @@ function SnapshotRow({
               ) : changes.length === 0 ? (
                 <p className="text-[12.5px] text-muted-foreground">No values were changed.</p>
               ) : (
-                <ul className="divide-y rounded-md border">
+                <ul className="divide-y rounded-lg bg-background/50">
                   {changes.map((c) => (
                     <li key={c.id} className="flex items-start gap-3 px-3 py-2">
                       <div className="min-w-0 flex-1">
@@ -230,9 +233,9 @@ function SnapshotRow({
                         </div>
                         {c.error && <div className="text-[12px] text-warning">{c.error}</div>}
                       </div>
-                      <StatusPill tone={CHANGE_STATUS[c.status].tone}>
+                      <StatusLabel tone={CHANGE_STATUS[c.status].tone}>
                         {CHANGE_STATUS[c.status].label}
-                      </StatusPill>
+                      </StatusLabel>
                     </li>
                   ))}
                 </ul>

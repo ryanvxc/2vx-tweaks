@@ -56,8 +56,11 @@ docs/                        status, backlog, roadmap, architecture, modules, Wi
 - Commands take typed, enumerable arguments. Never accept free-form paths, registry keys, shell strings or command names.
 - Rust types use `#[serde(rename_all = "camelCase")]`; keep `src/types/*.ts` in sync by hand.
 - Errors: return `AppResult<T>`; the frontend receives `{ code, message }` (`BackendError`).
-- Every data card shows a `DataSourceBadge`: `live` (measured), `derived` (computed from live), `sample` (placeholder),
-  `planned` (not built). Never present sample data without the badge. In browser preview, live/derived show "Preview".
+- Every data card shows a `DataSourceBadge`: `live` (measured, solid dot), `derived` (computed from live, hollow dot),
+  `sample` (placeholder) and `planned` (not built) as words. Never present sample data without the badge. In browser
+  preview, live/derived show "Preview".
+- Layout: pages fill the window (`flex flex-1 flex-col`; see `docs/DESIGN_SYSTEM.md`), surfaces use the `panel` utility,
+  lists are single-line table rows, state is `StatusLabel` (dot and word), no pill boxes.
 - Styling: Tailwind tokens from `src/styles/globals.css` only (no raw hex except Windows caption red). Status colours
   (`success`/`warning`/`destructive`/`info`) mean state, never decoration. Dark-only for now.
 - File names kebab-case; components PascalCase; one page per folder under `pages/` when it has sub-components.

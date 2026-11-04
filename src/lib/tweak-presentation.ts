@@ -120,6 +120,16 @@ export const TWEAK_SECTIONS: Record<TweakTab, { title: string; ids: string[] }[]
       ids: ["performance.foreground-boost", "windows.window-animations-off"],
     },
     { title: "Storage", ids: ["performance.last-access-off", "windows.storage-sense-off"] },
+    {
+      title: "Microsoft Edge",
+      ids: [
+        "performance.edge-background-mode-off",
+        "performance.edge-startup-boost-off",
+        "privacy.edge-shopping-off",
+        "windows.edge-recommendations-off",
+        "windows.edge-sidebar-off",
+      ],
+    },
   ],
   privacy: [
     {
@@ -143,18 +153,6 @@ export const TWEAK_SECTIONS: Record<TweakTab, { title: string; ids: string[] }[]
         "privacy.app-diagnostics-off",
         "privacy.app-notification-access-off",
         "privacy.background-apps-off",
-      ],
-    },
-  ],
-  apps: [
-    {
-      title: "Microsoft Edge",
-      ids: [
-        "performance.edge-background-mode-off",
-        "performance.edge-startup-boost-off",
-        "privacy.edge-shopping-off",
-        "windows.edge-recommendations-off",
-        "windows.edge-sidebar-off",
       ],
     },
   ],

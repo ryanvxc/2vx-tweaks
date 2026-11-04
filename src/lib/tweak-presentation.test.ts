@@ -41,7 +41,7 @@ describe("tweak presentation", () => {
       "/gaming?tweak=gaming.game-dvr-off",
     );
     expect(tweakHref({ id: "privacy.edge-shopping-off", category: "privacy" })).toBe(
-      "/tweaks?tab=apps&tweak=privacy.edge-shopping-off",
+      "/tweaks?tab=windows&tweak=privacy.edge-shopping-off",
     );
   });
 

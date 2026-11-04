@@ -27,8 +27,8 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
       onClick={onSearch}
       aria-label="Search"
       className={cn(
-        "flex h-8.5 w-full items-center gap-2.5 rounded-md border bg-card/60 px-2.5 text-[13px] text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-foreground",
-        collapsed && "justify-center border-transparent bg-transparent px-0",
+        "flex h-8.5 w-full items-center gap-2.5 rounded-md bg-sidebar-accent/50 px-2.5 text-[13px] text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground",
+        collapsed && "justify-center bg-transparent px-0",
       )}
     >
       <Search className="size-4 shrink-0" aria-hidden />
@@ -51,7 +51,7 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
       <div
         data-tauri-drag-region
         className={cn(
-          "flex h-14 shrink-0 items-center gap-2.5",
+          "flex h-(--titlebar-height) shrink-0 items-center gap-2.5",
           collapsed ? "justify-center" : "px-4",
         )}
       >
@@ -59,14 +59,14 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
         {!collapsed && (
           <span
             data-tauri-drag-region
-            className="font-heading text-[16px] font-bold tracking-tight"
+            className="font-heading text-[16px] font-semibold tracking-tight"
           >
-            2VX <span className="font-medium text-muted-foreground">Tweaks</span>
+            2VX <span className="font-normal text-muted-foreground">Tweaks</span>
           </span>
         )}
       </div>
 
-      <div className="px-2.5 pb-1">
+      <div className="px-2.5">
         {collapsed ? (
           <Tooltip>
             <TooltipTrigger asChild>{searchButton}</TooltipTrigger>
@@ -79,7 +79,7 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
 
       <nav
         ref={navBox}
-        className="relative isolate flex flex-1 flex-col gap-3.5 overflow-y-auto px-2.5 pt-2.5"
+        className="relative isolate flex flex-1 flex-col gap-2 overflow-y-auto px-2.5 pt-2"
         aria-label="Main"
       >
         <span
@@ -90,7 +90,7 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
         {NAV_GROUPS.map((group, i) => (
           <div key={group.label} className="flex flex-col gap-0.5">
             {!collapsed && (
-              <div className="mb-0.5 px-2.5 text-[11.5px] font-medium text-muted-foreground/60">
+              <div className="mb-0.5 px-2.5 text-[11.5px] font-medium text-muted-foreground/60 [@media(max-height:640px)]:hidden">
                 {group.label}
               </div>
             )}
@@ -102,13 +102,13 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
         ))}
       </nav>
 
-      <div className="flex flex-col gap-0.5 border-t border-sidebar-border px-2.5 py-2.5">
+      <div className="flex flex-col gap-0.5 border-t border-sidebar-border px-2.5 py-2">
         <UpdateButton collapsed={collapsed} />
         <SidebarLink item={SETTINGS_ITEM} collapsed={collapsed} />
         <div
           className={cn(
-            "mt-1.5 flex items-center gap-2 rounded-lg",
-            collapsed ? "flex-col" : "bg-sidebar-accent/50 py-1.5 pr-1.5 pl-2.5",
+            "mt-1 flex items-center gap-2 rounded-lg",
+            collapsed ? "flex-col" : "py-1 pr-0.5 pl-2.5",
           )}
         >
           {app && !collapsed && (
@@ -172,7 +172,7 @@ function SidebarLink({
       aria-label={collapsed ? item.label : undefined}
       className={({ isActive }) =>
         cn(
-          "group relative flex h-8.5 items-center gap-2.5 rounded-md px-2.5 text-[13.5px] font-medium transition-colors",
+          "group relative flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium transition-colors",
           "text-sidebar-foreground hover:text-sidebar-accent-foreground",
           !isActive && "hover:bg-sidebar-accent/60",
           isActive && "text-sidebar-accent-foreground",

@@ -10,7 +10,8 @@ plans. Priorities point to [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md); stages to
 tests (1 ignored real-registry test) and 7 policy guard tests. The GitHub workflows have not run (no remote). The
 makeover was also toured on the desktop debug build with the real catalogue: every page, every Tweaks tab, a tweak review
 and a gaming profile review, with no console errors. Nothing was applied, so applying through the new screens is
-covered by unit tests only.
+covered by unit tests only. The later layout pass (shorter window, title in the title bar, full-height pages) was
+checked at 1280×720, 1024×600 and maximised.
 
 **Status legend**
 

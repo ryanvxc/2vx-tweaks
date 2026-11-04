@@ -11,15 +11,16 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
-import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
+import { ErrorState, LoadingRows } from "@/components/common/states";
 import { PageHeader } from "@/components/layout/page-header";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSystemSnapshot } from "@/hooks/use-system";
 import { formatBytes, formatFrequency, formatPercent, percentOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { DiskInfo, SystemSnapshot } from "@/types/system";
 
-/** The specification sheet. Live usage lives on Monitoring; each card links there. */
+/** The specification sheet: one row per part. Live usage lives on Monitoring; rows link there. */
 export function HardwarePage() {
   const snapshot = useSystemSnapshot();
   const s = snapshot.data;
@@ -36,9 +37,14 @@ export function HardwarePage() {
       ) : !s ? (
         <LoadingRows rows={6} />
       ) : (
-        <div className="flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-3 [&>:last-child:nth-child(odd)]:col-span-2">
-            <SpecCard icon={Cpu} title={s.cpu.brand || "Unknown CPU"} live="cpu">
+        <div className="flex flex-1 flex-col overflow-hidden panel">
+          <div className="flex h-9 shrink-0 items-center gap-3 border-b px-4 text-[12px] text-muted-foreground">
+            <span className="w-[12.875rem] shrink-0 xl:w-[16.375rem]">Part</span>
+            <span className="flex-1">Details</span>
+            <DataSourceBadge source="live" />
+          </div>
+          <ul className="flex flex-1 flex-col divide-y">
+            <Part icon={Cpu} title={s.cpu.brand || "Unknown CPU"} live="cpu">
               <Facts
                 items={[
                   ["Cores", s.cpu.physicalCores ?? "—"],
@@ -47,9 +53,9 @@ export function HardwarePage() {
                   ["Vendor", s.cpu.vendor || "—"],
                 ]}
               />
-            </SpecCard>
+            </Part>
             <Graphics snapshot={s} />
-            <SpecCard
+            <Part
               icon={MemoryStick}
               title={`${formatBytes(s.memory.totalBytes, 0)} memory`}
               live="memory"
@@ -60,8 +66,13 @@ export function HardwarePage() {
                   ["Page file", formatBytes(s.memory.swapTotalBytes)],
                 ]}
               />
-            </SpecCard>
-            <SpecCard icon={Monitor} title={windowsName(s)}>
+            </Part>
+            {s.motherboard && (s.motherboard.name || s.motherboard.vendor) && (
+              <Part icon={CircuitBoard} title={s.motherboard.name ?? "Motherboard"}>
+                <Facts items={[["Vendor", s.motherboard.vendor ?? "—"]]} />
+              </Part>
+            )}
+            <Part icon={Monitor} title={windowsName(s)}>
               <Facts
                 items={[
                   ["Build", `${s.os.build}${s.os.ubr != null ? `.${s.os.ubr}` : ""}`],
@@ -70,28 +81,15 @@ export function HardwarePage() {
                   ["PC name", s.hostname ?? "—"],
                 ]}
               />
-            </SpecCard>
-            {s.motherboard && (s.motherboard.name || s.motherboard.vendor) && (
-              <SpecCard icon={CircuitBoard} title={s.motherboard.name ?? "Motherboard"}>
-                <Facts items={[["Vendor", s.motherboard.vendor ?? "—"]]} />
-              </SpecCard>
+            </Part>
+            {s.disks.length === 0 ? (
+              <Part icon={HardDrive} title="Drives">
+                <p className="text-[13px] text-muted-foreground">Windows didn't report a drive.</p>
+              </Part>
+            ) : (
+              s.disks.map((d) => <Drive key={d.mountPoint} disk={d} />)
             )}
-          </div>
-
-          <h2 className="mt-2 text-section-title">Drives</h2>
-          {s.disks.length === 0 ? (
-            <EmptyState
-              icon={HardDrive}
-              title="No drives reported"
-              className="rounded-xl border bg-card"
-            />
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {s.disks.map((d) => (
-                <DriveCard key={d.mountPoint} disk={d} />
-              ))}
-            </div>
-          )}
+          </ul>
         </div>
       )}
     </>
@@ -102,7 +100,7 @@ function windowsName(s: SystemSnapshot) {
   return `${s.os.productName}${s.os.displayVersion ? ` ${s.os.displayVersion}` : ""}`;
 }
 
-function SpecCard({
+function Part({
   icon: Icon,
   title,
   live,
@@ -115,37 +113,50 @@ function SpecCard({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border bg-card px-4 py-3.5">
-      <div className="mb-3 flex items-center gap-2.5">
-        <Icon className="size-[18px] shrink-0 text-brand" aria-hidden />
-        <h2 data-selectable className="min-w-0 flex-1 truncate text-card-title" title={title}>
-          {title}
-        </h2>
-        {live && (
-          <Link
-            to={`/monitoring?tab=${live}`}
-            className="flex shrink-0 items-center gap-1 text-[12px] font-medium text-brand hover:underline"
-          >
-            <Activity className="size-3.5" /> Live
-          </Link>
-        )}
-        <DataSourceBadge source="live" />
+    <li className="flex min-h-14 flex-1 items-center gap-3 px-4">
+      <Icon className="size-[18px] shrink-0 text-brand" aria-hidden />
+      <div data-selectable className="line-clamp-2 w-44 shrink-0 text-card-title xl:w-[14.5rem]">
+        {title}
       </div>
-      {children}
+      <div className="min-w-0 flex-1">{children}</div>
+      {live ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              to={`/monitoring?tab=${live}`}
+              aria-label="Live usage"
+              className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Activity className="size-3.5" />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>Live usage</TooltipContent>
+        </Tooltip>
+      ) : (
+        <span className="size-5 shrink-0" />
+      )}
+    </li>
+  );
+}
+
+function Fact({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[12px] text-muted-foreground">{label}</dt>
+      <dd data-selectable className="truncate text-[13px] font-medium tabular">
+        {children}
+      </dd>
     </div>
   );
 }
 
 function Facts({ items }: { items: [string, ReactNode][] }) {
   return (
-    <dl className="grid grid-cols-4 gap-x-3 gap-y-2">
+    <dl className="grid grid-cols-4 gap-3">
       {items.map(([label, value]) => (
-        <div key={label} className="min-w-0">
-          <dt className="text-[12px] text-muted-foreground">{label}</dt>
-          <dd data-selectable className="truncate text-[13.5px] font-semibold tabular">
-            {value}
-          </dd>
-        </div>
+        <Fact key={label} label={label}>
+          {value}
+        </Fact>
       ))}
     </dl>
   );
@@ -154,62 +165,60 @@ function Facts({ items }: { items: [string, ReactNode][] }) {
 function Graphics({ snapshot }: { snapshot: SystemSnapshot }) {
   if (snapshot.gpus.length === 0)
     return (
-      <SpecCard icon={Gpu} title="Graphics">
+      <Part icon={Gpu} title="Graphics">
         <p className="text-[13px] text-muted-foreground">Windows didn't report a GPU.</p>
-      </SpecCard>
+      </Part>
     );
   return (
     <>
       {snapshot.gpus.map((g, i) => (
-        <SpecCard key={i} icon={Gpu} title={g.model ?? "Unknown GPU"} live="gpu">
+        <Part key={i} icon={Gpu} title={g.model ?? "Unknown GPU"} live="gpu">
           <Facts
             items={[
               [
-                "Dedicated memory",
+                "Video memory",
                 g.dedicatedMemoryBytes ? formatBytes(g.dedicatedMemoryBytes, 0) : "—",
               ],
               ["Vendor", g.vendor ?? "—"],
             ]}
           />
-        </SpecCard>
+        </Part>
       ))}
     </>
   );
 }
 
-function DriveCard({ disk: d }: { disk: DiskInfo }) {
+function Drive({ disk: d }: { disk: DiskInfo }) {
   const used = d.totalBytes - d.availableBytes;
   const pct = percentOf(used, d.totalBytes);
   const freePct = 100 - pct;
+  const type = [
+    d.kind !== "unknown" && d.kind.toUpperCase(),
+    d.fileSystem,
+    d.isRemovable && "removable",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const label = d.name || (d.isRemovable ? "Removable disk" : "Local disk");
   return (
-    <div className="rounded-xl border bg-card px-4 py-3.5">
-      <div className="flex items-center gap-2.5">
-        <HardDrive className="size-[18px] shrink-0 text-brand" aria-hidden />
-        <div className="min-w-0 flex-1 truncate text-card-title">
-          {d.mountPoint.replace(/\\$/, "")}{" "}
-          {d.name && <span className="font-normal text-muted-foreground">{d.name}</span>}
+    <Part icon={HardDrive} title={`${d.mountPoint.replace(/\\$/, "")} ${label}`}>
+      <div className="grid grid-cols-4 gap-3">
+        <dl className="col-span-3 grid grid-cols-3 gap-3">
+          <Fact label="Type">{type}</Fact>
+          <Fact label="Size">{formatBytes(d.totalBytes)}</Fact>
+          <Fact label="Free">{formatBytes(d.availableBytes)}</Fact>
+        </dl>
+        <div className="flex min-w-0 flex-col justify-between">
+          <div className="text-[12px] text-muted-foreground tabular">{formatPercent(pct)} used</div>
+          <Progress
+            value={pct}
+            indicatorClassName={cn(
+              freePct < 10 ? "bg-destructive" : freePct < 20 ? "bg-warning" : "bg-brand",
+            )}
+            aria-label={`${d.mountPoint} used`}
+          />
         </div>
-        <span className="text-[12px] text-muted-foreground">
-          {d.kind === "unknown" ? "Drive" : d.kind.toUpperCase()} · {d.fileSystem}
-          {d.isRemovable ? " · removable" : ""}
-        </span>
       </div>
-      <Progress
-        value={pct}
-        className="mt-3"
-        indicatorClassName={cn(
-          freePct < 10 ? "bg-destructive" : freePct < 20 ? "bg-warning" : "bg-brand",
-        )}
-        aria-label={`${d.mountPoint} used`}
-      />
-      <div className="mt-2 flex justify-between text-[12.5px] text-muted-foreground tabular">
-        <span>
-          {formatBytes(used)} used ({formatPercent(pct)})
-        </span>
-        <span>
-          {formatBytes(d.availableBytes)} free of {formatBytes(d.totalBytes)}
-        </span>
-      </div>
-    </div>
+    </Part>
   );
 }

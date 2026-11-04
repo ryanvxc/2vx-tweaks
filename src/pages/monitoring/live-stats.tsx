@@ -148,34 +148,34 @@ function StatTile({
       aria-selected={selected}
       onClick={onSelect}
       className={cn(
-        "flex flex-col overflow-hidden rounded-xl border bg-card pt-3.5 text-left transition-colors outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring",
+        "flex flex-col overflow-hidden panel pt-3 text-left transition-colors outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring",
         selected && "bg-raised",
       )}
     >
-      <div className="flex w-full items-center justify-between px-4">
+      <div className="flex w-full items-center justify-between px-3.5">
         <div className="flex items-center gap-2 text-[12.5px] font-medium text-muted-foreground">
           <Icon className="size-4" style={{ color }} />
           {label}
         </div>
         <DataSourceBadge source="live" pulse={selected} />
       </div>
-      <div className="mt-2.5 px-4">
+      <div className="mt-1.5 flex w-full items-baseline justify-between gap-2 px-3.5">
         {value === undefined ? (
-          <Skeleton className="h-7 w-20" />
+          <Skeleton className="h-6 w-16" />
         ) : (
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1">
             {valueIcon}
-            <span className="text-2xl leading-none font-semibold tracking-tight tabular">
+            <span className="text-[21px] leading-tight font-semibold tracking-tight tabular">
               {value}
             </span>
           </div>
         )}
-        <div className="mt-1.5 h-4 truncate text-[12px] text-muted-foreground tabular">
-          {sub ?? <Skeleton className="h-3 w-28" />}
+        <div className="min-w-0 truncate text-[12px] text-muted-foreground tabular">
+          {sub ?? <Skeleton className="h-3 w-20" />}
         </div>
       </div>
-      <div className="mt-1.5 w-full">
-        <Sparkline data={series} color={color} max={max} height={32} />
+      <div className="mt-1 w-full">
+        <Sparkline data={series} color={color} max={max} height={26} />
       </div>
     </button>
   );

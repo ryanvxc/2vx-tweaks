@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { MessageNotice, Notice, StatusPill } from "@/components/common/notice";
+import { MessageNotice, Notice, StatusLabel } from "@/components/common/notice";
 import { RiskBadge } from "@/components/common/risk-badge";
 import { LoadingRows } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
@@ -210,7 +210,7 @@ function PlanView({
         <>
           <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-muted-foreground">
             {plan.highestRisk && <RiskBadge risk={plan.highestRisk} />}
-            {restart && <StatusPill tone="info">{restart}</StatusPill>}
+            {restart && <StatusLabel tone="info">{restart}</StatusLabel>}
           </div>
           {plan.needsElevation && (
             <Notice tone="info" title="Windows will ask for administrator permission once" />
@@ -288,9 +288,9 @@ function OutcomeView({
                 </div>
                 {c.error && <div className="text-[12px] text-destructive">{c.error}</div>}
               </div>
-              <StatusPill tone={CHANGE_STATUS[c.status].tone}>
+              <StatusLabel tone={CHANGE_STATUS[c.status].tone}>
                 {CHANGE_STATUS[c.status].label}
-              </StatusPill>
+              </StatusLabel>
             </li>
           ))}
         </ul>

@@ -54,8 +54,9 @@ describe("RestorePage", () => {
   it("lists snapshots with tweak names and their recorded values", async () => {
     const user = userEvent.setup();
     renderPage();
-    expect(await screen.findByText(`Applied: ${USER_TWEAK.name}`)).toBeInTheDocument();
-    expect(screen.getByText("Completed")).toBeInTheDocument();
+    expect(await screen.findByText(USER_TWEAK.name)).toBeInTheDocument();
+    // A finished change needs no label; only the exceptions get one.
+    expect(screen.queryByText("Completed")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Show changes in #7" }));
     expect(await screen.findByText(String.raw`HKCU\Software\Test\User`)).toBeInTheDocument();
     expect(screen.getByText("(not set) → 0 (REG_DWORD)")).toBeInTheDocument();
@@ -100,7 +101,7 @@ describe("RestorePage", () => {
       { ...SNAPSHOT, id: 8, kind: "revert", reverts: 7 },
     ]);
     renderPage();
-    expect(await screen.findByText(`Undid: ${USER_TWEAK.name}`)).toBeInTheDocument();
+    expect(await screen.findByText(`Undid ${USER_TWEAK.name}`)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
   });
 });

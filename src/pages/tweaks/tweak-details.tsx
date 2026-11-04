@@ -1,6 +1,6 @@
 import { createElement, useState } from "react";
 import { AlertTriangle, ArrowRight, ExternalLink } from "lucide-react";
-import { StatusPill } from "@/components/common/notice";
+import { StatusLabel } from "@/components/common/notice";
 import { RiskBadge } from "@/components/common/risk-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,12 +67,12 @@ export function TweakDetails({
 
         <div className="-mx-6 flex min-h-0 flex-col gap-4 overflow-y-auto px-6">
           <div className="flex flex-wrap gap-1.5">
-            <StatusPill tone={stateInfo.tone}>{stateInfo.label}</StatusPill>
+            <StatusLabel tone={stateInfo.tone}>{stateInfo.label}</StatusLabel>
             <RiskBadge risk={meta.risk} />
-            <StatusPill tone="neutral">{IMPACT_LABEL[meta.impact]}</StatusPill>
-            {meta.permission === "administrator" && <StatusPill tone="info">Admin</StatusPill>}
-            {restart && <StatusPill tone="neutral">{restart}</StatusPill>}
-            {meta.recommended && <StatusPill tone="success">Recommended</StatusPill>}
+            <StatusLabel tone="neutral">{IMPACT_LABEL[meta.impact]}</StatusLabel>
+            {meta.permission === "administrator" && <StatusLabel tone="info">Admin</StatusLabel>}
+            {restart && <StatusLabel tone="neutral">{restart}</StatusLabel>}
+            {meta.recommended && <StatusLabel tone="success">Recommended</StatusLabel>}
           </div>
           {note && <p className="text-[12.5px] text-muted-foreground">{note}</p>}
           {meta.warning && (

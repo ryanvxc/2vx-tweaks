@@ -32,11 +32,16 @@ export function HealthPanel({
   const sorted = [...checks].sort((a, b) => ORDER[a.status] - ORDER[b.status]);
 
   return (
-    <SectionCard title="System health" source="derived" className="h-full">
+    <SectionCard
+      title="System health"
+      source="derived"
+      className="h-full"
+      contentClassName="flex flex-col"
+    >
       {!snapshot ? (
         <LoadingRows rows={5} />
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-1 flex-col gap-2.5">
           <div
             className={cn(
               "text-[13.5px] font-semibold",
@@ -50,7 +55,7 @@ export function HealthPanel({
               {summary.total - summary.attention - summary.warnings} of {summary.total}
             </span>
           </div>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-1 flex-col justify-between gap-1.5">
             {sorted.map((c) => {
               const { icon: Icon, className } = ICON[c.status];
               return (

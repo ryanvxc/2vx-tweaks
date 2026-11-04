@@ -10,7 +10,7 @@ import { HomeStats, RecommendedTweaks } from "./home-panels";
 import { RecentActivity } from "./recent-activity";
 import { UtilisationChart } from "./utilisation-chart";
 
-/** Summaries only, each linking to its primary location. Sized to fit the default window. */
+/** Summaries only, each linking to its primary location. The chart takes the spare height. */
 export function DashboardPage() {
   const snapshot = useSystemSnapshot();
   const metrics = useLiveMetrics();
@@ -23,11 +23,11 @@ export function DashboardPage() {
         description={
           snapshot.data
             ? `${snapshot.data.hostname ?? "This PC"} · ${os?.productName}${os?.displayVersion ? ` ${os.displayVersion}` : ""} · build ${os?.build}${os?.ubr != null ? `.${os.ubr}` : ""}`
-            : "Reading this PC…"
+            : undefined
         }
       />
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-1 flex-col gap-3">
         <EngineBanner previewNotice={false} />
         <UpdateNotice />
         <HomeStats />
@@ -36,7 +36,7 @@ export function DashboardPage() {
           <ErrorState title="Live metrics unavailable" message={metrics.error.message} />
         )}
 
-        <div className="grid grid-cols-12 gap-3">
+        <div className="grid flex-1 grid-cols-12 gap-3">
           <div className="col-span-8">
             <UtilisationChart samples={metrics.samples} snapshot={snapshot.data} />
           </div>
@@ -45,20 +45,15 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-3">
-          <div className="col-span-4">
-            <RecommendedTweaks />
-          </div>
-          <div className="col-span-4">
-            <HardwareCard
-              snapshot={snapshot.data}
-              error={snapshot.error}
-              onRetry={snapshot.refetch}
-            />
-          </div>
-          <div className="col-span-4">
-            <RecentActivity />
-          </div>
+        {/* A row, not a grid: Recommended drops out when there's nothing to suggest. */}
+        <div className="flex gap-3 *:min-w-0 *:flex-1">
+          <RecommendedTweaks />
+          <HardwareCard
+            snapshot={snapshot.data}
+            error={snapshot.error}
+            onRetry={snapshot.refetch}
+          />
+          <RecentActivity />
         </div>
       </div>
     </>

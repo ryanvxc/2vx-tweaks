@@ -54,12 +54,7 @@ export function UtilisationChart({
       source="live"
       className="h-full"
       actions={
-        <div
-          ref={views}
-          role="radiogroup"
-          aria-label="Series"
-          className="relative isolate flex rounded-md border p-0.5"
-        >
+        <div ref={views} role="radiogroup" aria-label="Series" className="relative isolate flex">
           <span
             ref={pill}
             aria-hidden
@@ -90,14 +85,14 @@ export function UtilisationChart({
           })}
         </div>
       }
-      contentClassName="relative min-h-[212px]"
+      contentClassName="relative min-h-[180px]"
     >
       {samples.length < 2 ? (
         <LoadingRows rows={5} />
       ) : (
         // Absolute so the graph takes whatever height the health panel beside it needs.
         // Keyed so choosing a series draws it in, while each new sample just updates.
-        <div key={view} className="absolute inset-y-0 right-5 left-2 animate-reveal">
+        <div key={view} className="absolute inset-y-0 right-3 left-1 animate-reveal">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
               <defs>

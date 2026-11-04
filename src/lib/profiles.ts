@@ -26,19 +26,19 @@ export const GAMING_PROFILES: Profile[] = [
   {
     id: "responsive",
     name: "Responsive",
-    summary: "Windows favours the game you're playing.",
+    summary: "Favour the game you're playing",
     tweakIds: RESPONSIVE,
   },
   {
     id: "quiet",
     name: "Quiet background",
-    summary: "Responsive, and less keeps running behind the game.",
+    summary: "Less running behind the game",
     tweakIds: QUIET,
   },
   {
     id: "everything",
     name: "Everything",
-    summary: "Quiet background, and recording and animations go too.",
+    summary: "Recording and animations off too",
     tweakIds: EVERYTHING,
   },
 ];

@@ -49,45 +49,42 @@ export function CleanerPage() {
       <PageHeader
         title="PC Cleaner"
         actions={
-          <Button size="sm" variant="outline" onClick={refetch} disabled={loading}>
+          <Button size="sm" variant="ghost" onClick={refetch} disabled={loading}>
             <RefreshCw className={loading ? "animate-spin" : undefined} /> Scan again
           </Button>
         }
       />
-      <div className="flex flex-col gap-3">
-        <div className="overflow-hidden rounded-xl border bg-card">
-          <div className="flex items-center gap-4 border-b px-4 py-3">
-            <div className="min-w-0 flex-1">
-              {loading && !data ? (
-                <Skeleton className="h-7 w-28" />
-              ) : (
-                <div className="font-heading text-[22px] leading-tight font-bold tabular">
-                  <AnimatedNumber value={total} format={formatBytes} duration={800} />
-                </div>
-              )}
-              <div className="text-[12.5px] text-muted-foreground">
-                in {found.length} locations · scan only
-              </div>
-            </div>
-            <DataSourceBadge source="live" />
-          </div>
-
-          {error ? (
-            <div className="p-4">
-              <ErrorState message={error.message} onRetry={refetch} />
-            </div>
-          ) : loading && !data ? (
-            <div className="p-4">
-              <LoadingRows rows={6} />
-            </div>
+      <div className="flex flex-1 flex-col overflow-hidden panel">
+        <div className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
+          {loading && !data ? (
+            <Skeleton className="h-7 w-28" />
           ) : (
-            <ul ref={list} className="divide-y">
-              {locations.map((l) => (
-                <LocationRow key={l.id} location={l} largest={largest} />
-              ))}
-            </ul>
+            <div className="text-[22px] leading-none font-semibold tracking-tight tabular">
+              <AnimatedNumber value={total} format={formatBytes} duration={800} />
+            </div>
           )}
+          <div className="flex-1 self-center text-[12.5px] text-muted-foreground">
+            in {found.length} locations · scan only
+          </div>
+          <DataSourceBadge source="live" />
         </div>
+
+        {error ? (
+          <div className="p-4">
+            <ErrorState message={error.message} onRetry={refetch} />
+          </div>
+        ) : loading && !data ? (
+          <div className="p-4">
+            <LoadingRows rows={6} />
+          </div>
+        ) : (
+          // Rows share the height, so a short list still reaches the bottom of the panel.
+          <ul ref={list} className="flex flex-1 flex-col divide-y">
+            {locations.map((l) => (
+              <LocationRow key={l.id} location={l} largest={largest} />
+            ))}
+          </ul>
+        )}
       </div>
     </>
   );
@@ -100,11 +97,11 @@ function LocationRow({ location: l, largest }: { location: CleanupLocation; larg
   return (
     <li
       data-stagger
-      className={cn("flex items-center gap-3.5 px-4 py-2.5", missing && "opacity-50")}
+      className={cn("flex min-h-10 flex-1 items-center gap-3 px-4", missing && "opacity-50")}
     >
       <Icon className="size-[18px] shrink-0 text-brand" aria-hidden />
       <div
-        className="w-60 min-w-0 shrink-0 truncate text-[13px] font-medium"
+        className="w-56 min-w-0 shrink-0 truncate text-[13px] font-medium"
         title={`${l.description}\n${l.path}`}
       >
         {l.label}
@@ -123,23 +120,21 @@ function LocationRow({ location: l, largest }: { location: CleanupLocation; larg
           Scan stopped at 250,000 entries.
         </Indicator>
       )}
-      <div className="w-24 shrink-0 text-right">
-        {missing ? (
-          <span className="text-[12.5px] text-muted-foreground">Not on this PC</span>
-        ) : l.status === "denied" ? (
-          <span className="text-[12.5px] text-muted-foreground">Needs admin</span>
-        ) : (
-          <>
-            <div className="text-[13.5px] leading-tight font-semibold tabular">
-              {l.status === "partial" ? "≥ " : ""}
-              {formatBytes(l.bytes)}
-            </div>
-            <div className="text-[11.5px] text-muted-foreground tabular">
-              {l.files.toLocaleString()} {l.id === "recycle-bin" ? "items" : "files"}
-            </div>
-          </>
-        )}
-      </div>
+      {missing || l.status === "denied" ? (
+        <span className="w-44 shrink-0 text-right text-[12.5px] text-muted-foreground">
+          {missing ? "Not on this PC" : "Needs admin"}
+        </span>
+      ) : (
+        <>
+          <span className="w-24 shrink-0 text-right text-[12px] text-muted-foreground tabular">
+            {l.files.toLocaleString()} {l.id === "recycle-bin" ? "items" : "files"}
+          </span>
+          <span className="w-[4.25rem] shrink-0 text-right text-[13px] font-semibold tabular">
+            {l.status === "partial" ? "≥ " : ""}
+            {formatBytes(l.bytes)}
+          </span>
+        </>
+      )}
     </li>
   );
 }

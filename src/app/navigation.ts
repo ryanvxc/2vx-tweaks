@@ -1,18 +1,15 @@
 import {
   Activity,
   AppWindow,
-  Bell,
   Cpu,
   EyeOff,
   Gamepad2,
   Gpu,
   History,
   House,
-  Info,
   Layers,
   MemoryStick,
   Network,
-  Palette,
   Rocket,
   Server,
   Settings,
@@ -46,9 +43,8 @@ export interface NavGroup {
 }
 
 export type MonitoringTab = "cpu" | "memory" | "gpu" | "network";
-export type TweakTab = "windows" | "privacy" | "apps" | "services";
+export type TweakTab = "windows" | "privacy" | "services";
 export type StartupTab = "all" | "currentUser" | "allUsers";
-export type SettingsTab = "general" | "appearance" | "updates" | "about";
 
 export const MONITORING_TABS: NavTab<MonitoringTab>[] = [
   { value: "cpu", label: "CPU", icon: Cpu },
@@ -60,7 +56,6 @@ export const MONITORING_TABS: NavTab<MonitoringTab>[] = [
 export const TWEAK_TABS: NavTab<TweakTab>[] = [
   { value: "windows", label: "Windows", icon: AppWindow },
   { value: "privacy", label: "Privacy", icon: EyeOff },
-  { value: "apps", label: "Apps", icon: Layers },
   { value: "services", label: "Services", icon: Server },
 ];
 
@@ -68,13 +63,6 @@ export const STARTUP_TABS: NavTab<StartupTab>[] = [
   { value: "all", label: "All", icon: Layers },
   { value: "currentUser", label: "Your account", icon: User },
   { value: "allUsers", label: "All users", icon: Users },
-];
-
-export const SETTINGS_TABS: NavTab<SettingsTab>[] = [
-  { value: "general", label: "General", icon: Settings },
-  { value: "appearance", label: "Appearance", icon: Palette },
-  { value: "updates", label: "Updates", icon: Bell },
-  { value: "about", label: "About", icon: Info },
 ];
 
 export const NAV_GROUPS: NavGroup[] = [
@@ -152,7 +140,6 @@ export const SETTINGS_ITEM: NavItem = {
   label: "Settings",
   icon: Settings,
   description: "Preferences, updates and engine status",
-  tabs: SETTINGS_TABS,
 };
 
 export const ALL_NAV_ITEMS: NavItem[] = [...NAV_GROUPS.flatMap((g) => g.items), SETTINGS_ITEM];

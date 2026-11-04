@@ -5,6 +5,16 @@ notes come from commit subjects. This file records the larger milestones.
 
 ## 0.2.0 (unreleased)
 
+### Layout
+- The window is shorter (1280×720, minimum 1024×600) and pages fill it: each page title moved into the title bar, filters
+  moved up beside the tabs, and every page reaches the bottom of the window.
+- Restore, Startup and PC Cleaner are single tables, Hardware is one specification sheet, Gaming shows all three
+  profiles side by side, and Settings is one page instead of four tabs.
+- Pill boxes are gone: state is a dot and a word, data sources are a dot, and buttons, indicators and rows lost their
+  boxes. Cards have a filled surface instead of a visible outline.
+- Tweaks has three tabs of similar size: Apps joined Windows, and the headings inside a tab are gone.
+- Geist replaces Inter and Manrope.
+
 ### Motion and copy
 - The app now responds to you: the sidebar, tabs, chart filter and selection outlines slide, pages and lists arrive,
   figures count up, buttons and switches react to a press, and a tweak's card pulses green the moment it takes effect.

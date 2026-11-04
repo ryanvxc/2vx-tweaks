@@ -2,16 +2,17 @@ import { useState } from "react";
 import { Copy, FolderOpen, KeyRound, RefreshCw, Rocket, SearchX } from "lucide-react";
 import { STARTUP_TABS } from "@/app/navigation";
 import { toast } from "sonner";
+import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { FilterBar } from "@/components/common/filter-bar";
-import { Indicator } from "@/components/common/indicator";
+import { StatusLabel } from "@/components/common/notice";
 import { PageTabs } from "@/components/common/page-tabs";
-import { SectionCard } from "@/components/common/section-card";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { useStaggerIn } from "@/hooks/use-motion";
 import { useStartupItems } from "@/hooks/use-system";
 import { useTabParam } from "@/hooks/use-tab-param";
+import { cn } from "@/lib/utils";
 import type { StartupItem } from "@/types/system";
 
 const SOURCE_LABEL: Record<StartupItem["source"], string> = {
@@ -19,6 +20,10 @@ const SOURCE_LABEL: Record<StartupItem["source"], string> = {
   runOnceKey: "Runs once",
   startupFolder: "Startup folder",
 };
+
+// Shared by the header and every row, so the columns line up.
+const COLUMNS =
+  "grid grid-cols-[13rem_minmax(0,1fr)_6.5rem_6rem_2.75rem_1.5rem] items-center gap-3";
 
 export function StartupPage() {
   const { data, error, loading, refetch } = useStartupItems();
@@ -41,47 +46,64 @@ export function StartupPage() {
     <>
       <PageHeader
         title="Startup"
+        description={disabled > 0 ? `${disabled} disabled` : undefined}
         actions={
-          <Button size="sm" variant="outline" onClick={refetch} disabled={loading}>
+          <Button size="sm" variant="ghost" onClick={refetch} disabled={loading}>
             <RefreshCw className={loading ? "animate-spin" : undefined} /> Refresh
           </Button>
         }
       />
-      <div className="flex flex-col gap-4">
-        <PageTabs label="Scope" tabs={tabs} value={tab} onChange={setTab} />
-        <FilterBar
-          search={search}
-          onSearch={setSearch}
-          placeholder="Search name or command"
-          end={
-            data && (
-              <span className="text-[12px] text-muted-foreground tabular">{disabled} disabled</span>
-            )
-          }
+      <div className="flex flex-1 flex-col gap-3">
+        <PageTabs
+          label="Scope"
+          tabs={tabs}
+          value={tab}
+          onChange={setTab}
+          end={<FilterBar search={search} onSearch={setSearch} placeholder="Search startup" />}
         />
-        <SectionCard title="Startup entries" source="live">
+        <div className="flex flex-1 flex-col overflow-hidden panel">
           {error ? (
-            <ErrorState message={error.message} onRetry={refetch} />
+            <div className="p-4">
+              <ErrorState message={error.message} onRetry={refetch} />
+            </div>
           ) : loading && !data ? (
-            <LoadingRows rows={5} />
+            <div className="p-4">
+              <LoadingRows rows={5} />
+            </div>
           ) : shown.length === 0 ? (
             <EmptyState
               icon={items.length === 0 ? Rocket : SearchX}
               title={items.length === 0 ? "Nothing starts with Windows" : "No entries match"}
+              className="flex-1"
             />
           ) : (
-            <ul ref={list} className="-mx-2 flex flex-col">
-              {shown.map((i) => (
-                <StartupRow key={i.id} item={i} />
-              ))}
-            </ul>
+            <>
+              <div
+                className={cn(
+                  COLUMNS,
+                  "h-9 shrink-0 border-b px-4 text-[12px] text-muted-foreground",
+                )}
+              >
+                <span>Name</span>
+                <span>Command</span>
+                <span>Source</span>
+                <span>Scope</span>
+                <span>State</span>
+                <DataSourceBadge source="live" />
+              </div>
+              <ul ref={list} className="divide-y">
+                {shown.map((i) => (
+                  <StartupRow key={i.id} item={i} />
+                ))}
+              </ul>
+            </>
           )}
           {data && data.unreadable.length > 0 && (
-            <p className="mt-3 text-[12px] text-warning">
+            <p className="mt-auto border-t px-4 py-2 text-[12px] text-warning">
               Couldn't read: {data.unreadable.join("; ")}
             </p>
           )}
-        </SectionCard>
+        </div>
       </div>
     </>
   );
@@ -89,6 +111,7 @@ export function StartupPage() {
 
 function StartupRow({ item }: { item: StartupItem }) {
   const SourceIcon = item.source === "startupFolder" ? FolderOpen : KeyRound;
+  const off = item.enabled === false;
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(item.command);
@@ -98,33 +121,32 @@ function StartupRow({ item }: { item: StartupItem }) {
     }
   };
   return (
-    <li
-      data-stagger
-      className="group flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent/40"
-    >
-      <SourceIcon className="size-4 shrink-0 text-brand" aria-hidden />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2">
-          <span className="truncate text-[13px] font-medium" title={item.location}>
-            {item.name}
-          </span>
-          <span className="shrink-0 text-[12px] text-muted-foreground">
-            {SOURCE_LABEL[item.source]} · {item.scope === "allUsers" ? "All users" : "Your account"}
-          </span>
-        </div>
-        <code
-          data-selectable
-          className="block truncate font-mono text-[11.5px] text-muted-foreground"
-          title={item.command}
-        >
-          {item.command}
-        </code>
+    <li data-stagger className={cn(COLUMNS, "group h-10 px-4 transition-colors hover:bg-raised")}>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <SourceIcon className="size-4 shrink-0 text-brand" aria-hidden />
+        <span className="truncate text-[13px] font-medium" title={item.location}>
+          {item.name}
+        </span>
       </div>
-      {item.enabled === false ? (
-        <Indicator icon={Rocket} tone="neutral" title="Disabled in Task Manager" />
-      ) : (
-        <Indicator icon={Rocket} tone="success" title="Starts with Windows" />
-      )}
+      <code
+        data-selectable
+        className="truncate font-mono text-[11.5px] text-muted-foreground"
+        title={item.command}
+      >
+        {item.command}
+      </code>
+      <span className="truncate text-[12.5px] text-muted-foreground">
+        {SOURCE_LABEL[item.source]}
+      </span>
+      <span className="truncate text-[12.5px] text-muted-foreground">
+        {item.scope === "allUsers" ? "All users" : "Your account"}
+      </span>
+      <StatusLabel
+        tone={off ? "neutral" : "success"}
+        title={off ? "Disabled in Task Manager" : "Starts with Windows"}
+      >
+        {off ? "Off" : "On"}
+      </StatusLabel>
       <Button
         size="icon-xs"
         variant="ghost"
