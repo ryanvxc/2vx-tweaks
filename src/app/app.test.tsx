@@ -66,12 +66,12 @@ describe("App shell", () => {
     render(<App />);
     const nav = screen.getByRole("navigation", { name: "Main" });
     const row = (name: string) => within(nav).getByRole("link", { name });
-    await waitFor(() => expect(row("Windows")).toHaveAttribute("aria-current", "page"));
+    await waitFor(() => expect(row("Core")).toHaveAttribute("aria-current", "page"));
     expect(row("Privacy")).not.toHaveAttribute("aria-current");
 
     await user.click(row("Privacy"));
     expect(row("Privacy")).toHaveAttribute("aria-current", "page");
-    expect(row("Windows")).not.toHaveAttribute("aria-current");
+    expect(row("Core")).not.toHaveAttribute("aria-current");
     expect(await screen.findByRole("tab", { name: /Privacy/, selected: true })).toBeInTheDocument();
   });
 

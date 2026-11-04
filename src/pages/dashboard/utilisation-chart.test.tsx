@@ -30,6 +30,26 @@ const title = (text: string) =>
   expect(document.querySelector('[data-slot="card-title"]')).toHaveTextContent(text);
 
 describe("UtilisationChart title", () => {
+  it("opens on All, with each device and its newest value in the title", () => {
+    render(
+      <UtilisationChart
+        samples={[sample(0, "NVIDIA GeForce RTX 4070"), sample(1000, "NVIDIA GeForce RTX 4070")]}
+        snapshot={SNAPSHOT}
+      />,
+      { wrapper: TooltipProvider },
+    );
+    expect(screen.getByRole("radio", { name: "All" })).toBeChecked();
+    title("CPU10%GPU40%RAM25%");
+  });
+
+  it("marks a device with no reading instead of showing zero", () => {
+    const noGpu = (timestampMs: number) => ({ ...sample(timestampMs, null), gpus: [] });
+    render(<UtilisationChart samples={[noGpu(0), noGpu(1000)]} snapshot={SNAPSHOT} />, {
+      wrapper: TooltipProvider,
+    });
+    title("GPU—");
+  });
+
   it("names the device for a single-series view", async () => {
     const user = userEvent.setup();
     render(
@@ -39,6 +59,7 @@ describe("UtilisationChart title", () => {
       />,
       { wrapper: TooltipProvider },
     );
+    await pick(user, "CPU");
     title("Intel(R) Core(TM) i5-14600KF");
     await pick(user, "GPU");
     title("NVIDIA GeForce RTX 4070");

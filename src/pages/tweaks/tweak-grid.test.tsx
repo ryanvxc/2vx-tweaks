@@ -197,6 +197,22 @@ describe("TweakGrid", () => {
     expect(screen.getByText("No tweaks match")).toBeInTheDocument();
   });
 
+  it("puts tweaks that can't run on this PC in a last section, whatever the sort", async () => {
+    const user = userEvent.setup();
+    mock.getTweakStatuses.mockResolvedValue([
+      { ...STATUSES[0]!, compatibility: "notInstalled" },
+      ...STATUSES.slice(1),
+    ]);
+    renderGrid("/tweaks?tab=privacy", true);
+
+    const lastHeading = async () => (await screen.findAllByRole("heading", { level: 2 })).at(-1);
+    expect(await lastHeading()).toHaveTextContent("Unavailable");
+
+    await user.click(screen.getByRole("button", { name: /Sort/ }));
+    await user.click(await screen.findByRole("menuitemradio", { name: "Name" }));
+    expect(await lastHeading()).toHaveTextContent("Unavailable");
+  });
+
   it("names what a selected tweak can break in the review", async () => {
     const warned = { ...STATUSES[0]!, meta: { ...STATUSES[0]!.meta, warning: "Printing stops." } };
     mock.getTweakStatuses.mockResolvedValue([warned, ...STATUSES.slice(1)]);

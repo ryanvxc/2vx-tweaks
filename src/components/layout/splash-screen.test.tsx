@@ -106,7 +106,6 @@ describe("SplashScreen", () => {
     const onDone = vi.fn();
     const { container } = render(<SplashScreen onDone={onDone} />);
     expect(container.querySelector("canvas")).not.toBeInTheDocument();
-    expect(screen.queryByText(/pulse/)).not.toBeInTheDocument();
     await wait(1000);
     expect(onDone).not.toHaveBeenCalled();
     await wait(400);

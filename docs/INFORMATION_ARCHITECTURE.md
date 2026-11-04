@@ -10,7 +10,7 @@ Every feature has one primary location. Other pages may summarise it and link th
 | Specifications, drives, board, Windows edition | Hardware | – |
 | Whether a tweak is in effect | Tweaks (read from the PC) | Home counts; Game Mode and its presets reference tweaks by ID |
 | Past changes and undo | Restore Centre | Home: the newest one and the backup count; a tweak's switch can undo that tweak |
-| System health | Home (a dialog from the System health card) | Anything wrong also shows as a notice at the top of Home |
+| System health | Home (a dialog from the System health card) | – |
 | Update state and release notes | Settings › Updates | Account menu (fast path), dot on the account card, Home notice (alert) |
 | Privilege level | Settings › General | Account card |
 | App version | Settings › About | Account menu |
@@ -19,10 +19,10 @@ Every feature has one primary location. Other pages may summarise it and link th
 
 | Page | Question | First screen | Behind a click |
 | --- | --- | --- | --- |
-| **Home** | Is my PC okay, and what should I do next? | Alerts, backups, tweaks in effect, live chart, Quickstart, Patch Notes, newest change, health | Everything else |
+| **Home** | Is my PC okay, and what should I do next? | Backups, tweaks in effect, live chart, Quickstart, Patch Notes, newest change, health | Everything else |
 | **Monitoring** | What is it doing right now? | Four live tiles that choose the graph | Per-thread load (CPU only) |
 | **Hardware** | What's in this PC? | One specification sheet: processor, graphics, memory, Windows, board, drives | – |
-| **Tweaks** | What can I change? | Tabs (each also a sidebar row), search, filters, a grid of cards | Details dialog with values and sources |
+| **Tweaks** | What can I change? | Tabs (each also a sidebar row), search, filters, cards in titled sections, with anything this PC can't run in a last Unavailable section | Details dialog with values and sources |
 | **Game Mode** | Is a game running, and what should change for it? | Ring, detected game, live CPU and GPU | Configure (what it turns on), Add a Game |
 | **PC Cleaner** | What can I clear, turn off or remove? | Four tabs: System Cleaner, Services, Uninstall, Autoruns | The review before each change |
 | **Restore Centre** | What did 2VX change, and can I undo it? | One table of batches | Exact old and new values |

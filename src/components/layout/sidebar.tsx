@@ -50,7 +50,7 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
 
       <nav
         ref={navBox}
-        className="relative isolate flex min-h-0 flex-1 flex-col justify-between gap-1.5 overflow-y-auto px-3 pt-2 pb-1"
+        className="relative isolate flex min-h-0 flex-1 flex-col justify-between gap-1.5 overflow-y-auto px-3 pt-2 pb-6"
         aria-label="Main"
       >
         <span

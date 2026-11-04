@@ -1,5 +1,4 @@
 import { EngineBanner } from "@/components/common/engine-banner";
-import { Notice } from "@/components/common/notice";
 import { RecommendedAction } from "@/components/common/recommended-action";
 import { ErrorState } from "@/components/common/states";
 import { UpdateNotice } from "@/components/common/update-notice";
@@ -7,7 +6,6 @@ import { PageHero } from "@/components/layout/page-hero";
 import { useLiveMetrics } from "@/hooks/use-live-metrics";
 import { useStaggerIn } from "@/hooks/use-motion";
 import { useAccount, useSystemSnapshot } from "@/hooks/use-system";
-import { evaluateHealth } from "@/lib/health";
 import { HomeCards } from "./home-panels";
 import { Quickstart } from "./quickstart";
 import { UpdatesSection } from "./updates-section";
@@ -25,8 +23,6 @@ export function DashboardPage() {
   const s = snapshot.data;
   const os = s?.os;
   const name = account.data?.email.split("@")[0];
-  // Below the fold now, so anything wrong comes up here instead of waiting to be found.
-  const problems = s ? evaluateHealth(s, metrics.latest).filter((c) => c.status !== "good") : [];
 
   return (
     <div
@@ -45,19 +41,14 @@ export function DashboardPage() {
 
       <EngineBanner previewNotice={false} />
       <UpdateNotice />
-      {problems.map((c) => (
-        <Notice key={c.id} tone="warning" title={c.label}>
-          {c.detail}
-        </Notice>
-      ))}
       <HomeCards />
 
       {metrics.error && metrics.samples.length === 0 && (
         <ErrorState title="Live metrics unavailable" message={metrics.error.message} />
       )}
 
-      {/* Stops short of the window's height at the default size, so Updates shows at the bottom. */}
-      <div className="grid h-[clamp(20rem,calc(100vh-20rem),34rem)] shrink-0 grid-cols-3 gap-3">
+      {/* Short enough that Updates shows at the bottom. Quickstart scrolls inside this height. */}
+      <div className="grid h-84 shrink-0 grid-cols-3 gap-3">
         <div data-stagger className="col-span-2 min-h-0">
           <UtilisationChart samples={metrics.samples} snapshot={s} />
         </div>

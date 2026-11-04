@@ -9,6 +9,11 @@ notes come from commit subjects. This file records the larger milestones.
 - Check for updates now works in every release build, including ones built on your own PC.
 - Slow connections no longer fail the download after 30 seconds.
 
+### Tweaks
+- Tweaks is rebuilt: a new header and tab bar, larger cards, and sections inside each tab.
+- Tabs are now Core, Privacy, Apps and Services. Windows became Core, and the Microsoft Edge tweaks moved to Apps.
+- Tweaks that can't run on this PC always sit in an Unavailable section at the bottom.
+
 ### PC Cleaner
 - PC Cleaner now has four tabs: System Cleaner, Services, Uninstall and Autoruns.
 - System Cleaner shows what each location holds. Tick what you want, or pick Recommended, then Start cleaning. Files are
@@ -23,7 +28,9 @@ notes come from commit subjects. This file records the larger milestones.
 - Home is rebuilt: a greeting by account name, three cards that light up with rising dots on hover, a 60-second chart
   with CPU, GPU and RAM tabs, a Quickstart checklist, and Updates below the fold.
 - Quickstart ticks what it can read from the PC. The rest tick once they've been opened.
-- Patch Notes reads this file, so it works offline. System health opens in a dialog, and anything wrong shows at the top.
+- Patch Notes reads this file, so it works offline. System health opens in a dialog.
+- The chart opens on All, with CPU, GPU and RAM on one graph. The row is shorter, so Updates shows sooner, and Quickstart
+  scrolls.
 - The Updates cards use original art painted for 2VX.
 
 ### Game Mode

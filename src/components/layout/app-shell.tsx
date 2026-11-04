@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { ErrorBoundary } from "@/components/common/error-boundary";
+import { cn } from "@/lib/utils";
 import { CommandPalette } from "./command-palette";
 import { HeaderSlot } from "./header-slot";
 import { Sidebar } from "./sidebar";
 import { TitleBar } from "./title-bar";
 
 /** Pages that carry their own title (`PageHero`), so the title bar stays thin. */
-const OWN_TITLE = ["/", "/gaming", "/cleaner"];
+const OWN_TITLE = ["/", "/gaming", "/cleaner", "/tweaks"];
 
 export function AppShell() {
   const { pathname, search } = useLocation();
@@ -27,7 +28,14 @@ export function AppShell() {
       <Sidebar onSearch={() => setSearching(true)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <TitleBar slot={setHeaderSlot} thin={OWN_TITLE.includes(pathname)} />
-        <main ref={main} className="flex-1 overflow-y-auto">
+        {/* Tweaks reserves the scrollbar's width, or its cards shift between short and long tabs. */}
+        <main
+          ref={main}
+          className={cn(
+            "flex-1 overflow-y-auto",
+            pathname === "/tweaks" && "[scrollbar-gutter:stable]",
+          )}
+        >
           {/* Keyed by route so an error on one page doesn't stick after navigating away. */}
           <ErrorBoundary key={pathname}>
             <HeaderSlot.Provider value={headerSlot}>

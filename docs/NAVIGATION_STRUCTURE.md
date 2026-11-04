@@ -14,8 +14,9 @@ Tools
   2VX Game Mode    /gaming              ?view=configure (brand colour)
 
 Optimisations
-  Windows          /tweaks?tab=windows  (also /tweaks)
+  Core             /tweaks?tab=core     (also /tweaks)
   Privacy          /tweaks?tab=privacy
+  Apps             /tweaks?tab=apps
   Services         /tweaks?tab=services
   Hardware         /hardware
   PC Cleaner       /cleaner             ?tab=system | services | uninstall | autoruns
@@ -23,9 +24,9 @@ Optimisations
 [Account card]     opens the account menu
 ```
 
-Ten rows in three groups. Rows and groups share out the sidebar's height, so the list ends just above the account
+Eleven rows in three groups. Rows and groups share out the sidebar's height, so the list ends a little above the account
 card at any window size. A row stops growing at 64 px; on a taller window the spare height goes between the groups. The
-rows for Windows, Privacy and Services are the Tweaks page's tabs (`tabsInSidebar`), so they stay in step with the tabs
+rows for Core, Privacy, Apps and Services are the Tweaks page's tabs (`tabsInSidebar`), so they stay in step with the tabs
 on the page, and Search still lists the page as Tweaks. Settings has no sidebar row: it's in the account menu, Search and the title of its
 own page. Search is in the account menu, and Ctrl K opens it from anywhere. The title bar holds only minimise and close.
 

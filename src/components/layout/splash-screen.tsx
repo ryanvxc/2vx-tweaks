@@ -149,10 +149,6 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-5 text-center text-[12px] text-muted-foreground/60">
-        {!still && "Click to send a pulse · "}Space for another fact · Esc to skip
-      </div>
-
       <header
         data-tauri-drag-region
         className="absolute inset-x-0 top-0 flex h-(--titlebar-height) justify-end"

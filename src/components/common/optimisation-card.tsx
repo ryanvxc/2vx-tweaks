@@ -42,16 +42,17 @@ export function OptimisationCard({
       ref={ref}
       data-stagger
       className={cn(
-        "group relative flex min-h-[168px] flex-col panel px-4 pt-4 pb-3 transition-colors",
+        "group relative flex h-44 flex-col panel px-5 pt-5 pb-3.5 transition-colors",
         "hover:bg-raised",
         highlighted && "border-primary/50",
         muted && "opacity-60",
         className,
       )}
     >
-      <div className="flex items-center gap-2.5">
+      <div className={cn("flex items-center gap-3", badge && "pr-10")}>
         <Icon
-          className="size-[18px] shrink-0 text-brand transition-transform duration-200 group-hover:scale-110"
+          className="size-[22px] shrink-0 text-brand transition-transform duration-200 group-hover:scale-110"
+          strokeWidth={1.75}
           aria-hidden
         />
         <div className="min-w-0 flex-1">
@@ -60,24 +61,23 @@ export function OptimisationCard({
               type="button"
               onClick={onOpen}
               aria-label={openLabel ?? `Details for ${title}`}
-              className="text-left text-card-title outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
+              title={title}
+              className="block w-full truncate text-left text-[14.5px] font-semibold outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
             >
               {title}
             </button>
           ) : (
-            <div className="text-card-title">{title}</div>
+            <div className="truncate text-[14.5px] font-semibold">{title}</div>
           )}
         </div>
-        {badge && <div className="relative shrink-0">{badge}</div>}
       </div>
-      <p className="mt-2.5 line-clamp-3 text-[13px] leading-normal text-muted-foreground">
+      {badge && <div className="absolute top-3 right-3">{badge}</div>}
+      <p className="mt-2.5 line-clamp-2 text-[13px] leading-normal text-muted-foreground">
         {description}
       </p>
-      <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+      <div className="mt-auto flex items-center justify-between gap-2 border-t border-dashed pt-3">
         {/* Raised above the stretched open-button so tooltips and the control stay usable. */}
-        <div className="relative -ml-1 flex min-w-0 flex-wrap items-center gap-0.5">
-          {indicators}
-        </div>
+        <div className="relative flex min-w-0 items-center gap-1.5">{indicators}</div>
         {control && <div className="relative shrink-0">{control}</div>}
       </div>
     </div>
@@ -85,7 +85,11 @@ export function OptimisationCard({
 }
 
 export function NewBadge() {
-  return <span className="text-[11px] font-medium text-success">New</span>;
+  return (
+    <span className="rounded-md border border-success/25 bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
+      New
+    </span>
+  );
 }
 
 /** Fills the width at any window size, adding columns rather than stretching cards. */

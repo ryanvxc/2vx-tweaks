@@ -98,7 +98,8 @@ describe("DashboardPage", () => {
     expect(useUiStore.getState().quickstartOpened).toEqual(["startup"]);
   });
 
-  it("brings a health problem to the top, since the health card is below the fold", async () => {
+  it("keeps health problems in the System health dialog, not at the top of the page", async () => {
+    const user = userEvent.setup();
     const real = await backend.getSystemSnapshot();
     vi.spyOn(backend, "getSystemSnapshot").mockResolvedValue({
       ...real,
@@ -106,8 +107,13 @@ describe("DashboardPage", () => {
     });
     renderPage();
 
-    const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("System drive space");
+    const health = await screen.findByRole("button", { name: /System health/ });
+    expect(screen.queryByText("System drive space")).not.toBeInTheDocument();
+
+    await user.click(health);
+    expect(
+      await within(await screen.findByRole("dialog")).findByText("System drive space"),
+    ).toBeInTheDocument();
   });
 
   it("opens the patch notes from the changelog and the health checks", async () => {

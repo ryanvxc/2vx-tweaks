@@ -2,12 +2,13 @@ import {
   Activity,
   AppWindow,
   ArchiveRestore,
+  Bolt,
   Brush,
   Cpu,
-  EyeOff,
   Gamepad2,
   Gauge,
   Gpu,
+  HatGlasses,
   House,
   MemoryStick,
   Network,
@@ -46,7 +47,7 @@ export interface NavGroup {
 }
 
 export type MonitoringTab = "cpu" | "memory" | "gpu" | "network";
-export type TweakTab = "windows" | "privacy" | "services";
+export type TweakTab = "core" | "privacy" | "apps" | "services";
 export type CleanerTab = "system" | "services" | "uninstall" | "autoruns";
 
 export const MONITORING_TABS: NavTab<MonitoringTab>[] = [
@@ -57,8 +58,9 @@ export const MONITORING_TABS: NavTab<MonitoringTab>[] = [
 ];
 
 export const TWEAK_TABS: NavTab<TweakTab>[] = [
-  { value: "windows", label: "Windows", icon: AppWindow },
-  { value: "privacy", label: "Privacy", icon: EyeOff },
+  { value: "core", label: "Core", icon: Bolt },
+  { value: "privacy", label: "Privacy", icon: HatGlasses },
+  { value: "apps", label: "Apps", icon: AppWindow },
   { value: "services", label: "Services", icon: Server },
 ];
 

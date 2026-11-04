@@ -21,7 +21,7 @@ export function SectionCard({
   headerClassName,
   contentClassName,
 }: {
-  title: string;
+  title: ReactNode;
   description?: string;
   source?: DataSource;
   actions?: ReactNode;

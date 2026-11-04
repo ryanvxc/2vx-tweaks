@@ -12,19 +12,27 @@ import { SectionCard } from "@/components/common/section-card";
 import { LoadingRows } from "@/components/common/states";
 import { useSlidingIndicator } from "@/hooks/use-motion";
 import { formatBytes } from "@/lib/format";
-import { usagePoints } from "@/lib/usage-points";
+import { usagePoints, type UsagePoint } from "@/lib/usage-points";
 import { cn } from "@/lib/utils";
 import type { MetricsSample, SystemSnapshot } from "@/types/system";
 
 const VIEWS = [
+  { value: "all", label: "All" },
   { value: "cpu", label: "CPU" },
   { value: "gpu", label: "GPU" },
   { value: "ram", label: "RAM" },
 ] as const;
 
 type View = (typeof VIEWS)[number]["value"];
+type Device = Exclude<View, "all">;
 
-const COLOUR = "var(--chart-1)";
+// Each device keeps its colour in every view, so a line means the same thing on All.
+const SERIES: { key: Device; label: string; colour: string }[] = [
+  { key: "cpu", label: "CPU", colour: "var(--chart-1)" },
+  { key: "gpu", label: "GPU", colour: "var(--chart-2)" },
+  { key: "ram", label: "RAM", colour: "var(--chart-3)" },
+];
+
 const WINDOW_SECONDS = 60;
 
 export function UtilisationChart({
@@ -34,15 +42,17 @@ export function UtilisationChart({
   samples: MetricsSample[];
   snapshot: SystemSnapshot | undefined;
 }) {
-  const [view, setView] = useState<View>("cpu");
+  const [view, setView] = useState<View>("all");
   const { container: views, indicator: pill } =
     useSlidingIndicator<HTMLDivElement>('[aria-checked="true"]');
   const data = usagePoints(samples);
-  const label = VIEWS.find((v) => v.value === view)?.label;
+  const shown = SERIES.filter((s) => view === "all" || s.key === view);
 
   return (
     <SectionCard
-      title={viewTitle(view, samples.at(-1), snapshot)}
+      title={
+        view === "all" ? <SeriesKey now={data.at(-1)} /> : viewTitle(view, samples.at(-1), snapshot)
+      }
       source="live"
       className="h-full"
       headerClassName="border-b items-center [&>[data-slot=card-title]]:row-span-2"
@@ -88,10 +98,17 @@ export function UtilisationChart({
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 8, right: 30, bottom: 2, left: 0 }}>
               <defs>
-                <linearGradient id="util-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={COLOUR} stopOpacity={0.5} />
-                  <stop offset="100%" stopColor={COLOUR} stopOpacity={0.02} />
-                </linearGradient>
+                {shown.map((s) => (
+                  <linearGradient key={s.key} id={`util-${s.key}`} x1="0" y1="0" x2="0" y2="1">
+                    {/* Three full fills would hide each other. */}
+                    <stop
+                      offset="0%"
+                      stopColor={s.colour}
+                      stopOpacity={view === "all" ? 0.14 : 0.5}
+                    />
+                    <stop offset="100%" stopColor={s.colour} stopOpacity={0.02} />
+                  </linearGradient>
+                ))}
               </defs>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 6" vertical={false} />
               <XAxis
@@ -124,25 +141,29 @@ export function UtilisationChart({
                   fontSize: 12,
                 }}
                 labelFormatter={(v) => (v === 0 ? "now" : `${-Number(v)}s ago`)}
-                formatter={(value) => [value == null ? "—" : `${value}%`, label]}
+                formatter={(value, name) => [value == null ? "—" : `${value}%`, name]}
               />
-              <Area
-                type="monotone"
-                dataKey={view}
-                stroke={COLOUR}
-                strokeWidth={2}
-                fill="url(#util-fill)"
-                isAnimationActive={false}
-                dot={(dot) =>
-                  dot.index === data.length - 1 ? (
-                    <NowDot key="now" {...dot} />
-                  ) : (
-                    <g key={dot.index} />
-                  )
-                }
-                activeDot={{ r: 4, fill: COLOUR, stroke: "none" }}
-                connectNulls
-              />
+              {shown.map((s) => (
+                <Area
+                  key={s.key}
+                  type="monotone"
+                  dataKey={s.key}
+                  name={s.label}
+                  stroke={s.colour}
+                  strokeWidth={2}
+                  fill={`url(#util-${s.key})`}
+                  isAnimationActive={false}
+                  dot={(dot) =>
+                    dot.index === data.length - 1 ? (
+                      <NowDot key="now" {...dot} colour={s.colour} />
+                    ) : (
+                      <g key={dot.index} />
+                    )
+                  }
+                  activeDot={{ r: 4, fill: s.colour, stroke: "none" }}
+                  connectNulls
+                />
+              ))}
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -152,19 +173,39 @@ export function UtilisationChart({
 }
 
 /** Marks the newest reading, which is the only point on the line that's still moving. */
-function NowDot({ cx, cy }: { cx?: number; cy?: number }) {
+function NowDot({ cx, cy, colour }: { cx?: number; cy?: number; colour: string }) {
   if (cx == null || cy == null) return null;
   return (
     <g>
-      <circle cx={cx} cy={cy} r={4} fill={COLOUR} className="now-ping" />
-      <circle cx={cx} cy={cy} r={4} fill={COLOUR} />
+      <circle cx={cx} cy={cy} r={4} fill={colour} className="now-ping" />
+      <circle cx={cx} cy={cy} r={4} fill={colour} />
     </g>
+  );
+}
+
+/** With three lines on the graph, the title says which is which and where each one is now. */
+function SeriesKey({ now }: { now: UsagePoint | undefined }) {
+  return (
+    <span className="flex items-center gap-5">
+      {SERIES.map((s) => {
+        const value = now?.[s.key];
+        return (
+          <span key={s.key} className="flex items-center gap-2">
+            <span aria-hidden className="size-2 rounded-full" style={{ background: s.colour }} />
+            {s.label}
+            <span className="font-normal text-muted-foreground tabular">
+              {value == null ? "—" : `${Math.round(value)}%`}
+            </span>
+          </span>
+        );
+      })}
+    </span>
   );
 }
 
 /** Names the device being plotted: the chart follows the first GPU in the samples. */
 function viewTitle(
-  view: View,
+  view: Device,
   latest: MetricsSample | undefined,
   snapshot: SystemSnapshot | undefined,
 ) {

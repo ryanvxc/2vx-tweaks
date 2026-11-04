@@ -5,16 +5,17 @@ change, so the journal's history stays valid.
 
 ## Tweaks
 
-### Tweaks › Windows
+Sections are headings on the page and set the order inside each tab. Anything this PC can't run moves to an Unavailable
+section, always last.
+
+### Tweaks › Core
 
 | Section | Tweak |
 | --- | --- |
-| Responsiveness | `performance.foreground-boost`, `windows.window-animations-off` |
-| Storage | `performance.last-access-off`, `windows.storage-sense-off` |
-| Microsoft Edge | `performance.edge-background-mode-off`, `performance.edge-startup-boost-off`, `privacy.edge-shopping-off`, `windows.edge-recommendations-off`, `windows.edge-sidebar-off` |
+| Core | `performance.foreground-boost`, `gaming.mmcss-games-priority`, `performance.last-access-off`, `gaming.game-dvr-off`, `windows.storage-sense-off`, `windows.window-animations-off` |
 
-Sections set the order on the page; they no longer show as headings. All five Edge settings sit together here: Windows
-had four tweaks on its own and Apps only had Edge, so the two tabs became one.
+Xbox services stay under Services: they're switches that remove a feature, and Core shouldn't suggest turning off
+something that breaks Game Pass.
 
 ### Tweaks › Privacy
 
@@ -22,6 +23,12 @@ had four tweaks on its own and Apps only had Edge, so the two tabs became one.
 | --- | --- |
 | Windows data | `privacy.diagnostic-data-minimum`, `privacy.activity-history-off`, `privacy.feedback-requests-off`, `privacy.advertising-id-off`, `privacy.app-launch-tracking-off`, `privacy.language-list-opt-out`, `privacy.online-speech-off`, `privacy.inking-typing-collection-off` |
 | App permissions | `privacy.app-location-off`, `privacy.app-account-info-off`, `privacy.app-diagnostics-off`, `privacy.app-notification-access-off`, `privacy.background-apps-off` |
+
+### Tweaks › Apps
+
+| Section | Tweak |
+| --- | --- |
+| Microsoft Edge | `performance.edge-background-mode-off`, `performance.edge-startup-boost-off`, `privacy.edge-shopping-off`, `windows.edge-recommendations-off`, `windows.edge-sidebar-off` |
 
 ### Tweaks › Services
 
@@ -31,15 +38,6 @@ had four tweaks on its own and Apps only had Edge, so the two tabs became one.
 | Bluetooth and sensors | `services.bluetooth-off`, `services.sensor-off`, `services.sensor-monitoring-off` |
 | Xbox | `services.xbox-auth-off`, `services.xbox-save-off` |
 | Other | `services.maps-broker-off`, `services.wap-push-off`, `services.compat-assistant-off`, `services.sync-host-off` |
-
-### Gaming
-
-| Section | Tweak |
-| --- | --- |
-| Gaming | `gaming.mmcss-games-priority`, `gaming.game-dvr-off` |
-
-Xbox services stay under Services: they're switches that remove a feature, and Gaming shouldn't suggest turning off
-something that breaks Game Pass.
 
 ## Game Mode presets
 

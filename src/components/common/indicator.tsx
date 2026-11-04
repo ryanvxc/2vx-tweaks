@@ -15,6 +15,8 @@ const TONE_TEXT: Record<IndicatorTone, string> = {
   neutral: "text-muted-foreground",
 };
 
+const BOX = "size-7 border border-hairline bg-background/40";
+
 /**
  * A small icon on a card that explains itself on hover or keyboard focus: a title, plus a
  * sentence when the title isn't enough. The label is also the accessible name, so the meaning never
@@ -25,12 +27,15 @@ export function Indicator({
   tone,
   title,
   children,
+  boxed,
   className,
 }: {
   icon: LucideIcon;
   tone: IndicatorTone;
   title: string;
   children?: ReactNode;
+  /** In a small square, for the row at the bottom of a card. */
+  boxed?: boolean;
   className?: string;
 }) {
   return (
@@ -42,6 +47,7 @@ export function Indicator({
           className={cn(
             "inline-flex size-6 cursor-default items-center justify-center rounded-md transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
             TONE_TEXT[tone],
+            boxed && BOX,
             className,
           )}
         >
@@ -92,7 +98,10 @@ export function ImpactMeter({ impact }: { impact: Impact }) {
         <span
           tabIndex={0}
           aria-label={`${info.title} (estimate)`}
-          className="group/impact inline-flex size-6 cursor-default items-end justify-center gap-[3px] rounded-md pb-[5px] transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+          className={cn(
+            "group/impact inline-flex cursor-default items-end justify-center gap-[3px] rounded-md pb-[7px] transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+            BOX,
+          )}
         >
           {[1, 2, 3].map((n) => (
             <span

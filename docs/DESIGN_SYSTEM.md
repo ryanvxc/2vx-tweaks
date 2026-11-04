@@ -62,7 +62,8 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
   reaches the bottom.
 - Lists are tables, not stacks of cards: one panel, an `h-9` header row, single-line rows, columns shared through a
   `COLUMNS` constant.
-- No pill boxes. State is a dot and a word (`StatusLabel`); a label with nothing to report isn't shown at all.
+- No pill boxes. State is a dot and a word (`StatusLabel`); a label with nothing to report isn't shown at all. The one
+  exception is `NewBadge`, whose box matches EXM's card.
 - Copy: a row is an icon, a title and at most one short line, and that line stays only if something could confuse.
   Never explain how the app works or why it's safe. Tweak card descriptions fit two lines (aim for under 70 characters);
   the detail goes in `details`.
@@ -114,10 +115,10 @@ skips. Moving the cursor holds it for up to 7 s. Settings › Appearance turns i
 
 | Component | Purpose |
 | --- | --- |
-| `OptimisationCard`, `CardGrid`, `NewBadge` | The fixed-height card used by Tweaks: icon, title, description, then indicators and one control |
+| `OptimisationCard`, `CardGrid`, `NewBadge` | The fixed-height card used by Tweaks: icon, one-line title, two-line description, a dashed line, then boxed indicators and one control |
 | `Indicator`, `ImpactMeter` | Bare 24 px icons with tooltips (warning, restart, blocked, partial) and the 3-bar impact estimate |
 | `FilterBar` | Search box, filter and sort menus on one row |
-| `PageTabs` | Accessible tab list (`role="tablist"`) used by Monitoring, Tweaks and PC Cleaner (`filled` raises the active tab), with an `end` slot for that page's filters; `useTabParam` keeps the tab in the URL |
+| `PageTabs` | Accessible tab list (`role="tablist"`) used by Monitoring, Tweaks and PC Cleaner (`filled` is a full-width bar with a raised active tab and a white underline), with an `end` slot for that page's filters; `useTabParam` keeps the tab in the URL |
 | `SettingsGroup`, `SettingsRow` | Rows under a heading for Settings: icon, title, optional line, control on the right. Groups sit inside a shared `panel` |
 | `MetricChart` | Recharts area chart for live metrics with a fixed time window |
 | `CommandPalette` (`components/layout/`) | Ctrl K search over pages, tabs and tweaks. It only navigates |

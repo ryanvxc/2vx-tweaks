@@ -51,7 +51,7 @@ export function UpdatesSection({
           aria-haspopup="dialog"
         >
           <Face art={patchNotesArt} title="Patch Notes">
-            What's new in 2VX {app.data?.version ?? notes?.version}.
+            What's new in 2VX {app.data?.version ?? notes?.version}
           </Face>
         </button>
 

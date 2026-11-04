@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
+import type { TweakCategory } from "@/types/engine";
 import { DEFAULT_GAME_MODE_TWEAKS, GAME_MODE_TWEAKS, GAMING_PROFILES } from "./profiles";
-import { TWEAK_ICON, TWEAK_SECTIONS, tweakHref, tweakPlacement } from "./tweak-presentation";
+import {
+  groupTweaks,
+  TWEAK_ICON,
+  TWEAK_SECTIONS,
+  tweakHref,
+  tweakPlacement,
+} from "./tweak-presentation";
 
 // The Rust catalogue is the source of truth; this catches a tweak added there and not here.
 const SOURCES = import.meta.glob<string>("/src-tauri/src/engine/tweaks/**/*.rs", {
@@ -42,11 +49,58 @@ describe("tweak presentation", () => {
 
   it("links a tweak to its primary location", () => {
     expect(tweakHref({ id: "gaming.game-dvr-off", category: "gaming" })).toBe(
-      "/tweaks?tab=windows&tweak=gaming.game-dvr-off",
+      "/tweaks?tab=core&tweak=gaming.game-dvr-off",
     );
     expect(tweakHref({ id: "privacy.edge-shopping-off", category: "privacy" })).toBe(
-      "/tweaks?tab=windows&tweak=privacy.edge-shopping-off",
+      "/tweaks?tab=apps&tweak=privacy.edge-shopping-off",
     );
+  });
+
+  describe("groupTweaks", () => {
+    const tweak = (id: string, blocked = false) => ({
+      meta: { id, category: id.split(".")[0] as TweakCategory },
+      blocked,
+    });
+    const options = { unavailable: (t: { blocked: boolean }) => t.blocked };
+    const ids = (groups: ReturnType<typeof groupTweaks<ReturnType<typeof tweak>>>) =>
+      groups.map((g) => [g.title, g.tweaks.map((t) => t.meta.id)]);
+
+    it("follows the section's written order", () => {
+      const tweaks = [
+        tweak("windows.storage-sense-off"),
+        tweak("performance.last-access-off"),
+        tweak("gaming.game-dvr-off"),
+      ];
+      expect(ids(groupTweaks(tweaks, { ...options, tab: "core", catalogue: true }))).toEqual([
+        [
+          "Core",
+          ["performance.last-access-off", "gaming.game-dvr-off", "windows.storage-sense-off"],
+        ],
+      ]);
+    });
+
+    it("drops sections with nothing in them", () => {
+      const id = TWEAK_SECTIONS.privacy[1]!.ids[0]!;
+      expect(
+        ids(groupTweaks([tweak(id)], { ...options, tab: "privacy", catalogue: true })),
+      ).toEqual([[TWEAK_SECTIONS.privacy[1]!.title, [id]]]);
+    });
+
+    it("keeps the user's sort inside a section", () => {
+      const tweaks = [tweak("windows.storage-sense-off"), tweak("performance.last-access-off")];
+      expect(ids(groupTweaks(tweaks, { ...options, tab: "core", catalogue: false }))).toEqual([
+        ["Core", ["windows.storage-sense-off", "performance.last-access-off"]],
+      ]);
+    });
+
+    it("always puts what can't run last, even in a flat search", () => {
+      const tweaks = [tweak("gaming.game-dvr-off", true), tweak("windows.storage-sense-off")];
+      const last = (tab: "core" | null) =>
+        groupTweaks(tweaks, { ...options, tab, catalogue: false }).at(-1);
+      expect(last("core")?.title).toBe("Unavailable");
+      expect(last(null)?.title).toBe("Unavailable");
+      expect(last(null)?.tweaks.map((t) => t.meta.id)).toEqual(["gaming.game-dvr-off"]);
+    });
   });
 
   it("still shows a tweak nobody placed yet", () => {

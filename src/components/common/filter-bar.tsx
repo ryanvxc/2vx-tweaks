@@ -46,22 +46,22 @@ export function FilterBar({
   const active = filters.reduce((n, g) => n + g.selected.length, 0);
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative w-52">
-        <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+      <div className="relative w-60">
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="search"
           value={search}
           onChange={(e) => onSearch(e.target.value)}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="h-8 w-full panel rounded-lg pr-7 pl-8 text-[13px] outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/40 [&::-webkit-search-cancel-button]:hidden"
+          className="h-10 w-full panel rounded-lg pr-8 pl-9.5 text-[13.5px] outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/40 [&::-webkit-search-cancel-button]:hidden"
         />
         {search && (
           <button
             type="button"
             aria-label="Clear search"
             onClick={() => onSearch("")}
-            className="absolute top-1/2 right-1.5 flex size-5 -translate-y-1/2 animate-in items-center justify-center rounded text-muted-foreground duration-120 ease-arrive fade-in-0 zoom-in-75 hover:text-foreground"
+            className="absolute top-1/2 right-2 flex size-5 -translate-y-1/2 animate-in items-center justify-center rounded text-muted-foreground duration-120 ease-arrive fade-in-0 zoom-in-75 hover:text-foreground"
           >
             <X className="size-3.5" />
           </button>
@@ -71,7 +71,7 @@ export function FilterBar({
       {filters.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className={cn(active > 0 && "text-brand")}>
+            <Button variant="outline" className={cn("h-10 px-4", active > 0 && "text-brand")}>
               <ListFilter /> Filter
               {active > 0 && (
                 <span
@@ -126,7 +126,7 @@ export function FilterBar({
       {sort && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
+            <Button variant="outline" className="h-10 px-4">
               <ArrowDownUp /> Sort
             </Button>
           </DropdownMenuTrigger>

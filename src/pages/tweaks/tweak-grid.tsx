@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import {
   AlertTriangle,
@@ -7,17 +7,19 @@ import {
   PackageOpen,
   SearchX,
   Sparkles,
-  Wand2,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { TWEAK_TABS, type TweakTab } from "@/app/navigation";
+import { TWEAK_TABS } from "@/app/navigation";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { FilterBar, type FilterGroup } from "@/components/common/filter-bar";
 import { ImpactMeter, Indicator } from "@/components/common/indicator";
 import { CardGrid, NewBadge, OptimisationCard } from "@/components/common/optimisation-card";
 import { PageTabs } from "@/components/common/page-tabs";
+import { RecommendedAction } from "@/components/common/recommended-action";
 import { EmptyState, ErrorState } from "@/components/common/states";
+import { PageHero } from "@/components/layout/page-hero";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -37,7 +39,7 @@ import {
   isBlocked,
   RESTART_HINT,
 } from "@/lib/engine-text";
-import { isNewTweak, TWEAK_SECTIONS, tweakIcon, tweakPlacement } from "@/lib/tweak-presentation";
+import { groupTweaks, isNewTweak, tweakIcon, tweakPlacement } from "@/lib/tweak-presentation";
 import { play } from "@/lib/motion";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
 import type { Impact, RiskLevel, TweakCategory, TweakStatus } from "@/types/engine";
@@ -55,22 +57,25 @@ const IMPACT_ORDER: Record<Impact, number> = { low: 0, medium: 1, high: 2 };
  * flag. Switching on selects a tweak for review (the dry-run plan in ChangeInspector);
  * switching off undoes exactly what 2VX recorded, after a confirmation.
  *
- * `browse` adds the topic tabs, search and filters a full catalogue needs. A search looks
- * through every tab, because its point is not having to know the tab.
+ * `browse` adds the page's title, topic tabs, search and filters. A search looks through every
+ * tab, because its point is not having to know the tab.
  */
 export function TweakGrid({
   categories,
   browse = false,
+  banner,
 }: {
   categories: TweakCategory[];
   browse?: boolean;
+  /** Shown between the tabs and the search row. */
+  banner?: ReactNode;
 }) {
   const { data, error, loading, refetch } = useTweakStatuses();
   const engine = useEngineStatus();
   const app = useAppInfo();
   const [params, setParams] = useSearchParams();
 
-  const [tab, setTab] = useTabParam(TWEAK_TABS, "windows");
+  const [tab, setTab] = useTabParam(TWEAK_TABS, "core");
   const [search, setSearch] = useState("");
   const [stateFilter, setStateFilter] = useState<StateFilter[]>([]);
   const [impactFilter, setImpactFilter] = useState<Impact[]>([]);
@@ -94,11 +99,6 @@ export function TweakGrid({
   const changesDisabled = isDesktop && engine.data?.journalAvailable === false;
   const detailsId = params.get("tweak");
   const details = all.find((t) => t.meta.id === detailsId) ?? null;
-
-  const tabs = TWEAK_TABS.map((t) => ({
-    ...t,
-    count: all.filter((s) => tweakPlacement(s.meta).tab === t.value).length,
-  }));
 
   const q = search.trim().toLowerCase();
   const shown = all
@@ -233,53 +233,53 @@ export function TweakGrid({
     />
   );
 
-  // Related tweaks stay together unless the user asked for another order.
-  const catalogueOrder = browse && q === "" && sort === "recommended";
+  const groups = groupTweaks(shown, {
+    tab: browse && q === "" ? tab : null,
+    // Sections keep their written order unless the user asked for another.
+    catalogue: sort === "recommended",
+    unavailable: (t) => isBlocked(t.compatibility),
+  });
 
   return (
-    <div ref={root} className="flex flex-1 flex-col gap-3">
+    <div
+      ref={root}
+      className="flex flex-1 flex-col gap-3 font-nav [--font-heading:var(--font-nav)]"
+    >
       {browse && (
-        <PageTabs
-          label="Topics"
-          tabs={tabs}
-          value={tab}
-          onChange={setTab}
-          end={
-            <FilterBar
-              search={search}
-              onSearch={setSearch}
-              placeholder="Search tweaks"
-              filters={filters}
-              sort={{
-                value: sort,
-                onChange: (v) => setSort(v as Sort),
-                options: [
-                  { value: "recommended", label: "Recommended first" },
-                  { value: "name", label: "Name" },
-                  { value: "impact", label: "Expected effect" },
-                  { value: "newest", label: "Newest" },
-                ],
-              }}
-              end={
-                recommendedOpen.length > 0 && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={changesDisabled}
-                    aria-label={`Select recommended (${recommendedOpen.length})`}
-                    onClick={() =>
-                      setStaged((s) => [
-                        ...new Set([...s, ...recommendedOpen.map((t) => t.meta.id)]),
-                      ])
-                    }
-                  >
-                    <Wand2 /> Recommended {recommendedOpen.length}
-                  </Button>
-                )
-              }
-            />
-          }
-        />
+        <>
+          <PageHero
+            title="Tweaks"
+            subtitle="Documented settings, each with an undo."
+            action={
+              <RecommendedAction
+                otherwise={{ to: "/gaming", label: "Open Game Mode" }}
+                disabled={changesDisabled}
+                onSelect={() =>
+                  setStaged((s) => [...new Set([...s, ...recommendedOpen.map((t) => t.meta.id)])])
+                }
+              />
+            }
+          />
+          <PageTabs label="Topics" tabs={TWEAK_TABS} value={tab} onChange={setTab} filled />
+          {banner}
+          <FilterBar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search tweaks"
+            filters={filters}
+            sort={{
+              value: sort,
+              onChange: (v) => setSort(v as Sort),
+              options: [
+                { value: "recommended", label: "Recommended first" },
+                { value: "name", label: "Name" },
+                { value: "impact", label: "Expected effect" },
+                { value: "newest", label: "Newest" },
+              ],
+            }}
+            end={<DataSourceBadge source="live" />}
+          />
+        </>
       )}
 
       {error ? (
@@ -295,10 +295,19 @@ export function TweakGrid({
       ) : shown.length === 0 ? (
         <EmptyState icon={SearchX} title="No tweaks match" className="flex-1 panel" />
       ) : (
-        // A catalogue keeps its column width; a short fixed list spreads across the row.
-        <CardGrid className={browse ? undefined : "grid-cols-[repeat(auto-fit,minmax(19rem,1fr))]"}>
-          {(catalogueOrder ? inCatalogueOrder(tab, shown) : shown).map(card)}
-        </CardGrid>
+        <div className="flex flex-col gap-6">
+          {groups.map((group) => (
+            <section key={group.title ?? "all"} className="flex flex-col gap-3">
+              {group.title && <h2 className="text-[19px] leading-tight">{group.title}</h2>}
+              {/* A catalogue keeps its column width; a short fixed list spreads across the row. */}
+              <CardGrid
+                className={browse ? undefined : "grid-cols-[repeat(auto-fit,minmax(19rem,1fr))]"}
+              >
+                {group.tweaks.map(card)}
+              </CardGrid>
+            </section>
+          ))}
+        </div>
       )}
 
       {staged.length > 0 && (
@@ -359,16 +368,6 @@ export function TweakGrid({
   );
 }
 
-/** A tab's tweaks section by section; anything unplaced goes last. */
-function inCatalogueOrder(tab: TweakTab, tweaks: TweakStatus[]) {
-  const order = TWEAK_SECTIONS[tab].flatMap((s) => s.ids);
-  const place = (t: TweakStatus) => {
-    const i = order.indexOf(t.meta.id);
-    return i < 0 ? order.length : i;
-  };
-  return [...tweaks].sort((a, b) => place(a) - place(b));
-}
-
 function TweakCard({
   tweak,
   staged,
@@ -415,6 +414,7 @@ function TweakCard({
 
   const switchControl = (
     <Switch
+      size="lg"
       checked={applied || staged}
       disabled={disabled || blocked || lockedOn || busy}
       onCheckedChange={onSwitch}
@@ -437,19 +437,22 @@ function TweakCard({
       indicators={
         <>
           <ImpactMeter impact={meta.impact} />
+          {(meta.warning || restart || blocked || state === "partial") && (
+            <span aria-hidden className="mx-0.5 h-4 w-px bg-hairline" />
+          )}
           {meta.warning && (
-            <Indicator icon={AlertTriangle} tone="destructive" title="Can break features">
+            <Indicator boxed icon={AlertTriangle} tone="destructive" title="Can break features">
               {meta.warning}
             </Indicator>
           )}
-          {restart && <Indicator icon={LogOut} tone="neutral" title={restart} />}
+          {restart && <Indicator boxed icon={LogOut} tone="neutral" title={restart} />}
           {blocked && (
-            <Indicator icon={AlertTriangle} tone="neutral" title="Not for this PC">
+            <Indicator boxed icon={AlertTriangle} tone="neutral" title="Not for this PC">
               {COMPATIBILITY[compatibility]}
             </Indicator>
           )}
           {state === "partial" && (
-            <Indicator icon={CircleDashed} tone="warning" title="Partly in effect" />
+            <Indicator boxed icon={CircleDashed} tone="warning" title="Partly in effect" />
           )}
         </>
       }

@@ -118,21 +118,17 @@ export function tweakIcon(meta: Pick<TweakMeta, "id" | "category">): LucideIcon 
 
 /** Sections per tab, in display order. */
 export const TWEAK_SECTIONS: Record<TweakTab, { title: string; ids: string[] }[]> = {
-  windows: [
+  // One section: split by topic, each of these would be a lone card in an empty row.
+  core: [
     {
-      title: "Responsiveness",
-      ids: ["performance.foreground-boost", "windows.window-animations-off"],
-    },
-    { title: "Gaming", ids: ["gaming.mmcss-games-priority", "gaming.game-dvr-off"] },
-    { title: "Storage", ids: ["performance.last-access-off", "windows.storage-sense-off"] },
-    {
-      title: "Microsoft Edge",
+      title: "Core",
       ids: [
-        "performance.edge-background-mode-off",
-        "performance.edge-startup-boost-off",
-        "privacy.edge-shopping-off",
-        "windows.edge-recommendations-off",
-        "windows.edge-sidebar-off",
+        "performance.foreground-boost",
+        "gaming.mmcss-games-priority",
+        "performance.last-access-off",
+        "gaming.game-dvr-off",
+        "windows.storage-sense-off",
+        "windows.window-animations-off",
       ],
     },
   ],
@@ -161,6 +157,18 @@ export const TWEAK_SECTIONS: Record<TweakTab, { title: string; ids: string[] }[]
       ],
     },
   ],
+  apps: [
+    {
+      title: "Microsoft Edge",
+      ids: [
+        "performance.edge-background-mode-off",
+        "performance.edge-startup-boost-off",
+        "privacy.edge-shopping-off",
+        "windows.edge-recommendations-off",
+        "windows.edge-sidebar-off",
+      ],
+    },
+  ],
   services: [
     { title: "Printing", ids: ["services.print-spooler-off", "services.print-notify-off"] },
     {
@@ -183,6 +191,7 @@ export const TWEAK_SECTIONS: Record<TweakTab, { title: string; ids: string[] }[]
 };
 
 export const MORE_SECTION = "More";
+export const UNAVAILABLE_SECTION = "Unavailable";
 
 const PLACEMENT = new Map(
   (Object.keys(TWEAK_SECTIONS) as TweakTab[]).flatMap((tab) =>
@@ -191,11 +200,11 @@ const PLACEMENT = new Map(
 );
 
 const FALLBACK_TAB: Record<TweakCategory, TweakTab> = {
-  gaming: "windows",
-  performance: "windows",
-  power: "windows",
-  network: "windows",
-  windows: "windows",
+  gaming: "core",
+  performance: "core",
+  power: "core",
+  network: "core",
+  windows: "core",
   privacy: "privacy",
   services: "services",
 };
@@ -203,6 +212,47 @@ const FALLBACK_TAB: Record<TweakCategory, TweakTab> = {
 /** Where a tweak lives. One not placed yet still shows, in its category's tab. */
 export function tweakPlacement(meta: Pick<TweakMeta, "id" | "category">) {
   return PLACEMENT.get(meta.id) ?? { tab: FALLBACK_TAB[meta.category], section: MORE_SECTION };
+}
+
+export interface TweakGroup<T> {
+  /** `null` for a flat list, such as search results across every tab. */
+  title: string | null;
+  tweaks: T[];
+}
+
+/**
+ * Splits tweaks into the sections of `tab`, or one flat list when `tab` is null. They keep the
+ * order they arrive in, unless `catalogue` asks for each section's written order. Whatever
+ * can't run on this PC goes in a section of its own, always last.
+ */
+export function groupTweaks<T extends { meta: Pick<TweakMeta, "id" | "category"> }>(
+  tweaks: T[],
+  {
+    tab,
+    catalogue,
+    unavailable,
+  }: { tab: TweakTab | null; catalogue: boolean; unavailable: (tweak: T) => boolean },
+): TweakGroup<T>[] {
+  const usable = tweaks.filter((t) => !unavailable(t));
+  const blocked = tweaks.filter(unavailable);
+
+  const groups: TweakGroup<T>[] = tab
+    ? [...TWEAK_SECTIONS[tab], { title: MORE_SECTION, ids: [] as string[] }].map((section) => {
+        const inSection = usable.filter((t) => tweakPlacement(t.meta).section === section.title);
+        return {
+          title: section.title,
+          tweaks: catalogue
+            ? inSection.toSorted(
+                (a, b) => section.ids.indexOf(a.meta.id) - section.ids.indexOf(b.meta.id),
+              )
+            : inSection,
+        };
+      })
+    : [{ title: null, tweaks: usable }];
+
+  return [...groups, { title: UNAVAILABLE_SECTION, tweaks: blocked }].filter(
+    (group) => group.tweaks.length > 0,
+  );
 }
 
 /** A tweak's primary location, with its details open. */

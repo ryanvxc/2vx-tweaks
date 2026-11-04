@@ -49,9 +49,9 @@ Updating from a local build installs the CI build to `C:\Program Files\2VX Tweak
 exe stays where it is, unchanged. The local version stays below the feed because CI picks the next version from the
 tags, not from the committed config.
 
-Tested on 2026-11-04 in a local release build against the live feed: the startup check found v0.2.1, and the
-download and signature check passed. The install step, which needs a UAC prompt and replaces the Program Files copy,
-was not run.
+Tested on 2026-11-04 in a local release build against the live feed: the check, download and signature check passed,
+and the owner's click installed v0.2.2 over the old 0.1.0 copy in Program Files, which then reopened. An update from
+one CI build to the next hasn't run yet.
 
 ## User-facing behaviour
 
