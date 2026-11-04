@@ -1,12 +1,14 @@
 import { EngineBanner } from "@/components/common/engine-banner";
 import { Notice } from "@/components/common/notice";
+import { RecommendedAction } from "@/components/common/recommended-action";
 import { ErrorState } from "@/components/common/states";
 import { UpdateNotice } from "@/components/common/update-notice";
+import { PageHero } from "@/components/layout/page-hero";
 import { useLiveMetrics } from "@/hooks/use-live-metrics";
 import { useStaggerIn } from "@/hooks/use-motion";
 import { useAccount, useSystemSnapshot } from "@/hooks/use-system";
 import { evaluateHealth } from "@/lib/health";
-import { HomeAction, HomeCards } from "./home-panels";
+import { HomeCards } from "./home-panels";
 import { Quickstart } from "./quickstart";
 import { UpdatesSection } from "./updates-section";
 import { UtilisationChart } from "./utilisation-chart";
@@ -31,19 +33,15 @@ export function DashboardPage() {
       ref={page}
       className="flex flex-1 flex-col gap-3 font-nav [--font-heading:var(--font-nav)]"
     >
-      <div className="flex items-center justify-between gap-6 pb-1">
-        <div className="min-w-0">
-          <h1 className="truncate text-[1.75rem] leading-tight font-semibold tracking-tight">
-            Welcome back{name ? `, ${name}` : ""}!
-          </h1>
-          <p data-selectable className="truncate text-[14px] text-muted-foreground">
-            {s
-              ? `${s.hostname ?? "This PC"} · ${os?.productName}${os?.displayVersion ? ` ${os.displayVersion}` : ""} · build ${os?.build}${os?.ubr != null ? `.${os.ubr}` : ""}`
-              : " "}
-          </p>
-        </div>
-        <HomeAction />
-      </div>
+      <PageHero
+        title={`Welcome back${name ? `, ${name}` : ""}!`}
+        subtitle={
+          s
+            ? `${s.hostname ?? "This PC"} · ${os?.productName}${os?.displayVersion ? ` ${os.displayVersion}` : ""} · build ${os?.build}${os?.ubr != null ? `.${os.ubr}` : ""}`
+            : " "
+        }
+        action={<RecommendedAction otherwise={{ to: "/gaming", label: "Open Game Mode" }} />}
+      />
 
       <EngineBanner previewNotice={false} />
       <UpdateNotice />

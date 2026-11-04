@@ -14,7 +14,7 @@ describe("AccountMenu", () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter>
-        <AccountMenu collapsed={false} />
+        <AccountMenu collapsed={false} onSearch={() => {}} />
       </MemoryRouter>,
     );
 

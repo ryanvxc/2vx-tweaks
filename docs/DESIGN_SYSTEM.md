@@ -53,7 +53,8 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 - Sidebar 240 px (`--sidebar-width`), 64 px when compact. Its rows share out the height from 34 to 64 px, with the
   highlight capped at 40 px, and past that the spare height goes between the groups. Content uses the full window width; `CardGrid` fits as many
   19rem columns as there's room for.
-- Minimum window 1024×600, default 1280×720 (`tauri.conf.json`). Layouts are checked at both sizes and maximised.
+- The window is one size, 1280×820 (`tauri.conf.json`), and can only be minimised or closed. On a screen too small for
+  it, `preventOverflow` shrinks it to fit and pages scroll. Check layouts at 1280×820.
 - Page anatomy: title in the title bar (`PageHeader` portals into it through `HeaderSlot`, which is about 60 px saved on
   every page); tabs with search, filter and sort on their right; content.
 - Pages fill the window: the page root is `flex flex-1 flex-col`, and something on it takes the spare height, usually a
@@ -65,7 +66,9 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 - Copy: a row is an icon, a title and at most one short line, and that line stays only if something could confuse.
   Never explain how the app works or why it's safe. Tweak card descriptions fit two lines (aim for under 70 characters);
   the detail goes in `details`.
-- Home is the one page taller than the window, and the one that keeps its title in the page: the title bar shrinks to
+- Game Mode keeps its title in the page too (`PageHero`), and its layout follows EXM's: promises, then a panel holding
+  the ring, the stats and Configure.
+- Home is the one page taller than the window, and it keeps its title in the page: the title bar shrinks to
   the window controls, and Updates sits below the fold with its heading showing at the bottom of the default window.
   Each Updates card has an original image in `src/assets/home/`, painted from seeded noise for 2VX. No third-party art.
 

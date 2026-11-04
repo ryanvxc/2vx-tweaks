@@ -39,40 +39,42 @@ export function GameModeConfigure({
     setDraft((d) => (d.includes(id) ? d.filter((x) => x !== id) : [...d, id]));
 
   return (
-    // Spacing follows the window height so all seven rows fit the smallest window.
-    <div className="flex flex-1 flex-col gap-[clamp(0.25rem,calc(2vh-0.5rem),0.5rem)]">
+    <div className="flex flex-1 flex-col gap-2.5">
       <button
         type="button"
         onClick={onClose}
-        className="flex items-center gap-2 self-start py-0.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+        className="mt-2 flex items-center gap-2 self-start py-1 text-[13.5px] text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" aria-hidden /> Go back
       </button>
 
-      <div className="flex items-center gap-3 panel px-4 py-2.5">
-        <Settings
-          className="size-5 shrink-0 text-muted-foreground"
-          strokeWidth={1.75}
-          aria-hidden
-        />
-        <h2 className="min-w-0 flex-1 truncate text-section-title">Configure Game Mode</h2>
-        <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Presets">
-          {GAMING_PROFILES.map((profile) => (
-            <Button
-              key={profile.id}
-              size="sm"
-              variant={sameTweaks(profile.tweakIds, draft) ? "secondary" : "ghost"}
-              aria-pressed={sameTweaks(profile.tweakIds, draft)}
-              title={profile.summary}
-              onClick={() => setDraft(profile.tweakIds)}
-            >
-              {profile.name}
-            </Button>
-          ))}
+      <div className="flex flex-col gap-2 panel px-5 py-3.5">
+        <div className="flex items-center gap-3">
+          <Settings
+            className="size-5 shrink-0 text-muted-foreground"
+            strokeWidth={1.75}
+            aria-hidden
+          />
+          <h2 className="min-w-0 flex-1 truncate text-section-title">Configure Game Mode</h2>
+          <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Presets">
+            {GAMING_PROFILES.map((profile) => (
+              <Button
+                key={profile.id}
+                size="sm"
+                variant={sameTweaks(profile.tweakIds, draft) ? "secondary" : "ghost"}
+                aria-pressed={sameTweaks(profile.tweakIds, draft)}
+                title={profile.summary}
+                onClick={() => setDraft(profile.tweakIds)}
+              >
+                {profile.name}
+              </Button>
+            ))}
+          </div>
         </div>
+        <p className="text-[13px] text-muted-foreground">Choose what 2VX Game Mode turns on.</p>
       </div>
 
-      <ul className="flex flex-col gap-[clamp(0.25rem,calc(2vh-0.5rem),0.5rem)]">
+      <ul className="flex flex-col gap-2">
         {tweaks.map((t) => (
           <Row
             key={t.meta.id}
@@ -86,7 +88,7 @@ export function GameModeConfigure({
 
       <div className="sticky bottom-0 mt-auto flex gap-3 bg-background pt-1">
         <Button
-          className="h-10 flex-1"
+          className="h-12 flex-1"
           disabled={sameTweaks(draft, saved)}
           onClick={() => {
             setUi({ gameModeTweaks: draft });
@@ -97,7 +99,7 @@ export function GameModeConfigure({
         </Button>
         <Button
           variant="secondary"
-          className="h-10 flex-1"
+          className="h-12 flex-1"
           disabled={sameTweaks(draft, DEFAULT_GAME_MODE_TWEAKS)}
           onClick={() => setDraft(DEFAULT_GAME_MODE_TWEAKS)}
         >
@@ -124,15 +126,10 @@ function Row({
   const restart = state === "applied" ? null : RESTART_HINT[meta.restart];
 
   return (
-    <li
-      className={cn(
-        "flex items-center gap-3.5 panel px-4 py-[clamp(0.3125rem,calc(1.5vh-0.25rem),0.5rem)]",
-        blocked && "opacity-60",
-      )}
-    >
+    <li className={cn("flex items-center gap-3.5 panel px-5 py-2.5", blocked && "opacity-60")}>
       <Icon className="size-5 shrink-0 text-brand" strokeWidth={1.75} aria-hidden />
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[13.5px] font-medium">{meta.name}</div>
+        <div className="truncate text-[14px] font-medium">{meta.name}</div>
         <p className="truncate text-[12.5px] text-muted-foreground">{meta.description}</p>
       </div>
       {blocked && (

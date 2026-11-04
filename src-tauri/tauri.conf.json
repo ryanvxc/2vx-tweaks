@@ -16,13 +16,13 @@
         "label": "main",
         "title": "2VX Tweaks",
         "width": 1280,
-        "height": 720,
-        "minWidth": 1024,
-        "minHeight": 600,
+        "height": 820,
         "center": true,
         "decorations": false,
         "shadow": true,
-        "resizable": true,
+        "resizable": false,
+        "maximizable": false,
+        "preventOverflow": true,
         "backgroundColor": "#060609"
       }
     ],

@@ -130,20 +130,20 @@ export function GameModeMain({
 
   return (
     <>
-      <ul className="grid grid-cols-4 divide-x px-1 py-1">
+      <ul className="grid grid-cols-4 divide-x pt-8 pb-6">
         {PROMISES.map(({ icon: Icon, colour, title, text }) => (
-          <li key={title} className="flex flex-col gap-1 px-4 first:pl-1 last:pr-1">
-            <div className="flex items-center gap-2 text-[13px] font-medium">
-              <Icon className={cn("size-4 shrink-0", colour)} aria-hidden />
+          <li key={title} className="flex flex-col gap-2 px-5 first:pl-0 last:pr-0">
+            <div className="flex items-center gap-2 text-[13.5px] font-medium">
+              <Icon className={cn("size-[18px] shrink-0", colour)} aria-hidden />
               {title}
             </div>
-            <p className="text-[12.5px] leading-snug text-muted-foreground">{text}</p>
+            <p className="text-[13px] leading-relaxed text-muted-foreground">{text}</p>
           </li>
         ))}
       </ul>
 
-      <section className="flex flex-1 flex-col gap-3 panel p-5">
-        <div className="grid flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] items-center gap-8">
+      <section className="flex flex-1 flex-col gap-6 panel p-8">
+        <div className="grid flex-1 grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] items-center gap-8">
           <Orb
             state={orb}
             onClick={() => {
@@ -177,7 +177,7 @@ export function GameModeMain({
           </div>
         </div>
 
-        <Button variant="secondary" className="h-10 w-full" onClick={onConfigure}>
+        <Button variant="secondary" className="h-12 w-full" onClick={onConfigure}>
           <Settings /> Configure Game Mode
         </Button>
       </section>
@@ -214,8 +214,7 @@ function Orb({ state, onClick }: { state: OrbState; onClick: () => void }) {
               if (!inert) onClick();
             }}
             className={cn(
-              "flex size-[clamp(9.5rem,29vh,13rem)] items-center justify-center rounded-full border-2 bg-card font-semibold transition-[scale,background-color,border-color,color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              "text-[clamp(1.05rem,2.9vh,1.35rem)]",
+              "flex size-52 items-center justify-center rounded-full border-2 bg-card text-[1.35rem] font-semibold transition-[scale,background-color,border-color,color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-ring",
               state === "idle" && "cursor-default border-success/70 text-muted-foreground/70",
               state === "ready" &&
                 "border-success text-foreground hover:scale-[1.03] active:scale-[0.98]",
@@ -256,7 +255,7 @@ function Stat({
   children: ReactNode;
 }) {
   return (
-    <div className="flex min-h-[clamp(2.75rem,8.5vh,3.75rem)] items-center gap-3 border-b last:border-b-0">
+    <div className="flex min-h-17 items-center gap-3">
       <Icon className="size-5 shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden />
       <span className="min-w-0 flex-1 truncate text-[14px] text-muted-foreground">{label}</span>
       <div className="shrink-0 text-[14px] font-semibold tabular">{children}</div>

@@ -4,6 +4,7 @@ import {
   ChevronsUpDown,
   LogOut,
   MonitorCog,
+  Search,
   Settings,
   User,
   UserPlus,
@@ -36,7 +37,7 @@ import { UpdateMenuItem } from "./update-menu-item";
 const ROW = "h-10 gap-3 rounded-lg px-2.5 text-[13.5px] focus:bg-sidebar-accent";
 
 /** The sidebar's account card and the menu above it. The account lives on this PC only. */
-export function AccountMenu({ collapsed }: { collapsed: boolean }) {
+export function AccountMenu({ collapsed, onSearch }: { collapsed: boolean; onSearch: () => void }) {
   const navigate = useNavigate();
   const { data: app } = useAppInfo();
   const { data: account } = useAccount();
@@ -110,6 +111,9 @@ export function AccountMenu({ collapsed }: { collapsed: boolean }) {
                 Set up account
               </MenuRow>
             )}
+            <MenuRow icon={Search} hint="Ctrl K" onSelect={onSearch}>
+              Search
+            </MenuRow>
             <MenuRow icon={Settings} onSelect={() => void navigate("/settings")}>
               Settings
             </MenuRow>
@@ -155,10 +159,12 @@ function Avatar({ name, attention = false }: { name?: string; attention?: boolea
 
 function MenuRow({
   icon: Icon,
+  hint,
   onSelect,
   children,
 }: {
   icon: LucideIcon;
+  hint?: string;
   onSelect: () => void;
   children: string;
 }) {
@@ -166,6 +172,7 @@ function MenuRow({
     <DropdownMenuItem onSelect={onSelect} className={ROW}>
       <Icon className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />
       {children}
+      {hint && <span className="ml-auto text-[12px] text-muted-foreground">{hint}</span>}
     </DropdownMenuItem>
   );
 }

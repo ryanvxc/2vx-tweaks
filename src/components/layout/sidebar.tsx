@@ -19,7 +19,7 @@ const rowsOf = (group: NavGroup): { item: NavItem; tab?: NavTab }[] =>
     item.tabsInSidebar ? (item.tabs ?? []).map((tab) => ({ item, tab })) : [{ item }],
   );
 
-export function Sidebar() {
+export function Sidebar({ onSearch }: { onSearch: () => void }) {
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
   // Only the links read the route on their own, and the pill has to move when it changes.
   useLocation();
@@ -36,7 +36,7 @@ export function Sidebar() {
       <div
         data-tauri-drag-region
         className={cn(
-          "flex h-(--titlebar-height) shrink-0 items-center gap-2.5",
+          "flex h-(--titlebar-height) shrink-0 items-center gap-2.5 border-b border-sidebar-border",
           collapsed ? "justify-center" : "px-5",
         )}
       >
@@ -50,7 +50,7 @@ export function Sidebar() {
 
       <nav
         ref={navBox}
-        className="relative isolate flex min-h-0 flex-1 flex-col justify-between gap-1.5 overflow-y-auto px-3 pt-1 pb-1"
+        className="relative isolate flex min-h-0 flex-1 flex-col justify-between gap-1.5 overflow-y-auto px-3 pt-2 pb-1"
         aria-label="Main"
       >
         <span
@@ -92,7 +92,7 @@ export function Sidebar() {
       </nav>
 
       <div className="shrink-0 p-3">
-        <AccountMenu collapsed={collapsed} />
+        <AccountMenu collapsed={collapsed} onSearch={onSearch} />
       </div>
     </aside>
   );

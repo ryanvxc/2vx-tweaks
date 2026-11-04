@@ -11,7 +11,7 @@ General
   Resources        /tools
 
 Tools
-  Game Mode        /gaming              ?view=configure (brand colour)
+  2VX Game Mode    /gaming              ?view=configure (brand colour)
 
 Optimisations
   Windows          /tweaks?tab=windows  (also /tweaks)
@@ -28,12 +28,12 @@ Eleven rows in three groups. Rows and groups share out the sidebar's height, so 
 card at any window size. A row stops growing at 64 px; on a taller window the spare height goes between the groups. The
 rows for Windows, Privacy and Services are the Tweaks page's tabs (`tabsInSidebar`), so they stay in step with the tabs
 on the page, and Search still lists the page as Tweaks. Settings has no sidebar row: it's in the account menu, Search and the title of its
-own page. Search is the magnifier in the title bar, and Ctrl K opens it from anywhere.
+own page. Search is in the account menu, and Ctrl K opens it from anywhere. The title bar holds only minimise and close.
 
 ## Account menu
 
 The card at the bottom of the sidebar shows the account's name and the Windows privilege level. Its menu holds the email
-and version, Settings, System detection (Hardware), Check for updates and Log out. The card shows a dot when an update
+and version, Search, Settings, System detection (Hardware), Check for updates and Log out. The card shows a dot when an update
 is waiting on the user, because the update row is hidden until the menu opens.
 
 The account is an email saved on this PC (see `security.md`). With none saved, the menu offers Set up account instead of

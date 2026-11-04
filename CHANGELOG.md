@@ -13,6 +13,8 @@ notes come from commit subjects. This file records the larger milestones.
 - The Updates cards use original art painted for 2VX.
 
 ### Game Mode
+- It's now called 2VX Game Mode, with its title at the top of the page, more room for the four promises and Configure
+  right under the ring.
 - Game Mode is one screen: a ring, the detected game, how long it has run and live CPU and GPU use. The ring turns on
   once a game is running.
 - Games in Steam, Epic, GOG, Xbox, Ubisoft, EA and Riot folders are found by themselves. Add a Game covers the rest.
@@ -27,11 +29,12 @@ notes come from commit subjects. This file records the larger milestones.
   is an email saved on this PC: there's no server, password or sign-in, and it's never sent anywhere.
 - The sidebar now fills its height down to the account card, at any window size. Windows, Privacy and Services have their
   own rows, and they follow the tabs on the Tweaks page.
-- Search moved to the title bar. Ctrl K still opens it. Settings › Compact sidebar replaces the collapse button.
+- The window now has one size, 1280×820, and only minimise and close. A line separates the logo from the sidebar's rows.
+- Search moved to the account menu. Ctrl K still opens it. Settings › Compact sidebar replaces the collapse button.
 - The compact sidebar's links were losing their styling; they're centred and coloured properly now.
 
 ### Layout
-- The window is shorter (1280×720, minimum 1024×600) and pages fill it: each page title moved into the title bar, filters
+- Pages fill the window: each page title moved into the title bar, filters
   moved up beside the tabs, and every page reaches the bottom of the window.
 - Restore, Startup and PC Cleaner are single tables, Hardware is one specification sheet, Gaming shows all three
   profiles side by side, and Settings is one page instead of four tabs.

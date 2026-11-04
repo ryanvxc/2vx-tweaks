@@ -324,7 +324,7 @@
   opacity: 0;
 }
 
-.home-action {
+.glow-action {
   border: 1px solid transparent;
   background:
     linear-gradient(var(--card), var(--card)) padding-box,

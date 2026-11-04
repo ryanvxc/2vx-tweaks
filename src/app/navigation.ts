@@ -100,7 +100,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         to: "/gaming",
-        label: "Game Mode",
+        label: "2VX Game Mode",
         icon: Gamepad2,
         description: "Turn it on while a game is running",
         highlight: true,

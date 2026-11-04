@@ -11,7 +11,7 @@ tests (1 ignored real-registry test) and 7 policy guard tests. The GitHub workfl
 makeover was also toured on the desktop debug build with the real catalogue: every page, every Tweaks tab, a tweak review
 and a gaming profile review, with no console errors. Nothing was applied, so applying through the new screens is
 covered by unit tests only. The later layout pass (shorter window, title in the title bar, full-height pages) was
-checked at 1280×720, 1024×600 and maximised.
+checked at 1280×720, 1024×600 and maximised. The window has since been fixed at 1280×820.
 
 **Status legend**
 
@@ -38,7 +38,7 @@ broker's real UAC path (P0-7) and a real update install still need a VM.
 
 | Area                                                                                                              | Current status                                                       | Problems                                                                                                                                                                            | Recommended action                                          | Priority    |
 | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------- |
-| App shell (title bar, window controls, sidebar, routing) | **Implemented** (0.2 makeover) | Grouped sidebar with an account card and menu (local email, updates, Settings); search in the title bar, which shows where you are; `/system`, `/history` and old Settings links redirect. | Keep | – |
+| App shell (title bar, window controls, sidebar, routing) | **Implemented** (0.2 makeover) | Grouped sidebar with an account card and menu (local email, updates, Settings); search in the account menu and on Ctrl K; a fixed window with only minimise and close; `/system`, `/history` and old Settings links redirect. | Keep | – |
 | Loading screen (`splash-screen.tsx`) | **Implemented** | Progress is the real startup calls settling. Interactive dot logo, skippable, off switch in Settings, static with Reduce motion. | Keep | – |
 | Design system (tokens, shadcn primitives, `SectionCard`, `DataSourceBadge`, states, `ConfirmDialog`, `RiskBadge`) | **Implemented** (0.2 redesign, `DESIGN_SYSTEM.md`) | Charcoal/violet/magenta tokens, typography scale, motion tokens with one Reduce motion switch, card/indicator/filter/tab/settings-row components. Light theme not built. | Light theme | P3 |
 | Dashboard: system summary and quick actions | **Implemented** (Home, 0.2) | Heading, action button, three cards, chart, Quickstart (`lib/quickstart.ts`) and Updates. `system-summary.tsx`, `hardware-card.tsx` and `recent-activity.tsx` are unused and kept until deletion is confirmed. | Keep | – |
