@@ -5,6 +5,14 @@ notes come from commit subjects. This file records the larger milestones.
 
 ## 0.2.0 (unreleased)
 
+### Sidebar and account
+- The sidebar is rebuilt in Poppins, with larger rows and three groups: General, Tools and Optimisations. Gaming is now
+  Game Mode, in the brand colour, and Tools is now Resources.
+- An account card at the bottom opens a menu with Settings, System detection, Check for updates and Log out. The account
+  is an email saved on this PC: there's no server, password or sign-in, and it's never sent anywhere.
+- Search moved to the title bar. Ctrl K still opens it. Settings › Compact sidebar replaces the collapse button.
+- The compact sidebar's links were losing their styling; they're centred and coloured properly now.
+
 ### Layout
 - The window is shorter (1280×720, minimum 1024×600) and pages fill it: each page title moved into the title bar, filters
   moved up beside the tabs, and every page reaches the bottom of the window.

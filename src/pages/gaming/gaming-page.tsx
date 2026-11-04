@@ -23,7 +23,7 @@ export function GamingPage() {
 
   return (
     <>
-      <PageHeader title="Gaming" />
+      <PageHeader title="Game Mode" />
       <div className="flex flex-1 flex-col gap-3">
         <EngineBanner />
 

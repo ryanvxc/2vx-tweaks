@@ -19,9 +19,9 @@ export function AppShell() {
 
   return (
     <div className="flex h-full">
-      <Sidebar onSearch={() => setSearching(true)} />
+      <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <TitleBar slot={setHeaderSlot} />
+        <TitleBar slot={setHeaderSlot} onSearch={() => setSearching(true)} />
         <main ref={main} className="flex-1 overflow-y-auto">
           {/* Keyed by route so an error on one page doesn't stick after navigating away. */}
           <ErrorBoundary key={pathname}>

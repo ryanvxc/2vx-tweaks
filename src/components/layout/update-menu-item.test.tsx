@@ -1,7 +1,11 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const plugin = vi.hoisted(() => ({ support: vi.fn(), check: vi.fn(), restart: vi.fn() }));
 const toast = vi.hoisted(() => ({ info: vi.fn(), success: vi.fn(), error: vi.fn() }));
@@ -11,16 +15,23 @@ vi.mock("sonner", () => ({ toast }));
 
 const { resetUpdater } = await import("@/hooks/use-updater");
 const { useUiStore } = await import("@/stores/ui-store");
-const { UpdateButton } = await import("./update-button");
+const { UpdateMenuItem } = await import("./update-menu-item");
 
 const SUPPORTED = { available: true, reason: null, endpoint: "https://x/y.json", channel: "main" };
 
 function renderButton() {
-  render(<UpdateButton collapsed={false} />, { wrapper: TooltipProvider });
+  render(
+    <DropdownMenu open modal={false}>
+      <DropdownMenuTrigger>Account</DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <UpdateMenuItem />
+      </DropdownMenuContent>
+    </DropdownMenu>,
+  );
   return userEvent.setup();
 }
 
-const button = (name: string) => screen.findByRole("button", { name });
+const button = (name: string) => screen.findByRole("menuitem", { name });
 
 beforeEach(() => {
   resetUpdater();
@@ -29,7 +40,7 @@ beforeEach(() => {
   plugin.support.mockResolvedValue(SUPPORTED);
 });
 
-describe("UpdateButton", () => {
+describe("UpdateMenuItem", () => {
   it("checks, downloads, then restarts to apply", async () => {
     const install = vi.fn(async () => {});
     plugin.check.mockResolvedValue({

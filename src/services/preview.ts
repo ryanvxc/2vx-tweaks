@@ -1,5 +1,6 @@
 import type { EngineStatus, TweakMeta, TweakStatus } from "@/types/engine";
 import type {
+  Account,
   AppInfo,
   BackendError,
   CleanupLocation,
@@ -25,6 +26,23 @@ function appInfo(): AppInfo {
     logDir: "(preview — no log directory)",
     debugBuild: true,
   };
+}
+
+let previewAccount: Account | null = { email: "preview@example.com" };
+
+const account = () => previewAccount;
+
+function setAccount(email: string): Promise<Account> {
+  if (!/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email.trim())) {
+    const err: BackendError = { code: "invalid_input", message: "not an email address" };
+    return Promise.reject(err);
+  }
+  previewAccount = { email: email.trim() };
+  return Promise.resolve(previewAccount);
+}
+
+function clearAccount() {
+  previewAccount = null;
 }
 
 function snapshot(): SystemSnapshot {
@@ -351,6 +369,9 @@ function refuse(): Promise<never> {
 
 export const preview = {
   appInfo,
+  account,
+  setAccount,
+  clearAccount,
   snapshot,
   metricsSince,
   tweaks,

@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window: system information, logging, custom window chrome, the tweak engine (IDs only: plan, apply, revert, history), and the signed updater (check, download, install, relaunch).",
+  "description": "Main window: system information, logging, custom window chrome, the local account, the tweak engine (IDs only: plan, apply, revert, history), and the signed updater (check, download, install, relaunch).",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -14,6 +14,9 @@
     "allow-get-app-info",
     "allow-log-frontend-event",
     "allow-get-update-support",
+    "allow-get-account",
+    "allow-set-account",
+    "allow-clear-account",
     "allow-get-system-snapshot",
     "allow-get-metrics",
     "allow-list-startup-items",

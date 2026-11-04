@@ -9,6 +9,7 @@ import type {
   TweakStatus,
 } from "@/types/engine";
 import type {
+  Account,
   AppInfo,
   BackendError,
   MetricsSample,
@@ -46,6 +47,16 @@ export function toBackendError(err: unknown): BackendError {
 export const backend = {
   getAppInfo: (): Promise<AppInfo> =>
     isDesktop ? call("get_app_info") : Promise.resolve(preview.appInfo()),
+
+  /** The local account, if there is one. It stays on this PC. */
+  getAccount: (): Promise<Account | null> =>
+    isDesktop ? call("get_account") : Promise.resolve(preview.account()),
+
+  setAccount: (email: string): Promise<Account> =>
+    isDesktop ? call("set_account", { email }) : preview.setAccount(email),
+
+  clearAccount: (): Promise<void> =>
+    isDesktop ? call("clear_account") : Promise.resolve(preview.clearAccount()),
 
   /** Desktop only; `services/updater` serves the preview answer. */
   getUpdateSupport: (): Promise<UpdateSupport> => call("get_update_support"),

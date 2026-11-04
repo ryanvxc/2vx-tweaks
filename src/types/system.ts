@@ -76,6 +76,11 @@ export interface MetricsSample {
   networkTxBytesPerSec: number;
 }
 
+// Mirrors src-tauri/src/account.rs.
+export interface Account {
+  email: string;
+}
+
 export interface AppInfo {
   name: string;
   version: string;

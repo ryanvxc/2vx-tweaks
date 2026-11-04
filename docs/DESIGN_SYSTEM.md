@@ -31,7 +31,9 @@ Chart series use `chart-1…5` (violet, blue, green, amber, magenta).
 
 ## Typography
 
-Everything uses Geist Variable (`@fontsource-variable/geist`, OFL 1.1), bundled, with Segoe UI Variable as the fallback.
+Pages use Geist Variable (`@fontsource-variable/geist`, OFL 1.1). The sidebar and account menu use Poppins
+(`@fontsource/poppins`, OFL 1.1, weights 400 to 600) through `font-nav`. Both are bundled, with Segoe UI Variable as the
+fallback.
 Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 
 | Utility | Size / weight | Use |
@@ -48,7 +50,7 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 - A surface is the `panel` utility: `--card` fill with a faint `--hairline` edge. Separation comes from the fill, not a
   visible outline, and panels are never nested.
 - Page padding 20 px, panel padding 16 px, every gap 12 px.
-- Sidebar 224 px (`--sidebar-width`), 64 px when compact. Content uses the full window width; `CardGrid` fits as many
+- Sidebar 240 px (`--sidebar-width`), 64 px when compact. Content uses the full window width; `CardGrid` fits as many
   19rem columns as there's room for.
 - Minimum window 1024×600, default 1280×720 (`tauri.conf.json`). Layouts are checked at both sizes and maximised.
 - Page anatomy: title in the title bar (`PageHeader` portals into it through `HeaderSlot`, which is about 60 px saved on

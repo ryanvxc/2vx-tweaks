@@ -1,23 +1,23 @@
 import {
   Activity,
   AppWindow,
+  ArchiveRestore,
   Cpu,
   EyeOff,
   Gamepad2,
+  Gauge,
   Gpu,
-  History,
   House,
   Layers,
   MemoryStick,
   Network,
+  Package,
   Rocket,
   Server,
   Settings,
-  SlidersHorizontal,
-  Sparkles,
+  Trash2,
   User,
   Users,
-  Wrench,
   type LucideIcon,
 } from "lucide-react";
 
@@ -35,6 +35,8 @@ export interface NavItem {
   description: string;
   /** Sections of the page, chosen with `?tab=`. */
   tabs?: NavTab[];
+  /** Drawn in the brand colour, to stand out from the list. */
+  highlight?: boolean;
 }
 
 export interface NavGroup {
@@ -67,7 +69,7 @@ export const STARTUP_TABS: NavTab<StartupTab>[] = [
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Overview",
+    label: "General",
     items: [
       { to: "/", label: "Home", icon: House, description: "Your PC at a glance" },
       {
@@ -78,34 +80,47 @@ export const NAV_GROUPS: NavGroup[] = [
         tabs: MONITORING_TABS,
       },
       {
+        to: "/restore",
+        label: "Restore Centre",
+        icon: ArchiveRestore,
+        description: "Every change 2VX made, with undo",
+      },
+      {
+        to: "/tools",
+        label: "Resources",
+        icon: Package,
+        description: "System report and Windows tools",
+      },
+    ],
+  },
+  {
+    label: "Tools",
+    items: [
+      {
+        to: "/gaming",
+        label: "Game Mode",
+        icon: Gamepad2,
+        description: "Pick a profile, then review what it changes",
+        highlight: true,
+      },
+    ],
+  },
+  {
+    label: "Optimisations",
+    items: [
+      {
+        to: "/tweaks",
+        label: "Tweaks",
+        icon: Gauge,
+        description: "Documented settings, each with an undo",
+        tabs: TWEAK_TABS,
+      },
+      {
         to: "/hardware",
         label: "Hardware",
         icon: Cpu,
         description: "What's inside this PC",
       },
-    ],
-  },
-  {
-    label: "Optimise",
-    items: [
-      {
-        to: "/tweaks",
-        label: "Tweaks",
-        icon: SlidersHorizontal,
-        description: "Documented settings, each with an undo",
-        tabs: TWEAK_TABS,
-      },
-      {
-        to: "/gaming",
-        label: "Gaming",
-        icon: Gamepad2,
-        description: "Pick a profile, then review what it changes",
-      },
-    ],
-  },
-  {
-    label: "Maintain",
-    items: [
       {
         to: "/startup",
         label: "Startup",
@@ -116,20 +131,8 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         to: "/cleaner",
         label: "PC Cleaner",
-        icon: Sparkles,
+        icon: Trash2,
         description: "What temporary files and caches use",
-      },
-      {
-        to: "/restore",
-        label: "Restore Centre",
-        icon: History,
-        description: "Every change 2VX made, with undo",
-      },
-      {
-        to: "/tools",
-        label: "Tools",
-        icon: Wrench,
-        description: "System report and Windows tools",
       },
     ],
   },

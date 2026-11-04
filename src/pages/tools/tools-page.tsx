@@ -38,7 +38,7 @@ export function ToolsPage() {
 
   return (
     <>
-      <PageHeader title="Tools" />
+      <PageHeader title="Resources" />
       <div className="grid flex-1 grid-cols-12 gap-3">
         <SectionCard
           title="System report"

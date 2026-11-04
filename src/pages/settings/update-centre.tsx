@@ -61,7 +61,7 @@ function StatusLine({
   const { icon, tone, title, text } = describe(state, currentVersion, lastChecked);
   const Icon = icon;
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
       <Icon
         key={state.kind}
         className={cn(
@@ -70,7 +70,7 @@ function StatusLine({
           (state.kind === "checking" || state.kind === "installing") && "animate-spin",
         )}
       />
-      <div className="min-w-0 flex-1">
+      <div className="min-w-40 flex-1">
         <div className="text-card-title">{title}</div>
         {text && (
           <div data-selectable className="text-[12.5px] leading-snug text-muted-foreground">
@@ -78,7 +78,7 @@ function StatusLine({
           </div>
         )}
       </div>
-      <div className="flex shrink-0 items-center gap-2">{children}</div>
+      <div className="ml-auto flex shrink-0 items-center gap-2">{children}</div>
     </div>
   );
 }

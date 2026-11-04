@@ -46,8 +46,8 @@ describe("App shell", () => {
     const user = userEvent.setup();
     render(<App />);
     const nav = screen.getByRole("navigation", { name: "Main" });
-    await user.click(within(nav).getByRole("link", { name: /gaming/i }));
-    expect(await screen.findByRole("heading", { name: "Gaming" })).toBeInTheDocument();
+    await user.click(within(nav).getByRole("link", { name: /game mode/i }));
+    expect(await screen.findByRole("heading", { name: "Game Mode" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Responsive" })).toBeInTheDocument();
     // The preview never claims an engine is connected.
     expect(screen.getByText("Browser preview")).toBeInTheDocument();

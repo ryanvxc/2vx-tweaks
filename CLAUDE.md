@@ -28,7 +28,7 @@ src/                         React frontend
   app/                       App root, routes, navigation config
   components/ui/             shadcn/ui primitives (generated, lightly adapted; keep shadcn style)
   components/common/         design-system components (SectionCard, DataSourceBadge, states, ConfirmDialog…)
-  components/layout/         shell: Sidebar, TitleBar, WindowControls, PageHeader
+  components/layout/         shell: Sidebar, AccountMenu, TitleBar, WindowControls, PageHeader
   pages/                     one folder/file per section
   hooks/                     data hooks (useSystemSnapshot, useLiveMetrics…)
   services/backend.ts        THE ONLY place that calls invoke(); typed wrappers per command
@@ -41,6 +41,7 @@ src-tauri/src/
   commands/                  Tauri command handlers: thin, validated
   system/                    read-only system info (os, hardware, metrics sampler, privilege)
   engine/                    declarative tweaks, policy, journal, plan/apply/revert, elevation broker
+  account.rs                 the local account: one email in a file, no server or sign-in
   logging.rs, error.rs
 scripts/                     release helpers for CI: next-version, release-notes, check-update-feed (+ tests)
 .github/workflows/            ci.yml (checks), release.yml (signed main-channel release + update feed)

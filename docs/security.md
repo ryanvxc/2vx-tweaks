@@ -109,4 +109,7 @@ those constants in that one file. Until then, the guard forbids all process laun
 - Logs and the change journal stay local (`%LOCALAPPDATA%\com.twovx.tweaks\`, per-user ACLs). No telemetry.
 - The journal stores registry targets and values that 2VX changed, plus an audit log of apply/revert events. It
   stores no personal data or hardware identifiers.
+- The local account is one email address in `account.json` in the same folder, used only to label the account card.
+  There's no server, password or sign-in, so it proves nothing and unlocks nothing. It's never transmitted or logged,
+  and Log out deletes the file.
 - Frontend log messages are stripped of control characters and capped at 2,000 chars, which prevents log injection.

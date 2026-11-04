@@ -8,12 +8,12 @@ Every feature has one primary location. Other pages may summarise it and link th
 | --- | --- | --- |
 | Live usage, history, per-thread load | Monitoring | Home chart (the one exception, kept by request: it names the device) |
 | Specifications, drives, board, Windows edition | Hardware | Home: four-line summary |
-| Whether a tweak is in effect | Tweaks / Gaming (read from the PC) | Home counts; Gaming profiles reference tweaks by ID |
+| Whether a tweak is in effect | Tweaks / Game Mode (read from the PC) | Home counts; Game Mode profiles reference tweaks by ID |
 | Past changes and undo | Restore Centre | Home: four newest; a tweak's switch can undo that tweak |
 | System health | Home | – |
-| Update state and release notes | Settings › Updates | Sidebar button (fast path), Home notice (alert) |
-| Privilege level | Settings › General | Sidebar chip |
-| App version | Settings › About | Sidebar chip |
+| Update state and release notes | Settings › Updates | Account menu (fast path), dot on the account card, Home notice (alert) |
+| Privilege level | Settings › General | Account card |
+| App version | Settings › About | Account menu |
 
 ## What each page answers
 
@@ -21,13 +21,13 @@ Every feature has one primary location. Other pages may summarise it and link th
 | --- | --- | --- | --- |
 | **Home** | Is my PC okay, and what should I do next? | Alerts, three headline numbers, live chart, health, recommendations, this PC, recent changes | Everything else |
 | **Monitoring** | What is it doing right now? | Four live tiles that choose the graph | Per-thread load (CPU only) |
-| **Hardware** | What's in this PC? | Spec cards: processor, graphics, memory, Windows, board, drives | – |
-| **Tweaks** | What can I change? | Tabs, search, filters, cards in named sections | Details dialog with values and sources |
-| **Gaming** | What should I set for games? | Three profile columns, each listing what it changes | Gaming settings |
+| **Hardware** | What's in this PC? | One specification sheet: processor, graphics, memory, Windows, board, drives | – |
+| **Tweaks** | What can I change? | Tabs, search, filters, a grid of cards | Details dialog with values and sources |
+| **Game Mode** | What should I set for games? | Three profile columns, each listing what it changes | Gaming settings |
 | **Startup** | What runs at sign-in? | Count, tabs, entries | Command (copy) |
 | **PC Cleaner** | What's using space? | Total, ranked list | Paths on hover |
 | **Restore Centre** | What did 2VX change, and can I undo it? | One table of batches | Exact old and new values |
-| **Tools** | How do I get a report or open a Windows tool? | Report, tools | – |
+| **Resources** | How do I get a report or open a Windows tool? | Report, tools | – |
 | **Settings** | How do I change the app? | Everything on one page | – |
 
 ## Progressive disclosure

@@ -197,7 +197,9 @@ function AboutGroup() {
         icon={BookOpenCheck}
         title="Open-source licences"
         control={
-          <span className="text-[12.5px] text-muted-foreground">Lucide (ISC), Geist (OFL 1.1)</span>
+          <span className="text-[12.5px] text-muted-foreground">
+            Lucide (ISC), Geist and Poppins (OFL 1.1)
+          </span>
         }
       />
     </SettingsGroup>

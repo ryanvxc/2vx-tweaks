@@ -47,7 +47,7 @@ always shows the real channel and URL.
 
 ## User-facing behaviour
 
-- **Check for updates** (sidebar, above Settings) walks the same steps from one button: a click checks and, if
+- **Check for updates** (account menu) walks the same steps from one button: a click checks and, if
   there is a newer version, downloads it; the label then reads "Restart to update", and a second click installs
   and reopens the app. A check at startup never downloads: it changes the label to "Update available" and waits.
 - **Update Centre** (Settings › Updates) shows one state at a time with one action:
@@ -58,7 +58,7 @@ always shows the real channel and URL.
 - **Automatic check**: once per app start, on by default, turned off in Settings › Updates. It only
   checks; it never downloads.
 - **Home notice**: a small banner when an update is available or downloaded, dismissible per version,
-  switchable in Settings › Notifications. The sidebar button shows a dot.
+  switchable in Settings › Notifications. The account card shows a dot.
 - Nothing is downloaded or installed without a click. `use-updater.test.ts` asserts this.
 
 ## Code map

@@ -4,9 +4,11 @@
 //! - `commands`  — the only surface the frontend can reach. Thin, validated wrappers.
 //! - `system`    — read-only system information and live metrics.
 //! - `engine`    — optimisation engine contracts and the tweak registry.
+//! - `account`   — the local account: an email in one file, never sent anywhere.
 //! - `logging`   — structured file + console logging.
 //! - `error`     — the single error type serialised to the frontend.
 
+pub mod account;
 pub mod commands;
 pub mod engine;
 pub mod error;
@@ -65,6 +67,9 @@ pub fn run() {
             commands::app::get_app_info,
             commands::app::log_frontend_event,
             commands::app::get_update_support,
+            commands::account::get_account,
+            commands::account::set_account,
+            commands::account::clear_account,
             commands::system::get_system_snapshot,
             commands::system::get_metrics,
             commands::system::list_startup_items,

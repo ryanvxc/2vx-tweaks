@@ -144,6 +144,10 @@ export const useUpdaterStore = create<UpdaterStore>()((set, get) => ({
 }));
 
 /** Subscribes to the updater and starts it once per app session. */
+/** An update is waiting on the user. */
+export const updateNeedsUser = (state: UpdaterState) =>
+  state.kind === "available" || state.kind === "ready" || state.kind === "restartRequired";
+
 export function useUpdater() {
   const store = useUpdaterStore();
   useEffect(() => {
