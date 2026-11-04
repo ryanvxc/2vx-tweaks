@@ -145,11 +145,10 @@ jobs:
           prerelease: true
           uploadUpdaterJson: true
           updaterJsonPreferNsis: true
-          # The committed config ships no update URL and no updater artifacts, so local and
-          # development builds can never update. Only this build gets the main-channel feed.
+          # Only this build signs updater artifacts. The update feed itself is in tauri.conf.json.
           args: >-
             --bundles nsis
-            --config '{"bundle":{"createUpdaterArtifacts":true},"plugins":{"updater":{"endpoints":["https://github.com/${{ github.repository }}/releases/download/updater-main/latest.json"]}}}'
+            --config '{"bundle":{"createUpdaterArtifacts":true}}'
 
       - name: Validate the new update feed
         if: steps.signing.outputs.configured == 'true'

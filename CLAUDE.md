@@ -97,8 +97,8 @@ newest section for users. Monitoring, Hardware, the Restore Centre and Tools are
 System Cleaner, Services (two presets over existing tweaks), Uninstall (fixed app table) and Autoruns (which replaced
 Startup; `/startup` redirects).
 A signed Tauri updater with an Update Centre is built (`docs/UPDATE_SYSTEM.md`); the feed URL
-is injected only by `.github/workflows/release.yml`, so local builds never update. P0-8b (no updater) is superseded;
-P0-8a/c stand. The repo is public at `ryanvxc/2vx-tweaks` and v0.2.0 is released. Still open: the broker's real UAC path on a VM
+is in `tauri.conf.json`, so every release build can update, and only `.github/workflows/release.yml` signs and publishes.
+P0-8b (no updater) is superseded; P0-8a/c stand. The repo is public at `ryanvxc/2vx-tweaks`. Still open: the broker's real UAC path on a VM
 (P0-7), a real update test on a VM. `HKCU\Software\Policies` is admin-only on Windows: never
 target it from a `User` tweak. The updater private key lives in `%USERPROFILE%\.tauri\`, never in the repo.
 Known limitations: GPU usage is sysinfo's sum over all engines (clamped 100); used VRAM not available system-wide yet.

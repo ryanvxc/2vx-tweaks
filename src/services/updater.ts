@@ -52,20 +52,27 @@ function fromPlugin(update: Update): PendingUpdate {
     download: (onProgress) => {
       let downloaded = 0;
       let total: number | null = null;
-      return update.download((event: DownloadEvent) => {
-        if (event.event === "Started") total = event.data.contentLength ?? null;
-        if (event.event === "Progress") downloaded += event.data.chunkLength;
-        onProgress({ downloaded, total });
-      });
+      return update.download(
+        (event: DownloadEvent) => {
+          if (event.event === "Started") total = event.data.contentLength ?? null;
+          if (event.event === "Progress") downloaded += event.data.chunkLength;
+          onProgress({ downloaded, total });
+        },
+        // Without this the download inherits the check's short timeout and fails on slow lines.
+        { timeout: DOWNLOAD_TIMEOUT_MS },
+      );
     },
     install: () => update.install(),
   };
 }
 
+const CHECK_TIMEOUT_MS = 30_000;
+const DOWNLOAD_TIMEOUT_MS = 10 * 60_000;
+
 const desktop: UpdaterService = {
   support: backend.getUpdateSupport,
   check: async () => {
-    const update = await check({ timeout: 30_000 });
+    const update = await check({ timeout: CHECK_TIMEOUT_MS });
     return update ? fromPlugin(update) : null;
   },
   restart: () => relaunch(),

@@ -202,22 +202,27 @@ fn updater_is_signed_https_and_opt_in() {
         !pubkey.contains("PRIVATE") && !read("tauri.conf.json").contains("secret key"),
         "a private key must never be committed"
     );
-    assert_eq!(updater["endpoints"], serde_json::json!([]));
+    assert_eq!(
+        updater["endpoints"],
+        serde_json::json!([
+            "https://github.com/ryanvxc/2vx-tweaks/releases/download/updater-main/latest.json"
+        ]),
+        "the one reviewed feed, over HTTPS"
+    );
+    assert_eq!(
+        conf["bundle"]["createUpdaterArtifacts"],
+        serde_json::json!(false),
+        "only CI holds the signing key"
+    );
     assert!(
         updater.get("dangerousInsecureTransportProtocol").is_none(),
         "insecure update transport"
     );
     let workflow = fs::read_to_string(root().join("../.github/workflows/release.yml")).unwrap();
-    for endpoint in workflow
-        .split("endpoints")
-        .skip(1)
-        .filter_map(|s| s.split('"').nth(2))
-    {
-        assert!(
-            endpoint.starts_with("https://github.com/"),
-            "endpoint `{endpoint}`"
-        );
-    }
+    assert!(
+        !workflow.contains("endpoints"),
+        "tauri.conf.json is the one place that names the feed"
+    );
     assert!(
         !workflow.contains("releases/latest/download"),
         "main builds are prereleases; the stable `latest` URL would never see them"

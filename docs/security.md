@@ -110,7 +110,9 @@ tell users: a disabled entry disappears from Task Manager's Startup tab rather t
 brief asked for an in-app Tauri updater). The updater is allowed under these conditions, all enforced by
 `tests/policy.rs` or the release workflow (details in `UPDATE_SYSTEM.md`):
 - official `tauri-plugin-updater`, signature verification always on, public key committed, private key never;
-- HTTPS GitHub feed only, injected by CI; the committed config has no update URL, so local builds never update;
+- one HTTPS GitHub feed, named in `tauri.conf.json`. ~~injected by CI so local builds never update~~ **revised
+  2026-11-04** at the owner's request, so the exe they run locally can reach the feed. Signature checking, the
+  newer-only rule and the click before each step are unchanged, and a local build still can't sign or publish;
 - never `releases/latest/download`; feed must be newer than the published one (no downgrades);
 - checking is the only automatic step and can be turned off; download and install each need a click;
 - release notes are shown before installing and rendered as text.

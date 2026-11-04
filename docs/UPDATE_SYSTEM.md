@@ -38,12 +38,20 @@ Settings › Updates (Update Centre)                       GitHub
 | Build                                  | Updates                                       | Why                                                                            |
 | -------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------ |
 | Development (`npm run app:dev`, debug) | No: "Updates aren't available for this build" | `get_update_support` returns unavailable for debug builds                      |
-| Local release (`npm run app:build`)    | No: no update channel                         | The committed config has `endpoints: []` and builds no updater artifacts       |
-| CI main-channel build (`release.yml`)  | Yes                                           | The workflow injects the feed URL and `createUpdaterArtifacts` with `--config` |
+| Local release (`npm run app:build`)    | Yes, to the newest CI build                   | `tauri.conf.json` holds the feed URL. It can't publish: no updater artifacts   |
+| CI main-channel build (`release.yml`)  | Yes                                           | The same feed, and only this build signs updater artifacts                     |
 | Browser preview (`npm run dev`)        | Simulated                                     | `services/updater.ts` mock feeds, no network                                   |
 
 `get_update_support` (Rust, `commands/app.rs`) reads the endpoint list from the app's own config, so the UI
 always shows the real channel and URL.
+
+Updating from a local build installs the CI build to `C:\Program Files\2VX Tweaks` and opens that copy. The local
+exe stays where it is, unchanged. The local version stays below the feed because CI picks the next version from the
+tags, not from the committed config.
+
+Tested on 2026-11-04 in a local release build against the live feed: the startup check found v0.2.1, and the
+download and signature check passed. The install step, which needs a UAC prompt and replaces the Program Files copy,
+was not run.
 
 ## User-facing behaviour
 

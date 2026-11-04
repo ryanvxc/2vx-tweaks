@@ -26,7 +26,7 @@ stripped symbols and `panic = "abort"`.
 - **Code signing**: an unsigned optimiser triggers SmartScreen, and some AV engines flag it. Configure
   `bundle.windows.certificateThumbprint` or a signing command (Azure Trusted Signing / EV certificate).
 - **Updates**: signed in-app updates for CI builds; see `UPDATE_SYSTEM.md`, `GITHUB_RELEASE_PIPELINE.md` and
-  `UPDATE_SETUP_GUIDE.md` (secrets to configure). Local `app:build` output has no update channel.
+  `UPDATE_SETUP_GUIDE.md` (secrets to configure). Local `app:build` output reads the same feed, but can't publish to it.
 - **Version**: CI picks the next patch version from the latest `v*` tag. For a minor or major release, bump
   `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` together; CI never lowers it.
 - **Identifier**: `com.twovx.tweaks`. Changing it moves the app's data and log folders.

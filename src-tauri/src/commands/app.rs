@@ -39,8 +39,8 @@ pub struct UpdateSupport {
     pub channel: &'static str,
 }
 
-/// Release builds from the workflow carry the `main` channel endpoint (injected at build
-/// time). Local builds have none, and development builds never update themselves.
+/// Release builds, local or from the workflow, read the `main` channel endpoint from
+/// `tauri.conf.json`. Development builds never update themselves.
 fn update_support(debug_build: bool, endpoints: &[String]) -> UpdateSupport {
     let endpoint = endpoints
         .iter()

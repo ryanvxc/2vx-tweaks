@@ -5,6 +5,10 @@ notes come from commit subjects. This file records the larger milestones.
 
 ## 0.2.0 (unreleased)
 
+### Updates
+- Check for updates now works in every release build, including ones built on your own PC.
+- Slow connections no longer fail the download after 30 seconds.
+
 ### PC Cleaner
 - PC Cleaner now has four tabs: System Cleaner, Services, Uninstall and Autoruns.
 - System Cleaner shows what each location holds. Tick what you want, or pick Recommended, then Start cleaning. Files are

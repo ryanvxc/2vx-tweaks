@@ -1,8 +1,7 @@
 # Update setup guide
 
 What the owner has to do, once, before installed copies of 2VX Tweaks can update themselves. Until these
-steps are done the release workflow builds but publishes nothing, and the Update Centre in local builds
-says "This build has no update channel".
+steps are done the release workflow builds but publishes nothing, so there is no feed for installed copies to read.
 
 ## Already done in the repository
 
@@ -69,8 +68,7 @@ Actions → "Release (main channel)" → Run workflow (or push a change to `main
 - a prerelease `updater-main` holding `latest.json`;
 - the job summary lists the release notes and "Published update feed".
 
-Install that `v0.2.0` setup: it is the first build that knows the feed. Copies built locally or before
-this point never update.
+Copies built before the feed URL was committed never update. Install a current setup once to replace them.
 
 ## 5. First end-to-end test (on a VM, not the development PC)
 

@@ -48,7 +48,7 @@
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDczOEIxODRDRUVBODczNjAKUldSZ2M2anVUQmlMYzhHSGttLzhGL0xFbFkyM2h0K1NwRUxnbVZKdE9BMFFKUlcrdHIyMStrcmQK",
-      "endpoints": [],
+      "endpoints": ["https://github.com/ryanvxc/2vx-tweaks/releases/download/updater-main/latest.json"],
       "windows": {
         "installMode": "passive"
       }
