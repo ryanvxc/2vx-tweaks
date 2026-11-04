@@ -7,15 +7,17 @@ import { Sidebar } from "./sidebar";
 import { TitleBar } from "./title-bar";
 
 export function AppShell() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const tab = new URLSearchParams(search).get("tab");
   const main = useRef<HTMLElement>(null);
   const [searching, setSearching] = useState(false);
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
 
-  // Each page opens at the top. Tabs and details change the query, so they don't move it.
+  // Each page and tab opens at the top: a tab can be a sidebar row, clicked from anywhere down the
+  // page. Details change the rest of the query, so they don't move it.
   useEffect(() => {
     if (main.current) main.current.scrollTop = 0;
-  }, [pathname]);
+  }, [pathname, tab]);
 
   return (
     <div className="flex h-full">

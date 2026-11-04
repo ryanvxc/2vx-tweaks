@@ -25,6 +25,8 @@ notes come from commit subjects. This file records the larger milestones.
   Game Mode, in the brand colour, and Tools is now Resources.
 - An account card at the bottom opens a menu with Settings, System detection, Check for updates and Log out. The account
   is an email saved on this PC: there's no server, password or sign-in, and it's never sent anywhere.
+- The sidebar now fills its height down to the account card, at any window size. Windows, Privacy and Services have their
+  own rows, and they follow the tabs on the Tweaks page.
 - Search moved to the title bar. Ctrl K still opens it. Settings › Compact sidebar replaces the collapse button.
 - The compact sidebar's links were losing their styling; they're centred and coloured properly now.
 

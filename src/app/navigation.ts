@@ -35,6 +35,8 @@ export interface NavItem {
   description: string;
   /** Sections of the page, chosen with `?tab=`. */
   tabs?: NavTab[];
+  /** The sidebar gives each tab its own row instead of one row for the page. */
+  tabsInSidebar?: boolean;
   /** Drawn in the brand colour, to stand out from the list. */
   highlight?: boolean;
 }
@@ -114,6 +116,7 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Gauge,
         description: "Documented settings, each with an undo",
         tabs: TWEAK_TABS,
+        tabsInSidebar: true,
       },
       {
         to: "/hardware",

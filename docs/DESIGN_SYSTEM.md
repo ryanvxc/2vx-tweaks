@@ -50,7 +50,8 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 - A surface is the `panel` utility: `--card` fill with a faint `--hairline` edge. Separation comes from the fill, not a
   visible outline, and panels are never nested.
 - Page padding 20 px, panel padding 16 px, every gap 12 px.
-- Sidebar 240 px (`--sidebar-width`), 64 px when compact. Content uses the full window width; `CardGrid` fits as many
+- Sidebar 240 px (`--sidebar-width`), 64 px when compact. Its rows share out the height from 34 to 64 px, with the
+  highlight capped at 40 px, and past that the spare height goes between the groups. Content uses the full window width; `CardGrid` fits as many
   19rem columns as there's room for.
 - Minimum window 1024×600, default 1280×720 (`tauri.conf.json`). Layouts are checked at both sizes and maximised.
 - Page anatomy: title in the title bar (`PageHeader` portals into it through `HeaderSlot`, which is about 60 px saved on

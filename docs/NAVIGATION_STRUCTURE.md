@@ -14,7 +14,9 @@ Tools
   Game Mode        /gaming              ?view=configure (brand colour)
 
 Optimisations
-  Tweaks           /tweaks              ?tab=windows | privacy | services
+  Windows          /tweaks?tab=windows  (also /tweaks)
+  Privacy          /tweaks?tab=privacy
+  Services         /tweaks?tab=services
   Hardware         /hardware
   Startup          /startup             ?tab=all | currentUser | allUsers
   PC Cleaner       /cleaner
@@ -22,7 +24,10 @@ Optimisations
 [Account card]     opens the account menu
 ```
 
-Nine top-level items in three groups. Settings has no sidebar row: it's in the account menu, Search and the title of its
+Eleven rows in three groups. Rows and groups share out the sidebar's height, so the list ends just above the account
+card at any window size. A row stops growing at 64 px; on a taller window the spare height goes between the groups. The
+rows for Windows, Privacy and Services are the Tweaks page's tabs (`tabsInSidebar`), so they stay in step with the tabs
+on the page, and Search still lists the page as Tweaks. Settings has no sidebar row: it's in the account menu, Search and the title of its
 own page. Search is the magnifier in the title bar, and Ctrl K opens it from anywhere.
 
 ## Account menu
@@ -37,8 +42,10 @@ Log out.
 ## Why this shape
 
 - **Game Mode stands alone** in the brand colour: a person who wants games to run better shouldn't have to read a list.
-  Everything else that changes the PC or reports on it is under Optimisations; service switches are a Tweaks tab, not a
-  page.
+  Everything else that changes the PC or reports on it is under Optimisations; service switches are a Tweaks tab, not
+  their own page.
+- **Tweaks has three rows**, not one: they're real sections and the most used part of the app. A row is always a real
+  destination, never padding to fill the sidebar.
 - **Monitoring and Hardware are separate**: one answers "right now", the other "what is this PC". The tiles on
   Monitoring are its selector, so it needs no second tab row.
 - **Network, Power and Applications are not top-level**: nothing exists for them yet. An empty page would be navigation

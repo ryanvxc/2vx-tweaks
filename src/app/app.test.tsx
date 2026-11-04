@@ -53,6 +53,21 @@ describe("App shell", () => {
     expect(screen.getByText("Browser preview")).toBeInTheDocument();
   });
 
+  it("gives each Tweaks tab a sidebar row and marks only the one on screen", async () => {
+    const user = userEvent.setup();
+    window.location.hash = "#/tweaks";
+    render(<App />);
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    const row = (name: string) => within(nav).getByRole("link", { name });
+    await waitFor(() => expect(row("Windows")).toHaveAttribute("aria-current", "page"));
+    expect(row("Privacy")).not.toHaveAttribute("aria-current");
+
+    await user.click(row("Privacy"));
+    expect(row("Privacy")).toHaveAttribute("aria-current", "page");
+    expect(row("Windows")).not.toHaveAttribute("aria-current");
+    expect(await screen.findByRole("tab", { name: /Privacy/, selected: true })).toBeInTheDocument();
+  });
+
   it("keeps old addresses working", async () => {
     window.location.hash = "#/history";
     render(<App />);

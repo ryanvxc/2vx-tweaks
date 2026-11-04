@@ -22,7 +22,7 @@ Every feature has one primary location. Other pages may summarise it and link th
 | **Home** | Is my PC okay, and what should I do next? | Alerts, backups, tweaks in effect, live chart, Quickstart, Patch Notes, newest change, health | Everything else |
 | **Monitoring** | What is it doing right now? | Four live tiles that choose the graph | Per-thread load (CPU only) |
 | **Hardware** | What's in this PC? | One specification sheet: processor, graphics, memory, Windows, board, drives | – |
-| **Tweaks** | What can I change? | Tabs, search, filters, a grid of cards | Details dialog with values and sources |
+| **Tweaks** | What can I change? | Tabs (each also a sidebar row), search, filters, a grid of cards | Details dialog with values and sources |
 | **Game Mode** | Is a game running, and what should change for it? | Ring, detected game, live CPU and GPU | Configure (what it turns on), Add a Game |
 | **Startup** | What runs at sign-in? | Count, tabs, entries | Command (copy) |
 | **PC Cleaner** | What's using space? | Total, ranked list | Paths on hover |
