@@ -13,6 +13,8 @@ interface UiState {
   reduceMotion: boolean;
   /** Show the Quickstart list on Home. */
   showQuickstart: boolean;
+  /** Show the loading screen at launch. */
+  showSplash: boolean;
   toggleSidebar: () => void;
   set: (patch: Partial<Omit<UiState, "toggleSidebar" | "set">>) => void;
 }
@@ -28,6 +30,7 @@ export const useUiStore = create<UiState>()(
       dismissedUpdateVersion: null,
       reduceMotion: false,
       showQuickstart: true,
+      showSplash: true,
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       set: (patch) => set(patch),
     }),

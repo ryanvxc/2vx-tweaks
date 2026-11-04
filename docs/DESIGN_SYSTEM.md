@@ -60,6 +60,17 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 Transitions are 150 ms colour/opacity only. Everything is disabled by Settings › Reduce motion
 (`.reduce-motion` on `<html>`) and by the Windows "Show animations" setting (`prefers-reduced-motion`).
 
+The loading screen is the one exception to all of that. It follows Settings › Reduce motion, which gives a static logo
+for at least 1.2 s, but deliberately not the Windows setting: that is often off for speed on the PCs this app is for,
+and following it would hide the screen altogether (`.splash-leaving` keeps its fade working in that case). It's brief,
+never flashes, and can be skipped or turned off. Otherwise a canvas of about 1,800 dots forms the logo as the real
+startup calls settle (`components/layout/splash-screen.tsx`, physics in `lib/splash-field.ts`). The bar and the stage
+text can run behind those calls but never ahead of them, a failed call counts as settled because its page reports the
+error, and the screen gives up on a stuck call after 8 s. It is on top of the app, which loads underneath and stays
+`inert` until it goes. The cursor pushes dots, a click sends a pulse, Space or → changes the fact and Esc or Enter
+skips. Moving the cursor holds it for up to 7 s. Settings › Appearance turns it off. Canvas colours are mixed from
+`--brand`, `--primary` and `--foreground`, and facts in `lib/splash-facts.ts` must be plainly true.
+
 ## Components (`src/components/common/`)
 
 | Component | Purpose |

@@ -8,6 +8,7 @@ import {
   Info,
   LayoutList,
   ListChecks,
+  Loader,
   Move,
   PanelLeft,
   Palette,
@@ -156,9 +157,22 @@ function AppearanceTab() {
         }
       />
       <SettingsRow
+        icon={Loader}
+        title="Loading screen"
+        description="Shown when 2VX starts. Turn it off to open straight to Home."
+        htmlFor="pref-splash"
+        control={
+          <Switch
+            id="pref-splash"
+            checked={ui.showSplash}
+            onCheckedChange={(v) => ui.set({ showSplash: v })}
+          />
+        }
+      />
+      <SettingsRow
         icon={Move}
         title="Reduce motion"
-        description="2VX also follows the Windows animation setting."
+        description="2VX also follows the Windows animation setting, except on the loading screen."
         htmlFor="pref-motion"
         control={
           <Switch

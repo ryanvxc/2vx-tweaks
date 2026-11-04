@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router";
 import { AppShell } from "@/components/layout/app-shell";
+import { SplashScreen } from "@/components/layout/splash-screen";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CleanerPage } from "@/pages/cleaner/cleaner-page";
@@ -29,27 +30,34 @@ export function App() {
     document.documentElement.classList.toggle("reduce-motion", reduceMotion);
   }, [reduceMotion]);
 
+  const [splash, setSplash] = useState(() => useUiStore.getState().showSplash);
+  const endSplash = useCallback(() => setSplash(false), []);
+
   return (
     <TooltipProvider delayDuration={300}>
-      <HashRouter>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="monitoring" element={<MonitoringPage />} />
-            <Route path="hardware" element={<HardwarePage />} />
-            <Route path="tweaks" element={<TweaksPage />} />
-            <Route path="system" element={<Moved to="/tweaks" />} />
-            <Route path="gaming" element={<GamingPage />} />
-            <Route path="startup" element={<StartupPage />} />
-            <Route path="cleaner" element={<CleanerPage />} />
-            <Route path="restore" element={<RestorePage />} />
-            <Route path="history" element={<Moved to="/restore" />} />
-            <Route path="tools" element={<ToolsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </HashRouter>
+      {/* Inert under the loading screen, so Tab can't reach controls nobody can see. */}
+      <div className="h-full" inert={splash}>
+        <HashRouter>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="monitoring" element={<MonitoringPage />} />
+              <Route path="hardware" element={<HardwarePage />} />
+              <Route path="tweaks" element={<TweaksPage />} />
+              <Route path="system" element={<Moved to="/tweaks" />} />
+              <Route path="gaming" element={<GamingPage />} />
+              <Route path="startup" element={<StartupPage />} />
+              <Route path="cleaner" element={<CleanerPage />} />
+              <Route path="restore" element={<RestorePage />} />
+              <Route path="history" element={<Moved to="/restore" />} />
+              <Route path="tools" element={<ToolsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </HashRouter>
+      </div>
+      {splash && <SplashScreen onDone={endSplash} />}
       <Toaster position="bottom-right" />
     </TooltipProvider>
   );

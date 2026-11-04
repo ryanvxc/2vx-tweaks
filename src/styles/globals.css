@@ -192,6 +192,14 @@
 }
 
 /* Settings > Appearance > Reduce motion, and the Windows animation setting. */
+/* Outranks the rules below, so the exit still fades with Windows animations off. */
+.splash-leaving {
+  opacity: 0;
+  scale: 1.04;
+  transition:
+    opacity 450ms,
+    scale 450ms !important;
+}
 .reduce-motion *,
 .reduce-motion *::before,
 .reduce-motion *::after {

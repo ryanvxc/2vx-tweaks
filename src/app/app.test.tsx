@@ -1,7 +1,8 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clearQueryCache } from "@/hooks/use-backend-query";
+import { useUiStore } from "@/stores/ui-store";
 import { App } from "./app";
 
 // Runs outside Tauri, so the backend service serves preview data.
@@ -9,6 +10,18 @@ describe("App shell", () => {
   beforeEach(() => {
     window.location.hash = "#/";
     clearQueryCache();
+    useUiStore.setState({ showSplash: false });
+  });
+
+  it("opens behind the loading screen, unless it's turned off", async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    useUiStore.setState({ showSplash: true });
+    render(<App />);
+    expect(screen.getByRole("progressbar", { name: "Loading 2VX" })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("progressbar")).not.toBeInTheDocument());
+    expect(screen.getByRole("heading", { name: "Welcome back" })).toBeInTheDocument();
   });
 
   it("renders Home with preview data clearly labelled", async () => {

@@ -5,6 +5,12 @@ notes come from commit subjects. This file records the larger milestones.
 
 ## 0.2.0 (unreleased)
 
+### Loading screen
+- 2VX now opens on a loading screen: dots form the logo as the real startup calls finish, with a fact or tip underneath.
+  The cursor pushes the dots, clicking sends a pulse, Space shows another fact and Esc skips.
+- It takes about 3 seconds and can't get stuck. Settings › Appearance turns it off, and Reduce motion replaces it with
+  the static logo. The Windows animation setting doesn't affect it, because it's often off for speed.
+
 ### Makeover
 - New structure, one primary location per feature: Overview (Home, Monitoring, Hardware), Optimise
   (Tweaks, Gaming), Maintain (Startup, PC Cleaner, Restore Centre, Tools). See
