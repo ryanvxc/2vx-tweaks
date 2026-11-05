@@ -7,12 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.app-launch-tracking-off",
         name: "Stop tracking app launches",
-        description: "Stops Windows tracking which apps you launch.",
-        details: "Sets Start_TrackProgs to 0 under HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced, \
-                  as Microsoft documents for this setting. Windows stops recording which apps you start, so Start and \
-                  search no longer rank results or show \"Most used\" from your launch history. This is the same \
-                  switch as Settings > Privacy & security > General. It affects only your account. Sign out and back \
-                  in to make sure Explorer picks it up.",
+        description: "Stops Windows noting which apps you open to personalise Start and search.",
+        details: "App launches normally feed the most-used list in Start and the ranking in search. After this, Windows stops logging them, so that list stops updating. Takes effect after signing out.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Low,
         permission: Permission::User,

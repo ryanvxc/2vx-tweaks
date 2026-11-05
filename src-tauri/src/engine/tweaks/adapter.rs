@@ -73,7 +73,7 @@ const fn adapter(
 /// written directly in the initialiser, and the requires key is built from the keyword.
 macro_rules! keyword {
     ($kind:literal, $keyword:literal, $id:literal, $section:expr, $name:literal,
-     $description:literal, $references:expr, $warning:expr) => {
+     $description:literal, $details:literal, $references:expr, $warning:expr) => {
         SettingsTweak {
             meta: adapter(
                 RegTarget::new(
@@ -86,10 +86,9 @@ macro_rules! keyword {
                 $name,
                 $description,
                 concat!(
-                    "Sets ",
-                    $keyword,
-                    " to 0 on the connected adapter, or the first one listed if none is. The \
-                     driver reads it when it starts, so this applies after a restart."
+                    $details,
+                    " This changes the connected adapter, or the first one listed if none is, \
+                     and applies after a restart."
                 ),
                 $references,
                 $warning,
@@ -106,7 +105,8 @@ pub const ALL: &[SettingsTweak] = &[
         "eth-energy-efficient",
         ETHERNET,
         "Energy-Efficient Ethernet off",
-        "Stops the link dropping to low power between packets.",
+        "Keeps the Ethernet link at full power between packets.",
+        "Energy-Efficient Ethernet naps between packets to save power, and some switches and adapters handle that badly, causing small delays or dropped links. Turning it off uses a little more power.",
         POWER,
         None
     ),
@@ -116,7 +116,8 @@ pub const ALL: &[SettingsTweak] = &[
         "eth-flow-control",
         ETHERNET,
         "Flow control off",
-        "Stops the adapter pausing traffic when a link partner is busy.",
+        "Stops the adapter pausing traffic when the other end of the link is busy.",
+        "Pause frames can add small delays on some home networks. The trade-off is that a fast adapter feeding a slower switch may drop packets instead of waiting. Turn it back on if transfers get worse.",
         ENUMERATION,
         None
     ),
@@ -126,7 +127,8 @@ pub const ALL: &[SettingsTweak] = &[
         "eth-interrupt-moderation",
         ETHERNET,
         "Interrupt moderation off",
-        "Interrupts per packet rather than in batches. Uses more CPU.",
+        "Handles each network packet straight away instead of grouping them.",
+        "Can trim a tiny amount of network latency, at the cost of more CPU work and interrupts, especially on fast downloads. Most games won't show a difference.",
         ENUMERATION,
         None
     ),
@@ -136,7 +138,8 @@ pub const ALL: &[SettingsTweak] = &[
         "eth-wake-magic",
         ETHERNET,
         "Wake on Magic Packet off",
-        "The PC no longer wakes when it receives a Magic Packet.",
+        "Stops a Wake-on-LAN packet waking this PC over Ethernet.",
+        "Useful if you never wake this PC remotely and want to rule out one reason it might wake on its own. Wake-on-LAN and remote wake tools stop working.",
         POWER,
         STOPS_WOL
     ),
@@ -146,16 +149,77 @@ pub const ALL: &[SettingsTweak] = &[
         "eth-wake-pattern",
         ETHERNET,
         "Wake on pattern match off",
-        "The PC no longer wakes on matched network traffic.",
+        "Stops ordinary network traffic waking this PC from sleep over Ethernet.",
+        "A common reason a PC wakes up on its own. Sleep becomes more reliable, but anything that relied on waking the PC over the network will no longer do so.",
         POWER,
         STOPS_WAKE
     ),
+    keyword!(
+        "Ethernet",
+        "*LsoV2IPv4",
+        "eth-lso-ipv4",
+        ETHERNET,
+        "No Large Send Offload (IPv4)",
+        "Makes the CPU split large IPv4 uploads instead of the network adapter.",
+        "Large Send Offload normally saves CPU time. Some adapters and drivers have bugs that cause slow uploads or dropped connections, and this is the usual fix. Leave it on if you have no problems.",
+        OFFLOAD,
+        None
+    ),
+    keyword!(
+        "Ethernet",
+        "*LsoV2IPv6",
+        "eth-lso-ipv6",
+        ETHERNET,
+        "No Large Send Offload (IPv6)",
+        "Makes the CPU split large IPv6 uploads instead of the network adapter.",
+        "Large Send Offload normally saves CPU time. Some adapters and drivers have bugs that cause slow uploads or dropped connections, and this is the usual fix. Leave it on if you have no problems.",
+        OFFLOAD,
+        None
+    ),
+    keyword!(
+        "Ethernet",
+        "*SelectiveSuspend",
+        "eth-selective-suspend",
+        ETHERNET,
+        "Selective suspend off",
+        "Stops an idle network adapter dropping into its low-power state.",
+        "Mainly useful for USB Ethernet adapters, which can be slow to wake or drop out after going idle. It uses slightly more power, and most built-in adapters won't change.",
+        SELECTIVE_SUSPEND,
+        None
+    ),
+    keyword!(
+        "Wifi",
+        "*WakeOnMagicPacket",
+        "wifi-wake-magic",
+        WIFI,
+        "Wake on Magic Packet off",
+        "Stops a Wake-on-LAN packet waking this PC over Wi-Fi.",
+        "Useful if you never wake this PC remotely and want to rule out one reason it might wake on its own. Wake-on-LAN over Wi-Fi stops working, and many adapters never supported it.",
+        POWER,
+        STOPS_WOL
+    ),
+    keyword!(
+        "Wifi",
+        "*WakeOnPattern",
+        "wifi-wake-pattern",
+        WIFI,
+        "Wake on pattern match off",
+        "Stops ordinary network traffic waking this PC from sleep over Wi-Fi.",
+        "Can stop a laptop or PC waking in the night or draining its battery while asleep. Anything that relied on waking the PC over Wi-Fi will no longer do so.",
+        POWER,
+        STOPS_WAKE
+    ),
+];
+
+/// Left the catalogue in 0.5. Kept so a change an earlier release made can still be undone.
+pub const RETIRED: &[SettingsTweak] = &[
     keyword!(
         "Ethernet",
         "*PMARPOffload",
         "eth-arp-offload",
         ETHERNET,
         "ARP offload off",
+        "While asleep, the adapter stops answering IPv4 ARP requests.",
         "While asleep, the adapter stops answering IPv4 ARP requests.",
         POWER,
         None
@@ -167,58 +231,9 @@ pub const ALL: &[SettingsTweak] = &[
         ETHERNET,
         "NS offload off",
         "While asleep, the adapter stops answering IPv6 neighbour requests.",
+        "While asleep, the adapter stops answering IPv6 neighbour requests.",
         POWER,
         None
-    ),
-    keyword!(
-        "Ethernet",
-        "*LsoV2IPv4",
-        "eth-lso-ipv4",
-        ETHERNET,
-        "Large Send Offload off (IPv4)",
-        "The CPU splits large IPv4 sends instead of the adapter.",
-        OFFLOAD,
-        None
-    ),
-    keyword!(
-        "Ethernet",
-        "*LsoV2IPv6",
-        "eth-lso-ipv6",
-        ETHERNET,
-        "Large Send Offload off (IPv6)",
-        "The CPU splits large IPv6 sends instead of the adapter.",
-        OFFLOAD,
-        None
-    ),
-    keyword!(
-        "Ethernet",
-        "*SelectiveSuspend",
-        "eth-selective-suspend",
-        ETHERNET,
-        "Selective suspend off",
-        "Keeps an idle adapter from entering its low-power state.",
-        SELECTIVE_SUSPEND,
-        None
-    ),
-    keyword!(
-        "Wifi",
-        "*WakeOnMagicPacket",
-        "wifi-wake-magic",
-        WIFI,
-        "Wake on Magic Packet off",
-        "The PC no longer wakes when it receives a Magic Packet.",
-        POWER,
-        STOPS_WOL
-    ),
-    keyword!(
-        "Wifi",
-        "*WakeOnPattern",
-        "wifi-wake-pattern",
-        WIFI,
-        "Wake on pattern match off",
-        "The PC no longer wakes on matched network traffic.",
-        POWER,
-        STOPS_WAKE
     ),
     keyword!(
         "Wifi",
@@ -226,6 +241,7 @@ pub const ALL: &[SettingsTweak] = &[
         "wifi-arp-offload",
         WIFI,
         "ARP offload off",
+        "While asleep, the adapter stops answering IPv4 ARP requests.",
         "While asleep, the adapter stops answering IPv4 ARP requests.",
         POWER,
         None
@@ -237,6 +253,7 @@ pub const ALL: &[SettingsTweak] = &[
         WIFI,
         "NS offload off",
         "While asleep, the adapter stops answering IPv6 neighbour requests.",
+        "While asleep, the adapter stops answering IPv6 neighbour requests.",
         POWER,
         None
     ),
@@ -246,6 +263,7 @@ pub const ALL: &[SettingsTweak] = &[
         "wifi-packet-coalescing",
         WIFI,
         "Packet coalescing off",
+        "Hands broadcast packets to Windows at once instead of holding them.",
         "Hands broadcast packets to Windows at once instead of holding them.",
         COALESCING,
         None
@@ -261,6 +279,7 @@ mod tests {
     fn keywords_of(kind: &str) -> Vec<&'static str> {
         let mut found: Vec<&str> = ALL
             .iter()
+            .chain(RETIRED)
             .flat_map(|t| t.settings)
             .filter(|s| s.target.key == kind)
             .map(|s| match &s.target.value {
@@ -281,7 +300,10 @@ mod tests {
         };
         assert_eq!(keywords_of("Ethernet"), sorted(ETHERNET_KEYWORDS));
         assert_eq!(keywords_of("Wifi"), sorted(WIFI_KEYWORDS));
-        assert_eq!(ALL.len(), ETHERNET_KEYWORDS.len() + WIFI_KEYWORDS.len());
+        assert_eq!(
+            ALL.len() + RETIRED.len(),
+            ETHERNET_KEYWORDS.len() + WIFI_KEYWORDS.len()
+        );
     }
 
     #[test]

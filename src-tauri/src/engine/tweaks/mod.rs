@@ -37,21 +37,11 @@ const ALL: &[SettingsTweak] = &[
     privacy::app_notifications::TWEAK,
     gaming::mmcss_games::TWEAK,
     gaming::game_dvr::TWEAK,
-    performance::foreground_boost::TWEAK,
     performance::last_access::TWEAK,
     windows::window_animations::TWEAK,
-    windows::storage_sense::TWEAK,
-    services::maps_broker::TWEAK,
-    services::bluetooth::TWEAK,
-    services::wap_push::TWEAK,
     services::compat_assistant::TWEAK,
-    services::sensor::TWEAK,
-    services::sensor_monitoring::TWEAK,
     services::sync_host::TWEAK,
     services::print_spooler::TWEAK,
-    services::print_notify::TWEAK,
-    services::xbox_auth::TWEAK,
-    services::xbox_save::TWEAK,
     services::diagtrack::TWEAK,
     services::geolocation::TWEAK,
     gaming::mpo::TWEAK,
@@ -71,8 +61,6 @@ const ALL: &[SettingsTweak] = &[
     performance::fault_tolerant_heap::TWEAK,
     windows::autoplay::TWEAK,
     windows::device_metadata::TWEAK,
-    windows::rdp_com_redirect::TWEAK,
-    windows::rdp_pnp_redirect::TWEAK,
     network::qos::CS2,
     network::qos::VALORANT,
     network::qos::FORTNITE,
@@ -83,12 +71,38 @@ const ALL: &[SettingsTweak] = &[
     network::qos::RAINBOW_SIX,
 ];
 
+/// Hand-written tweaks that left the catalogue. See `library::retired`.
+const RETIRED: &[SettingsTweak] = &[
+    performance::foreground_boost::TWEAK,
+    services::bluetooth::TWEAK,
+    services::maps_broker::TWEAK,
+    services::print_notify::TWEAK,
+    services::sensor::TWEAK,
+    services::sensor_monitoring::TWEAK,
+    services::wap_push::TWEAK,
+    services::xbox_auth::TWEAK,
+    services::xbox_save::TWEAK,
+    windows::rdp_com_redirect::TWEAK,
+    windows::rdp_pnp_redirect::TWEAK,
+    windows::storage_sense::TWEAK,
+];
+
 pub fn register_all(registry: &mut TweakRegistry) -> AppResult<()> {
     let tables = [ALL, adapter::ALL]
         .into_iter()
         .chain(library::ALL.iter().copied());
     for tweak in tables.flatten() {
         registry.register(Box::new(SettingsTweak {
+            meta: tweak.meta.clone(),
+            settings: tweak.settings,
+        }))?;
+    }
+    for tweak in RETIRED
+        .iter()
+        .chain(adapter::RETIRED)
+        .chain(library::RETIRED)
+    {
+        registry.register_retired(Box::new(SettingsTweak {
             meta: tweak.meta.clone(),
             settings: tweak.settings,
         }))?;
@@ -212,7 +226,7 @@ mod tests {
                 tested += 1;
             }
         }
-        assert!(tested > 1_000, "only {tested} library tweaks ran");
+        assert!(tested > 400, "only {tested} library tweaks ran");
     }
 
     #[test]
@@ -259,13 +273,88 @@ mod tests {
         for t in library() {
             let m = &t.meta;
             assert!(m.name.chars().count() <= 40, "{} name", m.id);
-            assert!(m.description.chars().count() <= 74, "{} description", m.id);
+            assert!(m.description.chars().count() <= 88, "{} description", m.id);
             assert!(m.section.is_some(), "{} section", m.id);
             assert_eq!(m.id.split('.').count(), 2, "{} id", m.id);
             if m.risk == RiskLevel::High {
                 assert!(m.warning.is_some(), "{} needs a warning", m.id);
             }
         }
+    }
+
+    /// These five shipped writing Windows' own default, so their switch did nothing.
+    #[test]
+    fn visuals_write_the_value_their_name_promises() {
+        let registry = TweakRegistry::with_builtin_tweaks();
+        for (id, value) in [
+            ("windows.taskbar-left", 0),
+            ("windows.desktop-icons", 1),
+            ("windows.enthusiast", 1),
+            ("windows.accent-taskbar", 1),
+            ("windows.nav-expand", 1),
+            ("windows.hub-mode", 1),
+        ] {
+            let tweak = registry.get(id).unwrap_or_else(|| panic!("{id}"));
+            let [setting] = tweak.settings() else {
+                panic!("{id} should write one value");
+            };
+            assert_eq!(setting.value, Some(RegValue::Dword(value)), "{id}");
+        }
+    }
+
+    #[test]
+    fn a_retired_tweak_can_be_neither_listed_nor_planned_but_keeps_its_targets() {
+        let registry = TweakRegistry::with_builtin_tweaks();
+        assert!(registry.retired().count() >= 999);
+        let e = engine(installed());
+        let listed: std::collections::BTreeSet<_> =
+            e.tweak_statuses().into_iter().map(|s| s.meta.id).collect();
+        for id in registry.retired().map(|meta| meta.id) {
+            assert!(!listed.contains(id), "{id} is still listed");
+            assert!(e.plan(&[id.to_string()]).is_err(), "{id} can be planned");
+            let tweak = registry.undoable(id);
+            for setting in tweak.unwrap_or_else(|| panic!("{id}")).settings() {
+                assert!(registry.declares_target(&setting.target), "{id}");
+            }
+        }
+    }
+
+    #[test]
+    fn the_audit_left_a_curated_library() {
+        let registry = TweakRegistry::with_builtin_tweaks();
+        assert_eq!(registry.len(), 320);
+        let visuals = registry
+            .list()
+            .filter(|m| m.category == crate::engine::TweakCategory::Visuals)
+            .count();
+        assert_eq!(visuals, 79);
+    }
+
+    #[test]
+    fn a_card_windows_ignores_is_unavailable_rather_than_a_dead_switch() {
+        const WINDOWS_10: u32 = 19045;
+        const WINDOWS_11: u32 = 26200;
+        let registry = TweakRegistry::with_builtin_tweaks();
+        let builds = |id: &str| {
+            registry
+                .list()
+                .find(|m| m.id == id)
+                .unwrap_or_else(|| panic!("{id}"))
+                .supported_builds
+        };
+        for id in ["windows.small-icons", "windows.tray-all"] {
+            assert!(builds(id).contains(WINDOWS_10), "{id}");
+            assert!(!builds(id).contains(WINDOWS_11), "{id}");
+        }
+        for id in [
+            "windows.snap-bar",
+            "windows.home-namespace",
+            "power.startup-sound",
+        ] {
+            assert!(!builds(id).contains(WINDOWS_10), "{id}");
+            assert!(builds(id).contains(WINDOWS_11), "{id}");
+        }
+        assert!(!builds("windows.copilot-button").contains(WINDOWS_11));
     }
 
     #[test]

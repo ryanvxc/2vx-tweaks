@@ -7,12 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.app-location-off",
         name: "Block app access to location",
-        description: "Stops Store apps reading this PC's location.",
-        details: "Sets the \"Let Windows apps access location\" policy to Force Deny (LetAppsAccessLocation = 2 \
-                  under HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy), the most restrictive value \
-                  Microsoft documents. Every user on this PC is affected, and the matching switch in Settings > \
-                  Privacy & security is locked while the policy is set. An app that is open keeps its access until \
-                  it restarts. Microsoft lists this policy for Pro and above, so it isn't offered on Home.",
+        description: "Stops Store apps reading this PC's location. Desktop programs are not covered.",
+        details: "Denies location to Store apps by policy and greys out their switches in Settings. Maps, weather and similar apps will ask you to enter a place instead.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

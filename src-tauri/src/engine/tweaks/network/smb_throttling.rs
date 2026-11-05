@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "network.smb-throttling-off",
         name: "Disable SMB throttling",
-        description: "Stops Windows limiting transfers to network drives on slow links.",
-        details: "Sets DisableBandwidthThrottling to 1 under LanmanWorkstation\\Parameters. Microsoft documents that this allows higher throughput on high-latency connections. It does nothing for games or browsing.",
+        description: "Stops Windows slowing transfers to network drives on slow or distant links.",
+        details: "By default the SMB client can hold back throughput on high-latency connections. This removes that limit. It helps mainly with VPNs and remote file servers, not home gigabit networks.",
         category: TweakCategory::Network,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

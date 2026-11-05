@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "power.power-throttling-off",
         name: "Disable power throttling",
-        description: "Stops Windows slowing background apps. Uses more battery on a laptop.",
-        details: "Sets PowerThrottlingOff to 1 under HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling, the value behind the Turn off Power Throttling policy. Efficiency mode in Task Manager may still apply to apps that ask for it.",
+        description: "Stops Windows slowing background apps to save power.",
+        details: "Windows can put background apps on efficient, slower CPU settings. Turning this off helps apps that need to keep working when they aren't in front, such as renders or encoders. It uses more battery on a laptop.",
         category: TweakCategory::Power,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

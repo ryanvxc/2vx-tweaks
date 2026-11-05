@@ -7,12 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "services.diagtrack-off",
         name: "Disable Telemetry Service",
-        description: "Turns off the service that sends diagnostic data to Microsoft.",
-        details: "Sets the start type of the DiagTrack service (Connected User Experiences and Telemetry) to \
-                  Disabled (Start = 4 under HKLM\\SYSTEM\\CurrentControlSet\\Services\\DiagTrack). Microsoft's \
-                  guidance on this service was written for Windows Server 2016 with Desktop Experience, the \
-                  closest published guidance; there is no equivalent for Windows 10 or 11. The service stops at \
-                  the next restart, and undoing this restores the recorded start type.",
+        description: "Stops the background service that sends diagnostic data to Microsoft.",
+        details: "The Connected User Experiences and Telemetry service runs all the time and uploads the usage and reliability data Windows collects. This is the most direct way to stop that. Insider builds need it, and problem reports may not send.",
         category: TweakCategory::Services,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

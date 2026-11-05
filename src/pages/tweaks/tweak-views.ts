@@ -5,6 +5,7 @@ import {
   HARDWARE_TABS,
   NETWORK_TABS,
   TWEAK_TABS,
+  VISUALS_TABS,
   type NavTab,
 } from "@/app/navigation";
 import type { TweakStatus } from "@/types/engine";
@@ -38,9 +39,18 @@ export interface TweakView {
 export const TWEAKS_VIEW: TweakView = {
   route: "/tweaks",
   title: "Tweaks",
-  subtitle: "Windows, privacy, gaming, apps, tasks and power.",
+  subtitle: "Windows, privacy, gaming, apps and power.",
   tabs: TWEAK_TABS,
   defaultTab: "core",
+  headings: "always",
+};
+
+export const VISUALS_VIEW: TweakView = {
+  route: "/visuals",
+  title: "Visuals",
+  subtitle: "How Windows looks: theme, taskbar, File Explorer and sign-in.",
+  tabs: VISUALS_TABS,
+  defaultTab: "appearance",
   headings: "always",
 };
 

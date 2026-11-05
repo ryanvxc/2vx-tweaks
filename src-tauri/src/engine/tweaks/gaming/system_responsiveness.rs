@@ -6,9 +6,9 @@ use crate::engine::{
 pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "gaming.system-responsiveness",
-        name: "Less CPU for background tasks",
-        description: "Lets games and media that use MMCSS have 90% of the CPU instead of 80%.",
-        details: "Sets SystemResponsiveness to 10 under the MMCSS SystemProfile key. Microsoft documents it as the share of CPU guaranteed to low-priority tasks, in tens, defaulting to 20. It only matters for programs that register with MMCSS, and 2VX hasn't measured the effect on any game.",
+        name: "Smaller MMCSS reserve",
+        description: "Keeps 10% of CPU for background tasks, not 20%, when media threads run.",
+        details: "Windows normally holds back 20% of CPU time for background tasks when multimedia apps run. This cuts that to 10%. It only applies to apps that register with the scheduler, so the change is small.",
         category: TweakCategory::Gaming,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

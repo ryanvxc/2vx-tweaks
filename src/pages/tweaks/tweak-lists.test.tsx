@@ -44,10 +44,10 @@ function tweak(
 }
 
 const LISTED = [
-  tweak("privacy.a", "Commercial pipeline", "privacy", "Telemetry"),
-  tweak("privacy.b", "Lock screen camera", "privacy", "Speech"),
+  tweak("privacy.ceip", "Commercial pipeline", "privacy", "Telemetry"),
+  tweak("privacy.tipc", "Lock screen camera", "privacy", "Speech"),
   tweak("windows.a", "Taskbar search box", "windows", "Taskbar and Start"),
-  tweak("privacy.c", "Applied already", "privacy", "Telemetry", {
+  tweak("privacy.inventory", "Applied already", "privacy", "Telemetry", {
     state: "applied",
     undoable: true,
   }),
@@ -92,7 +92,7 @@ describe("Long lists", () => {
   it("counts what's in effect on each section", async () => {
     renderTweaks("/tweaks?tab=privacy");
     const heading = await screen.findByRole("heading", { name: "Telemetry" });
-    expect(within(heading.parentElement!).getByText("1 of 2 in effect")).toBeInTheDocument();
+    expect(within(heading.parentElement!).getByText("1 of 2 applied")).toBeInTheDocument();
   });
 
   it("searches the whole page from any tab, by name or by what a tweak changes", async () => {

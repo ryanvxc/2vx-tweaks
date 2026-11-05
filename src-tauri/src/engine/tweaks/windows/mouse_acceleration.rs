@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "windows.mouse-acceleration-off",
         name: "Disable mouse acceleration",
-        description: "Same as unticking Enhance pointer precision in Mouse settings.",
-        details: "Sets MouseSpeed, MouseThreshold1 and MouseThreshold2 to 0 under HKCU\\Control Panel\\Mouse, the three values SPI_SETMOUSE describes. Takes effect after you sign out.",
+        description: "Pointer travel matches how far you move the mouse, whatever the speed.",
+        details: "Same as unticking Enhance pointer precision in Mouse settings. Aiming and muscle memory get more consistent, which many gamers prefer. You may need to raise pointer speed or DPI to compensate.",
         category: TweakCategory::Windows,
         risk: RiskLevel::Low,
         permission: Permission::User,

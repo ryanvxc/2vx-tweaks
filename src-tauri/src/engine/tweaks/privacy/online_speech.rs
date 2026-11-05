@@ -6,12 +6,9 @@ use crate::engine::{
 pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.online-speech-off",
-        name: "Turn off online speech recognition",
+        name: "Turn off online speech",
         description: "Stops sending your voice to Microsoft's cloud speech service.",
-        details: "Sets HasAccepted to 0 under \
-                  HKCU\\Software\\Microsoft\\Speech_OneCore\\Settings\\OnlineSpeechPrivacy, as Microsoft documents \
-                  in section 18.6 of its connections guide. This is the switch in Settings > Privacy & security > \
-                  Speech. It affects only your account.",
+        details: "Online speech recognition sends voice clips to Microsoft to convert them to text. With it off, voice typing and other cloud speech features stop, while speech recognition on the device still works.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Low,
         permission: Permission::User,

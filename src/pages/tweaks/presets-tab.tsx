@@ -86,7 +86,7 @@ function Preset({
         summary={preset.summary}
         status={presetStatus(inEffect, tweaks.length)}
         facts={[
-          { label: "In effect", value: `${inEffect} of ${tweaks.length}` },
+          { label: "Applied", value: `${inEffect} of ${tweaks.length}` },
           { label: "Need a restart or sign-out", value: restarts },
         ]}
       >

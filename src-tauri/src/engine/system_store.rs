@@ -6,7 +6,7 @@
 use std::cell::RefCell;
 
 use windows::Win32::Foundation::{
-    ERROR_FILE_NOT_FOUND, HLOCAL, LocalFree, VARIANT_BOOL, WIN32_ERROR,
+    ERROR_FILE_NOT_FOUND, HLOCAL, LPARAM, LocalFree, VARIANT_BOOL, WIN32_ERROR, WPARAM,
 };
 use windows::Win32::System::Com::{
     CLSCTX_INPROC_SERVER, COINIT_MULTITHREADED, CoCreateInstance, CoInitializeEx,
@@ -20,7 +20,11 @@ use windows::Win32::System::TaskScheduler::{
     TASK_ENUM_HIDDEN, TASK_TRIGGER_BOOT, TASK_TRIGGER_LOGON, TASK_TRIGGER_TYPE2, TaskScheduler,
 };
 use windows::Win32::System::Variant::VARIANT;
-use windows::core::{BSTR, GUID, Interface};
+use windows::Win32::UI::Shell::{SHCNE_ASSOCCHANGED, SHCNF_IDLIST, SHChangeNotify};
+use windows::Win32::UI::WindowsAndMessaging::{
+    HWND_BROADCAST, SMTO_ABORTIFHUNG, SendMessageTimeoutW, WM_SETTINGCHANGE,
+};
+use windows::core::{BSTR, GUID, Interface, w};
 
 use crate::engine::setting::{RegTarget, RegValue};
 use crate::error::{AppError, AppResult};
@@ -63,6 +67,29 @@ fn task_service() -> windows::core::Result<ITaskService> {
 }
 
 /// `None` when the task isn't on this PC, which differs by Windows version.
+/// Windows reads theme, taskbar and Explorer settings when told they changed, not when the registry
+/// does, so without this the switch would look like it did nothing until the next sign-in. It's a
+/// notification only: it sets nothing, and a window that doesn't answer is skipped.
+pub fn announce_appearance() {
+    const WAIT_MS: u32 = 200;
+    for area in [w!("ImmersiveColorSet"), w!("TraySettings")] {
+        // SAFETY: `area` is a static string that outlives the call, and the result isn't needed.
+        unsafe {
+            SendMessageTimeoutW(
+                HWND_BROADCAST,
+                WM_SETTINGCHANGE,
+                WPARAM(0),
+                LPARAM(area.as_ptr() as isize),
+                SMTO_ABORTIFHUNG,
+                WAIT_MS,
+                None,
+            );
+        }
+    }
+    // SAFETY: this event takes no item pointers.
+    unsafe { SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, None, None) };
+}
+
 fn registered_task(path: &str) -> windows::core::Result<Option<IRegisteredTask>> {
     let (folder, name) = path.rsplit_once('\\').unwrap_or(("", path));
     let folder = if folder.is_empty() { r"\" } else { folder };

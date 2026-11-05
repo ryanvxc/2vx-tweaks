@@ -7,13 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.app-account-info-off",
         name: "Block app access to account info",
-        description: "Stops Store apps reading your name and picture.",
-        details: "Sets the \"Let Windows apps access account information\" policy to Force Deny \
-                  (LetAppsAccessAccountInfo = 2 under HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy), \
-                  the most restrictive value Microsoft documents. Every user on this PC is affected, and the \
-                  matching switch in Settings > Privacy & security is locked while the policy is set. An app that \
-                  is open keeps its access until it restarts. Microsoft lists this policy for Pro and above, so it \
-                  isn't offered on Home.",
+        description: "Stops Store apps reading your account name, picture and other details.",
+        details: "Windows can share your account name and picture with Store apps. This denies them by policy, so apps have to ask you directly. Apps that greet you by name will show less.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

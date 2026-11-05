@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.advertising-id-off",
         name: "Turn off the advertising ID",
-        description: "Stops apps using your advertising ID for personalised ads.",
-        details: "Sets Enabled to 0 under HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo, the value Microsoft documents for turning off the advertising ID for every account on this PC. Apps that ask for the ID no longer get one, so ads in apps are not personalised from it; you see the same number of ads. Reverting restores the previous value. The per-account switch in Settings > Privacy & security > General is not changed.",
+        description: "Stops apps using an ID tied to this PC to show you personalised ads.",
+        details: "Windows gives each account an advertising ID that apps can read to build a profile for ads. This turns it off at machine level. You will still see ads, just less targeted ones.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

@@ -662,7 +662,9 @@ fn adapter_tweaks_stay_on_the_documented_keywords() {
 
     let registry = TweakRegistry::with_builtin_tweaks();
     let mut found = 0;
-    for tweak in registry.iter() {
+    // Retired ones still count: undo can still write what they wrote.
+    let retired = registry.retired().filter_map(|m| registry.undoable(m.id));
+    for tweak in registry.iter().chain(retired) {
         for setting in tweak.settings() {
             if setting.target.hive != Hive::Adapter {
                 continue;
@@ -702,6 +704,41 @@ fn adapter_tweaks_stay_on_the_documented_keywords() {
     let devices = code("src/system/devices.rs");
     let resolve = &devices[devices.find("pub fn adapter_key").unwrap()..];
     assert!(resolve.contains(r#"format!(r"{CLASS}\{NET_CLASS}\{instance}")"#));
+}
+
+/// 2VX changes values, not keys. Undoing the classic right-click menu is the one exception, because
+/// that key's presence is the setting. It stays one named key, and only an empty one is removed.
+#[test]
+fn only_the_classic_menu_key_is_ever_removed() {
+    let store = code("src/engine/store.rs");
+    assert_eq!(store.matches("remove_tree(").count(), 1);
+    assert!(store.contains("keys.is_none() && values.is_none()"));
+    let keys = &store[store.find("const PRESENCE_KEYS").unwrap()..];
+    let keys = &keys[..keys.find("];").unwrap()];
+    assert_eq!(keys.matches('"').count(), 2, "one key");
+    assert!(
+        keys.contains(
+            r"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+        )
+    );
+    for path in [
+        "src/engine/service.rs",
+        "src/engine/system_store.rs",
+        "src/engine/broker.rs",
+    ] {
+        assert!(!code(path).contains("remove_tree("), "{path}");
+    }
+}
+
+/// The UAC switches share a key with two harmless values, which pass one at a time.
+#[test]
+fn the_uac_key_opens_for_two_named_values_only() {
+    let policy = code("src/engine/policy.rs");
+    let allowed = &policy[policy.find("const ALLOWED_VALUES").unwrap()..];
+    let allowed = &allowed[..allowed.find("];").unwrap()];
+    assert!(allowed.contains("\"EnableFirstLogonAnimation\""));
+    assert!(allowed.contains("\"VerboseStatus\""));
+    assert_eq!(allowed.matches("Hive::").count(), 2);
 }
 
 /// Hardware details never carry a serial number. The parsers step over those fields by offset, so

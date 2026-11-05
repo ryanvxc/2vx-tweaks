@@ -7,13 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.app-diagnostics-off",
         name: "Block app access to diagnostics",
-        description: "Stops Store apps reading diagnostic information about other apps.",
-        details: "Sets the \"Let Windows apps access diagnostic information about other apps\" policy to Force \
-                  Deny (LetAppsGetDiagnosticInfo = 2 under \
-                  HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy), the most restrictive value Microsoft \
-                  documents. Every user on this PC is affected, and the matching switch in Settings > Privacy & \
-                  security is locked while the policy is set. An app that is open keeps its access until it \
-                  restarts. Microsoft lists this policy for Pro and above, so it isn't offered on Home.",
+        description: "Stops Store apps seeing information about other apps running on this PC.",
+        details: "Diagnostic access lets an app see what other apps are doing. Few apps need this. Some troubleshooting or monitoring apps from the Store may show less.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

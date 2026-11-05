@@ -6,13 +6,9 @@ use crate::engine::{
 pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.language-list-opt-out",
-        name: "Don't share your language list with websites",
-        description: "Stops websites reading your language list.",
-        details: "Sets HttpAcceptLanguageOptOut to 1 under HKCU\\Control Panel\\International\\User Profile, as Microsoft \
-                  documents for this setting. Windows stops offering your installed language list to websites and \
-                  apps, which then see only your primary display language and may pick a different language or \
-                  region for their content. This is the same switch as Settings > Privacy & security > General. It \
-                  affects only your account and applies to apps started afterwards.",
+        name: "Hide language list from sites",
+        description: "Keeps your language list from websites, so they can't profile you with it.",
+        details: "Windows can share your languages with websites so they show the right one. Hiding the list removes one detail sites can use to identify you. Some sites may need you to choose a language yourself.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Low,
         permission: Permission::User,

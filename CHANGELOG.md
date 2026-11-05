@@ -3,6 +3,27 @@
 Main-channel builds are released automatically from `main` (see `docs/GITHUB_RELEASE_PIPELINE.md`); their
 notes come from commit subjects. This file records the larger milestones.
 
+## 0.5.0
+
+### Visuals
+- There's a new Visuals page, under Tweaks. Theme, taskbar, Start, File Explorer and sign-in settings now live together, each with its own icon.
+- 20 new settings, including accent colour on title bars, seconds on the taskbar clock, the full right-click menu on Windows 11 and detailed startup messages.
+- Filter by Applied, Not applied, Category and Restart required.
+- Cards that do nothing on your version of Windows show as Unavailable instead of as a switch.
+
+### A smaller library that means something
+- Tweaks is now about performance, privacy and control. Every one of the 1,300 tweaks was reviewed, and 1,000 that did nothing useful, repeated another or only worked in specific setups are gone, leaving 320.
+- If one of those is still applied on your PC, nothing changes. Restore Centre lists it, with Undo.
+- Descriptions were rewritten in plain English: what it changes, why you'd want it and what you give up.
+- A switch's name is now true when it's on: Turn off transparency, Block camera access, No Edge rewards.
+- The Tasks tab is gone. Telemetry tasks are under Privacy and AMD's are under Hardware.
+- Presets are now chosen lists, so they no longer mute notifications or close apps at shutdown.
+
+### Fixes
+- Five switches wrote Windows' own default, so they did nothing. They work now. If you had one on, it shows Not applied until you turn it on again.
+- 37 tweaks now say correctly when they need a restart or sign-out.
+- Presets no longer change how Windows looks, and Game Mode leaves visual settings alone.
+
 ## 0.4.2
 
 ### Cards everywhere

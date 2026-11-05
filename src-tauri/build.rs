@@ -31,6 +31,7 @@ fn main() {
             "uninstall_app",
             "reinstall_app",
             "list_tweaks",
+            "list_retired_tweaks",
             "get_engine_status",
             "get_tweak_statuses",
             "plan_tweaks",

@@ -5,7 +5,7 @@ use tauri::State;
 use crate::engine::TweakMeta;
 use crate::engine::journal::{ChangeRecord, SnapshotRecord};
 use crate::engine::plan::Plan;
-use crate::engine::service::{Engine, EngineStatus, OperationOutcome, TweakStatus};
+use crate::engine::service::{Engine, EngineStatus, OperationOutcome, RetiredTweak, TweakStatus};
 use crate::error::{AppError, AppResult};
 
 /// Runs engine work off the async runtime: registry reads, journal writes and the UAC
@@ -25,6 +25,12 @@ where
 #[tauri::command]
 pub fn list_tweaks(engine: State<'_, Arc<Engine>>) -> Vec<TweakMeta> {
     engine.registry().list().cloned().collect()
+}
+
+/// Tweaks 2VX no longer offers, for naming old history and undoing what's still applied. Read-only.
+#[tauri::command]
+pub async fn list_retired_tweaks(engine: State<'_, Arc<Engine>>) -> AppResult<Vec<RetiredTweak>> {
+    blocking(&engine, |e| e.retired_tweaks()).await
 }
 
 #[tauri::command]

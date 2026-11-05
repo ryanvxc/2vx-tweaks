@@ -1,28 +1,19 @@
 import {
   AppWindow,
-  Archive,
   AudioLines,
   BatteryCharging,
   Ban,
   BellOff,
-  BellRing,
   Binary,
-  Bluetooth,
-  BluetoothOff,
   Bot,
   Bug,
-  Building2,
-  Cable,
   CalendarClock,
   Captions,
   ChartNoAxesColumn,
   CirclePlay,
   Clapperboard,
   CloudDownload,
-  CloudOff,
   Cpu,
-  CreditCard,
-  Dices,
   Eye,
   EyeOff,
   FileClock,
@@ -30,33 +21,28 @@ import {
   FileText,
   FileType,
   Fingerprint,
-  FlaskConical,
   FolderOpen,
   FolderSync,
   Gamepad2,
   Gauge,
-  Glasses,
   Globe,
   Gpu,
   HardDrive,
-  HardDriveDownload,
-  HeartPulse,
   History,
-  HousePlug,
   Keyboard,
   KeyboardOff,
   KeyRound,
   Languages,
   Layers,
   Layers2,
-  LayoutPanelLeft,
-  Map as MapIcon,
+  LayoutDashboard,
+  LayoutGrid,
+  Lock,
   MapPin,
   MapPinOff,
   Megaphone,
   MemoryStick,
   MessageSquareOff,
-  MessagesSquare,
   MicOff,
   MonitorCog,
   MonitorDot,
@@ -67,7 +53,11 @@ import {
   Network,
   Package,
   PackageSearch,
+  Palette,
+  PanelBottom,
+  PanelLeft,
   PanelRight,
+  PanelsTopLeft,
   PenLine,
   Plug,
   Power,
@@ -77,35 +67,30 @@ import {
   Radio,
   RefreshCcw,
   Rocket,
-  RotateCw,
   Route,
-  Scale,
+  Rows3,
+  Save,
   ScanSearch,
   Search,
   Server,
-  ServerCog,
   Share2,
-  ShieldHalf,
   ShoppingBag,
-  Smartphone,
-  Sparkles,
+  SquareMenu,
   Stethoscope,
-  Store,
-  SunDim,
   TimerReset,
   Trophy,
   Usb,
   UserRound,
-  Users,
   VideoOff,
+  WandSparkles,
   Wifi,
   EthernetPort,
   Wind,
-  Wrench,
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import type { CleanerTab, HardwareTab, TweakTab } from "@/app/navigation";
+import { VISUAL_ICON } from "./visual-icons";
+import type { CleanerTab, HardwareTab, TweakTab, VisualsTab } from "@/app/navigation";
 import type { TweakCategory, TweakMeta } from "@/types/engine";
 
 // How tweaks look and where they sit in the UI. Kept apart from the engine metadata: icons
@@ -116,6 +101,7 @@ import type { TweakCategory, TweakMeta } from "@/types/engine";
 export type PlacedTab =
   | Exclude<TweakTab, "presets">
   | HardwareTab
+  | VisualsTab
   | Extract<CleanerTab, "services">
   | "tweaks"
   | "priority"
@@ -137,6 +123,7 @@ export const CATEGORY_LABEL: Record<TweakCategory, string> = {
   memory: "Memory",
   storage: "Storage",
   apps: "Apps",
+  visuals: "Visuals",
 };
 
 const CATEGORY_ICON: Record<TweakCategory, LucideIcon> = {
@@ -153,6 +140,7 @@ const CATEGORY_ICON: Record<TweakCategory, LucideIcon> = {
   memory: MemoryStick,
   storage: HardDrive,
   apps: AppWindow,
+  visuals: Eye,
 };
 
 export const TWEAK_ICON: Record<string, LucideIcon> = {
@@ -168,7 +156,6 @@ export const TWEAK_ICON: Record<string, LucideIcon> = {
   "performance.edge-background-mode-off": Ban,
   "performance.edge-startup-boost-off": Rocket,
   "performance.fault-tolerant-heap-off": Bug,
-  "performance.foreground-boost": AppWindow,
   "performance.kernel-in-ram": MemoryStick,
   "performance.last-access-off": FileClock,
   "performance.short-names-off": FileType,
@@ -188,29 +175,18 @@ export const TWEAK_ICON: Record<string, LucideIcon> = {
   "privacy.inking-typing-collection-off": PenLine,
   "privacy.language-list-opt-out": Languages,
   "privacy.online-speech-off": MicOff,
-  "services.bluetooth-off": BluetoothOff,
   "services.compat-assistant-off": Puzzle,
   "services.diagtrack-off": Radio,
   "services.geolocation-off": MapPinOff,
-  "services.maps-broker-off": MapIcon,
-  "services.print-notify-off": BellRing,
   "services.print-spooler-off": Printer,
-  "services.sensor-monitoring-off": SunDim,
-  "services.sensor-off": RotateCw,
   "services.sync-host-off": RefreshCcw,
-  "services.wap-push-off": MessagesSquare,
-  "services.xbox-auth-off": KeyRound,
-  "services.xbox-save-off": CloudOff,
   "windows.autoplay-off": CirclePlay,
   "windows.device-metadata-off": PackageSearch,
   "windows.edge-recommendations-off": Megaphone,
   "windows.edge-sidebar-off": PanelRight,
   "windows.keyboard-repeat-fast": Keyboard,
   "windows.mouse-acceleration-off": Mouse,
-  "windows.rdp-com-redirect-off": Cable,
-  "windows.rdp-pnp-redirect-off": MonitorSmartphone,
   "windows.sticky-keys-shortcut-off": KeyboardOff,
-  "windows.storage-sense-off": HardDriveDownload,
   "windows.window-animations-off": Wind,
 };
 
@@ -221,9 +197,8 @@ export const TWEAK_ICON: Record<string, LucideIcon> = {
 export const SECTION_ICON: Record<string, LucideIcon> = {
   // Windows
   Explorer: FolderOpen,
-  "Taskbar and Start": LayoutPanelLeft,
+  Notifications: BellOff,
   System: MonitorCog,
-  "Visual effects": Sparkles,
   "Startup and shutdown": Power,
   // Privacy
   "App permissions": KeyRound,
@@ -235,7 +210,6 @@ export const SECTION_ICON: Record<string, LucideIcon> = {
   "System reports": FileText,
   "Copilot and AI": Bot,
   // Gaming
-  "Game settings": Gamepad2,
   Input: MousePointerClick,
   "Per-game priority": Trophy,
   "Game Bar and capture": Clapperboard,
@@ -247,15 +221,10 @@ export const SECTION_ICON: Record<string, LucideIcon> = {
   "Brave, Opera and Vivaldi": Globe,
   Office: FileStack,
   "Other apps": Package,
-  // Tasks
-  Maintenance: Wrench,
+  // Scheduled tasks and third-party services
   "Third-party": Plug,
-  "Input sync": Keyboard,
-  "Family and account": Users,
+  "AMD software": Plug,
   Network: Network,
-  Diagnostics: Stethoscope,
-  "Flighting and experiments": FlaskConical,
-  "Maps and location": MapIcon,
   // Power
   "Sleep and buttons": Power,
   "Display and devices": MonitorDot,
@@ -263,43 +232,34 @@ export const SECTION_ICON: Record<string, LucideIcon> = {
   "USB and PCIe": Usb,
   // Hardware
   NVIDIA: Gpu,
-  AMD: Gpu,
-  Intel: Gpu,
   "Windows graphics": MonitorUp,
   "Scheduler and timers": TimerReset,
   "Power plan": Zap,
   "Paging and cache": MemoryStick,
-  Prefetch: Rocket,
-  Drives: HardDriveDownload,
   "File system": FileType,
   // Network
   TCP: Share2,
   SMB: FolderSync,
   "Winsock and resolution": Binary,
   "DNS cache": ScanSearch,
-  "Discovery and Wi-Fi": Wifi,
   "Ethernet adapter": EthernetPort,
   "Wi-Fi adapter": Wifi,
-  QoS: Scale,
   // Services
-  "Store and apps": Store,
   "Sync and account": UserRound,
-  "Network discovery": Radar,
-  "Backup and storage": Archive,
   "Search and shell": Search,
-  "Telemetry and diagnostics": HeartPulse,
-  "Smart card and sign-in": CreditCard,
   "Remote access": MonitorSmartphone,
-  Enterprise: Building2,
-  "Hyper-V": ServerCog,
-  "Phone and cellular": Smartphone,
-  Bluetooth: Bluetooth,
-  VPN: ShieldHalf,
-  Xbox: Dices,
-  "Mixed reality": Glasses,
-  "Printing and scanning": Printer,
-  "Location and sensors": MapPin,
-  "Peer networking": HousePlug,
+  // Visuals ("Startup and shutdown" is Windows' above)
+  "Theme and colour": Palette,
+  "Effects and animation": WandSparkles,
+  "Windows and desktop": PanelsTopLeft,
+  Taskbar: PanelBottom,
+  "Start menu": LayoutGrid,
+  "Search and widgets": LayoutDashboard,
+  View: Rows3,
+  "Navigation pane": PanelLeft,
+  "Context menu": SquareMenu,
+  "Open and save": Save,
+  "Lock and sign-in": Lock,
 };
 
 /** A hand-picked icon, then its section's, then its category's. */
@@ -308,6 +268,7 @@ export function tweakIcon(
 ): LucideIcon {
   return (
     TWEAK_ICON[meta.id] ??
+    VISUAL_ICON[meta.id] ??
     (meta.section ? SECTION_ICON[meta.section] : undefined) ??
     CATEGORY_ICON[meta.category] ??
     Globe
@@ -318,20 +279,21 @@ export function sectionIcon(title: string, category: TweakCategory): LucideIcon 
   return SECTION_ICON[title] ?? CATEGORY_ICON[category] ?? Globe;
 }
 
+const visualSections = (...titles: string[]) => titles.map((title) => ({ title, ids: [] }));
+
 /** Sections per tab, in display order. */
 export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[]> = {
-  // One section: split by topic, each of these would be a lone card in an empty row.
-  core: [
-    {
-      title: "Core",
-      ids: [
-        "performance.foreground-boost",
-        "performance.last-access-off",
-        "windows.storage-sense-off",
-        "windows.window-animations-off",
-      ],
-    },
+  // Visuals are all library tweaks: the sections are listed with no ids only to fix their order,
+  // which is the order people meet them in, not the alphabet.
+  appearance: [
+    { title: "Theme and colour", ids: [] },
+    { title: "Effects and animation", ids: ["windows.window-animations-off"] },
+    { title: "Windows and desktop", ids: [] },
   ],
+  taskbar: visualSections("Taskbar", "Start menu", "Search and widgets"),
+  explorer: visualSections("View", "Navigation pane", "Context menu", "Open and save"),
+  signin: visualSections("Lock and sign-in", "Startup and shutdown"),
+  core: [{ title: "System", ids: [] }],
   gaming: [{ title: "Essentials", ids: ["gaming.mmcss-games-priority", "gaming.game-dvr-off"] }],
   privacy: [
     {
@@ -370,33 +332,25 @@ export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[
       ],
     },
   ],
-  tasks: [],
   power: [],
   services: [
     {
-      title: "Printing and scanning",
-      ids: ["services.print-spooler-off", "services.print-notify-off"],
-    },
-    {
-      title: "Bluetooth and sensors",
-      ids: ["services.bluetooth-off", "services.sensor-off", "services.sensor-monitoring-off"],
-    },
-    { title: "Xbox", ids: ["services.xbox-auth-off", "services.xbox-save-off"] },
-    {
-      title: "Other",
+      title: "Background services",
       ids: [
         "services.diagtrack-off",
         "services.geolocation-off",
-        "services.maps-broker-off",
-        "services.wap-push-off",
-        "services.compat-assistant-off",
         "services.sync-host-off",
+        "services.compat-assistant-off",
+        "services.print-spooler-off",
+        "services.wsearch",
+        "services.cdp",
+        "services.nahimic",
       ],
     },
   ],
   gpu: [{ title: "GPU", ids: ["gaming.mpo-off"] }],
   cpu: [{ title: "CPU", ids: ["gaming.system-responsiveness", "power.power-throttling-off"] }],
-  ram: [{ title: "RAM", ids: ["performance.kernel-in-ram"] }],
+  ram: [{ title: "Paging and cache", ids: ["performance.kernel-in-ram"] }],
   peripherals: [
     {
       title: "Keyboard and mouse",
@@ -408,7 +362,9 @@ export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[
     },
     { title: "USB", ids: ["power.usb-selective-suspend-off"] },
   ],
-  storage: [{ title: "Storage", ids: ["performance.short-names-off"] }],
+  storage: [
+    { title: "Storage", ids: ["performance.short-names-off", "performance.last-access-off"] },
+  ],
   tweaks: [
     {
       title: "Network",
@@ -448,12 +404,7 @@ export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[
   devices: [
     {
       title: "Settings",
-      ids: [
-        "windows.autoplay-off",
-        "windows.device-metadata-off",
-        "windows.rdp-com-redirect-off",
-        "windows.rdp-pnp-redirect-off",
-      ],
+      ids: ["windows.autoplay-off", "windows.device-metadata-off"],
     },
   ],
 };
@@ -464,7 +415,6 @@ const TAB_ROUTE: Record<PlacedTab, string> = {
   privacy: "/tweaks",
   gaming: "/tweaks",
   apps: "/tweaks",
-  tasks: "/tweaks",
   power: "/tweaks",
   services: "/cleaner",
   gpu: "/hardware",
@@ -477,6 +427,27 @@ const TAB_ROUTE: Record<PlacedTab, string> = {
   adapters: "/network",
   security: "/advanced",
   devices: "/advanced",
+  appearance: "/visuals",
+  taskbar: "/visuals",
+  explorer: "/visuals",
+  signin: "/visuals",
+};
+
+/**
+ * Where Windows keeps a Visuals section's setting. Visuals go both ways, so a card that's already
+ * set says where to change it, since 2VX has nothing recorded to put back.
+ */
+export const VISUALS_SETTINGS_PAGE: Record<string, string> = {
+  "Theme and colour": "Settings > Personalisation > Colours",
+  "Effects and animation": "Settings > Accessibility > Visual effects",
+  "Windows and desktop": "Settings > System > Multitasking",
+  Taskbar: "Settings > Personalisation > Taskbar",
+  "Start menu": "Settings > Personalisation > Start",
+  "Search and widgets": "Settings > Personalisation > Taskbar",
+  View: "File Explorer's View menu",
+  "Navigation pane": "File Explorer's View menu",
+  "Open and save": "File Explorer's Options",
+  "Lock and sign-in": "Settings > Personalisation > Lock screen",
 };
 
 export const MORE_SECTION = "More";
@@ -497,13 +468,23 @@ const CATEGORY_TAB: Record<TweakCategory, PlacedTab> = {
   windows: "core",
   privacy: "privacy",
   services: "services",
-  tasks: "tasks",
+  // Only retired tweaks are left in this category: the rest moved to Privacy and Hardware.
+  tasks: "privacy",
   cpu: "cpu",
   gpu: "gpu",
   memory: "ram",
   storage: "storage",
   apps: "apps",
+  // Placed by section instead (see VISUALS_SECTION_TAB); this is only where a bad one lands.
+  visuals: "appearance",
 };
+
+/** The tab each Visuals section is on. A visuals tweak with any other section is a bug. */
+export const VISUALS_SECTION_TAB: Record<string, PlacedTab> = Object.fromEntries(
+  (["appearance", "taskbar", "explorer", "signin"] as const).flatMap((tab) =>
+    TWEAK_SECTIONS[tab].map((s) => [s.title, tab] as const),
+  ),
+);
 
 /** Driver settings have their own tab, beside the adapters they apply to. */
 const ADAPTER_SECTIONS = new Set(["Ethernet adapter", "Wi-Fi adapter"]);
@@ -514,10 +495,15 @@ type Placeable = Pick<TweakMeta, "id" | "category"> &
 
 /** Where a tweak lives: its one primary location. One not placed yet still shows, under its topic. */
 export function tweakPlacement(meta: Placeable) {
-  const placed = PLACEMENT.get(meta.id);
+  // A tweak moved to Visuals follows its section, even if it was once hand-placed elsewhere.
+  const placed = meta.category === "visuals" ? undefined : PLACEMENT.get(meta.id);
   const tab =
     placed?.tab ??
-    (meta.section && ADAPTER_SECTIONS.has(meta.section) ? "adapters" : CATEGORY_TAB[meta.category]);
+    (meta.section && ADAPTER_SECTIONS.has(meta.section)
+      ? "adapters"
+      : meta.category === "visuals" && meta.section
+        ? (VISUALS_SECTION_TAB[meta.section] ?? CATEGORY_TAB.visuals)
+        : CATEGORY_TAB[meta.category]);
   return {
     tab: tab as string,
     section: placed?.section ?? meta.section ?? MORE_SECTION,
@@ -545,7 +531,6 @@ const CARD_TITLE: Record<string, string> = {
   "privacy.inking-typing-collection-off": "Stop learning from your typing",
   "privacy.language-list-opt-out": "Keep your language list private",
   "privacy.online-speech-off": "Stop online speech recognition",
-  "services.compat-assistant-off": "Disable Compatibility Assistant",
   "windows.edge-recommendations-off": "Stop feature suggestions",
   "windows.edge-sidebar-off": "Hide the sidebar",
 };
@@ -553,6 +538,9 @@ const CARD_TITLE: Record<string, string> = {
 export function cardTitle(meta: Pick<TweakMeta, "id" | "name">) {
   return CARD_TITLE[meta.id] ?? meta.name;
 }
+
+/** Too specific to round out a row: a priority setting for one game is nobody's essential. */
+const NEVER_FILLS = new Set(["Per-game priority"]);
 
 /** How well a library tweak suits a hand-placed section called `title`: higher is better. */
 function cardFit(meta: Placeable, title: string) {
@@ -615,8 +603,9 @@ export function groupTweaks<T extends { meta: Placeable }>(
         ...inSection(library, title),
       ];
       const short = (CARDS_PER_ROW - (tweaks.length % CARDS_PER_ROW)) % CARDS_PER_ROW;
-      if (!catalogue || tweaks.length === 0 || short === 0) return { title, tweaks };
+      if (!catalogue || own.length === 0 || short === 0) return { title, tweaks };
       const extra = rest
+        .filter((t) => !NEVER_FILLS.has(tweakPlacement(t.meta).section))
         .toSorted((a, b) => cardFit(b.meta, title) - cardFit(a.meta, title))
         .slice(0, short);
       rest = rest.filter((t) => !extra.includes(t));

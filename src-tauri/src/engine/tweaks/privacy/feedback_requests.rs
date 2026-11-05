@@ -8,10 +8,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         id: "privacy.feedback-requests-off",
         name: "Stop Windows feedback requests",
         description: "Stops the pop-ups that ask you to rate Windows and send feedback.",
-        details: "Sets NumberOfSIUFInPeriod and PeriodInNanoSeconds to 0 under \
-                  HKCU\\Software\\Microsoft\\Siuf\\Rules, as Microsoft documents in section 18.16 of its \
-                  connections guide. This is \"Feedback frequency: Never\" in Settings. You can still open \
-                  Feedback Hub yourself.",
+        details: "Sets Windows feedback frequency to never, so surveys and rating prompts stop. You can still open Feedback Hub yourself.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Low,
         permission: Permission::User,

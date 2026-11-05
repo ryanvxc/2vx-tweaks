@@ -7,12 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "services.print-spooler-off",
         name: "Disable Print Spooler",
-        description: "Turns off the service that runs every print job.",
-        details: "Sets the start type of the Spooler service to Disabled (Start = 4 under \
-                  HKLM\\SYSTEM\\CurrentControlSet\\Services\\Spooler). Only worth doing on a PC that never prints. \
-                  Microsoft's guidance on this service was written for Windows Server 2016 with Desktop \
-                  Experience, the closest published guidance; there is no equivalent for Windows 10 or 11. The \
-                  service stops at the next restart, and undoing this restores the recorded start type.",
+        description: "Closes a service with a history of serious security holes on PCs that never print.",
+        details: "The spooler runs all the time even with no printer, and it was behind the PrintNightmare attacks. If you don't print, this removes that risk and a small background load. All printing stops, including Print to PDF.",
         category: TweakCategory::Services,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

@@ -14,12 +14,8 @@ macro_rules! qos_policy {
             meta: TweakMeta {
                 id: $id,
                 name: $game,
-                description: "Marks this game's traffic as high priority (DSCP 46). It only helps if your router honours the mark.",
-                details: concat!(
-                    "Adds a policy-based QoS rule under SOFTWARE\\Policies\\Microsoft\\Windows\\QoS that sets DSCP 46 on traffic from ",
-                    $exe,
-                    ", with no throttle. Many home routers ignore the mark, so it may change nothing. 2VX hasn't measured it."
-                ),
+                description: concat!("Asks for high priority for ", $game, ". Not all networks honour it."),
+                details: "Sets a Windows QoS policy that marks the game's packets with DSCP 46. It only helps if Windows applies the policy on your network and your router or ISP acts on the mark. Windows may skip it outside a domain and many home routers ignore it, so you may see no change.",
                 category: TweakCategory::Network,
                 risk: RiskLevel::Low,
                 permission: Permission::Administrator,

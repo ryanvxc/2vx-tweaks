@@ -38,6 +38,7 @@
     "allow-uninstall-app",
     "allow-reinstall-app",
     "allow-list-tweaks",
+    "allow-list-retired-tweaks",
     "allow-get-engine-status",
     "allow-get-tweak-statuses",
     "allow-plan-tweaks",

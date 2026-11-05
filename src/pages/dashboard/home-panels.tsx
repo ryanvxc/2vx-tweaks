@@ -111,7 +111,7 @@ export function HomeCards({
             </>
           ) : undefined
         }
-        text="Tweaks in effect"
+        text="Tweaks applied"
       />
     </div>
   );

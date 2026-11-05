@@ -108,6 +108,22 @@ const DENIED_KEYS: &[(Hive, &str)] = &[
 ];
 
 /// Individual values that may never be written, where the key itself holds unrelated settings.
+/// The exceptions to `DENIED_KEYS`, by exact value. `Policies\System` holds the UAC switches, so the
+/// key stays denied and these two, which only change what startup and first sign-in show, are named
+/// one at a time. Neither relaxes anything about elevation.
+const ALLOWED_VALUES: &[(Hive, &str, &str)] = &[
+    (
+        Hive::LocalMachine,
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System",
+        "EnableFirstLogonAnimation",
+    ),
+    (
+        Hive::LocalMachine,
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System",
+        "VerboseStatus",
+    ),
+];
+
 const DENIED_VALUES: &[(Hive, &str, &str)] = &[
     (
         Hive::LocalMachine,
@@ -305,8 +321,13 @@ pub fn check_target(target: &RegTarget) -> AppResult<()> {
         }
     }
 
+    let allowed = ALLOWED_VALUES.iter().any(|(hive, allowed_key, value)| {
+        *hive == target.hive
+            && key.eq_ignore_ascii_case(allowed_key)
+            && target.value.eq_ignore_ascii_case(value)
+    });
     for (hive, prefix) in DENIED_KEYS {
-        if *hive == target.hive && has_key_prefix(key, prefix) {
+        if !allowed && *hive == target.hive && has_key_prefix(key, prefix) {
             return Err(AppError::Policy(format!(
                 "`{target}` is a protected location"
             )));
@@ -448,6 +469,38 @@ mod tests {
             ))
             .is_ok()
         );
+    }
+
+    #[test]
+    fn only_the_two_named_values_pass_under_the_uac_key() {
+        const KEY: &str = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System";
+        for value in ["EnableFirstLogonAnimation", "VerboseStatus"] {
+            assert!(check_target(&t(Hive::LocalMachine, KEY, value)).is_ok());
+        }
+        for value in [
+            "EnableLUA",
+            "ConsentPromptBehaviorAdmin",
+            "ConsentPromptBehaviorUser",
+            "PromptOnSecureDesktop",
+            "EnableVirtualization",
+            "FilterAdministratorToken",
+            "LocalAccountTokenFilterPolicy",
+            "VerboseStatusX",
+            "",
+        ] {
+            assert!(
+                check_target(&t(Hive::LocalMachine, KEY, value)).is_err(),
+                "{value}"
+            );
+        }
+        // Naming a value is no way past the rest of the key, or into the same name elsewhere.
+        let below = t(
+            Hive::LocalMachine,
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit",
+            "VerboseStatus",
+        );
+        assert!(check_target(&below).is_err());
+        assert!(check_target(&t(Hive::CurrentUser, KEY, "VerboseStatus")).is_err());
     }
 
     #[test]

@@ -7,13 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.app-notification-access-off",
         name: "Block app access to notifications",
-        description: "Stops Store apps reading the notifications on this PC.",
-        details: "Sets the \"Let Windows apps access notifications\" policy to Force Deny \
-                  (LetAppsAccessNotifications = 2 under HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy), \
-                  the most restrictive value Microsoft documents. Every user on this PC is affected, and the \
-                  matching switch in Settings > Privacy & security is locked while the policy is set. An app that \
-                  is open keeps its access until it restarts. Microsoft lists this policy for Pro and above, so it \
-                  isn't offered on Home.",
+        description: "Stops Store apps reading the notifications that appear on this PC.",
+        details: "Notification access lets an app read messages shown by other apps, which can include private text. This blocks it by policy. Apps that mirror your notifications stop working.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

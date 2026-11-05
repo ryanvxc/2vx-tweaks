@@ -7,9 +7,9 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "performance.kernel-in-ram",
         name: "Keep kernel code in RAM",
-        description: "Stops Windows paging kernel code out to disk. Uses a little more memory.",
-        details: "Sets DisablePagingExecutive to 1 under Memory Management. Microsoft documents that this keeps kernel-mode code from being paged and that it raises memory use. On a PC with plenty of RAM the kernel is rarely paged anyway, so don't expect much.",
-        category: TweakCategory::Performance,
+        description: "Keeps Windows kernel code in memory rather than letting it move to disk.",
+        details: "Stops core system code being paged out, which can avoid a short delay when it's needed again. On PCs with plenty of RAM the difference is very small. It uses a little more memory.",
+        category: TweakCategory::Memory,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,
         supported_builds: BuildRange::ALL,
@@ -21,7 +21,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         warning: None,
         requires: None,
         added_in: "0.2",
-        section: None,
+        section: Some("Paging and cache"),
         evidence: crate::engine::Evidence::Documented,
         hardware: crate::engine::HardwareScope::Any,
         references: &[

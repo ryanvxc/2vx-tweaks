@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "gaming.mpo-off",
         name: "Disable multiplane overlay",
-        description: "Fixes flicker and stutter in desktop apps on some NVIDIA setups.",
-        details: "Sets OverlayTestMode to 5 under HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm, the change in the mpo_disable.reg file NVIDIA published for flicker when resizing windows. Multiplane overlay is a display feature that saves power, so leave it on unless you have the problem.",
+        description: "Can stop flicker and stutter in desktop apps caused by multiplane overlays.",
+        details: "NVIDIA published this workaround for apps that flicker after a driver update. Use it only if you see the problem. Reports differ on whether it still works on Windows 11 24H2 and later.",
         category: TweakCategory::Gaming,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

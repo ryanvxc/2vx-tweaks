@@ -7,12 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "services.geolocation-off",
         name: "Disable Geolocation Service",
-        description: "Turns off the service that tells apps where this PC is.",
-        details: "Sets the start type of the lfsvc service to Disabled (Start = 4 under \
-                  HKLM\\SYSTEM\\CurrentControlSet\\Services\\lfsvc). Microsoft's guidance on this service was \
-                  written for Windows Server 2016 with Desktop Experience, the closest published guidance; there \
-                  is no equivalent for Windows 10 or 11. The service stops at the next restart, and undoing this \
-                  restores the recorded start type.",
+        description: "Cuts off location for all apps and Windows by stopping the service that provides it.",
+        details: "A firmer block than the per-app location switches. Find my device and automatic time zone stop working, as does anything that locates you, such as local weather. On a desktop with a fixed time zone you are unlikely to miss it.",
         category: TweakCategory::Services,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

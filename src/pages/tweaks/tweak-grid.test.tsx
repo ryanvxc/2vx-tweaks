@@ -15,7 +15,7 @@ import {
 } from "@/test/engine-fixtures";
 import { useUiStore } from "@/stores/ui-store";
 import { TweakGrid } from "./tweak-grid";
-import { TWEAKS_VIEW } from "./tweak-views";
+import { TWEAKS_VIEW, VISUALS_VIEW } from "./tweak-views";
 
 const mock = vi.hoisted(() => ({
   getEngineStatus: vi.fn(),
@@ -70,6 +70,76 @@ beforeEach(() => {
   });
   mock.planTweaks.mockImplementation((ids: string[]) => Promise.resolve(plan(ids)));
   mock.listSnapshots.mockResolvedValue([]);
+});
+
+describe("TweakGrid on Visuals", () => {
+  const visual = (id: string, name: string, section: string, restart: "none" | "signOut") => ({
+    ...STATUSES[0]!,
+    meta: { ...USER_TWEAK, id, name, category: "visuals" as const, section, restart },
+  });
+  const VISUALS = [
+    visual("windows.v-theme", "Dark apps", "Theme and colour", "none"),
+    visual("windows.v-align", "Left taskbar", "Taskbar", "signOut"),
+  ];
+
+  beforeEach(() => {
+    mock.getTweakStatuses.mockResolvedValue([...STATUSES, ...VISUALS]);
+  });
+
+  const renderVisuals = () =>
+    render(
+      <MemoryRouter initialEntries={["/visuals"]}>
+        <TooltipProvider>
+          <TweakGrid view={VISUALS_VIEW} />
+        </TooltipProvider>
+      </MemoryRouter>,
+    );
+
+  it("lists only Visuals tweaks, on the tab their section belongs to", async () => {
+    renderVisuals();
+    expect(await screen.findByRole("switch", { name: "Turn on Dark apps" })).toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: "Turn on Left taskbar" })).toBeNull();
+    expect(screen.queryByRole("switch", { name: `Turn on ${USER_TWEAK.name}` })).toBeNull();
+  });
+
+  it("filters by Restart required, across every tab once searching", async () => {
+    const user = userEvent.setup();
+    renderVisuals();
+    await user.type(await screen.findByRole("searchbox", { name: "Search" }), "a");
+    await user.click(screen.getByRole("button", { name: /Filter/ }));
+    expect(await screen.findByText("Restart required")).toBeInTheDocument();
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "Needs a restart or sign-out" }));
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("switch", { name: "Turn on Left taskbar" })).toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: "Turn on Dark apps" })).toBeNull();
+  });
+
+  it("narrows a tab to one section with Category when nothing is searched", async () => {
+    const peek = visual("windows.v-peek", "Peek previews", "Effects and animation", "none");
+    mock.getTweakStatuses.mockResolvedValue([...VISUALS, peek]);
+    const user = userEvent.setup();
+    renderVisuals();
+    await screen.findByRole("switch", { name: "Turn on Dark apps" });
+    await user.click(screen.getByRole("button", { name: /Filter/ }));
+    await user.click(
+      await screen.findByRole("menuitemcheckbox", { name: "Effects and animation" }),
+    );
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("switch", { name: "Turn on Peek previews" })).toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: "Turn on Dark apps" })).toBeNull();
+  });
+
+  it("offers the page's tabs as Category, since every tweak shares one engine category", async () => {
+    const user = userEvent.setup();
+    renderVisuals();
+    await user.type(await screen.findByRole("searchbox", { name: "Search" }), "a");
+    await user.click(screen.getByRole("button", { name: /Filter/ }));
+    await user.click(await screen.findByRole("menuitemcheckbox", { name: "Taskbar and Start" }));
+    expect(screen.queryByRole("menuitemcheckbox", { name: "File Explorer" })).toBeNull();
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("switch", { name: "Turn on Left taskbar" })).toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: "Turn on Dark apps" })).toBeNull();
+  });
 });
 
 describe("TweakGrid", () => {

@@ -218,8 +218,13 @@ mod tests {
     #[test]
     fn sampler_produces_samples() {
         let sampler = MetricsSampler::start();
-        thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL + SAMPLE_INTERVAL * 2);
-        let samples = sampler.since(None);
+        // The first sample can take seconds when other tests are reading the system too.
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        let mut samples = sampler.since(None);
+        while samples.is_empty() && std::time::Instant::now() < deadline {
+            thread::sleep(SAMPLE_INTERVAL);
+            samples = sampler.since(None);
+        }
         assert!(!samples.is_empty(), "sampler produced no samples");
         assert!(samples[0].memory_total_bytes > 0);
     }

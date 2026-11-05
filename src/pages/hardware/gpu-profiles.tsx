@@ -70,7 +70,7 @@ function Profile({
         title={preset.name}
         summary={preset.summary}
         status={presetStatus(inEffect, tweaks.length)}
-        facts={[{ label: "In effect", value: `${inEffect} of ${tweaks.length}` }]}
+        facts={[{ label: "Applied", value: `${inEffect} of ${tweaks.length}` }]}
       >
         {open.length > 0 && (
           <Button disabled={disabled} onClick={() => setReviewing(true)}>

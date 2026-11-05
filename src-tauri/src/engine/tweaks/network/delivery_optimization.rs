@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "network.delivery-optimization-http",
         name: "Updates from Microsoft only",
-        description: "Stops Windows sharing update files with other PCs.",
-        details: "Sets the Delivery Optimization download mode to 0, HTTP only: peer-to-peer caching is off and downloads come from the original source. It doesn't touch Windows Update itself.",
+        description: "Stops Windows sharing update files with other PCs on the internet or your network.",
+        details: "Windows downloads updates from Microsoft only and no longer uploads them to other PCs, which can free up upload bandwidth. On a home network with several PCs, each one will download updates itself.",
         category: TweakCategory::Network,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

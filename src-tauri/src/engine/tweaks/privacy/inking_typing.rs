@@ -6,12 +6,9 @@ use crate::engine::{
 pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.inking-typing-collection-off",
-        name: "Stop learning from typing and inking",
-        description: "Stops Windows learning from what you type and write.",
-        details: "Sets RestrictImplicitTextCollection and RestrictImplicitInkCollection to 1 under \
-                  HKCU\\Software\\Microsoft\\InputPersonalization, as Microsoft documents in section 18.21 of its \
-                  connections guide. It affects only your account. Sign out and back in so input services pick it \
-                  up.",
+        name: "Stop typing and ink learning",
+        description: "Stops Windows building a personal dictionary from what you type and write.",
+        details: "Windows collects words you type and write to improve suggestions and handwriting recognition. This turns that off, so suggestions may become less accurate. Takes effect after signing out.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Low,
         permission: Permission::User,

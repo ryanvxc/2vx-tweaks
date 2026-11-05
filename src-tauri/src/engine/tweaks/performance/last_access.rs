@@ -7,11 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "performance.last-access-off",
         name: "Stop updating last-access times",
-        description: "Stops NTFS writing a timestamp each time a file or folder is read.",
-        details: "Sets NtfsDisableLastAccessUpdate to 0x80000001 under \
-                  HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem, the stored form of fsutil's user-managed, \
-                  disabled setting. Reads no longer cause a metadata write. On an SSD or a lightly used disk the \
-                  difference is small.",
+        description: "Stops NTFS noting the time every file or folder is read, saving small disk writes.",
+        details: "Windows can update a timestamp each time a file is read. Turning that off saves a small amount of disk work, mostly in large folders. Many modern PCs already handle this automatically.",
         category: TweakCategory::Performance,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

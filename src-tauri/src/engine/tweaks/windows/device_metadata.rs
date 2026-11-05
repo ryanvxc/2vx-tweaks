@@ -8,7 +8,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         id: "windows.device-metadata-off",
         name: "Stop downloading device apps",
         description: "Windows no longer fetches apps and icons from the internet for new hardware.",
-        details: "Sets PreventDeviceMetadataFromNetwork to 1, the Prevent device metadata retrieval from the Internet policy. Drivers still install.",
+        details: "Stops Windows downloading device pictures and companion app details when hardware is added. It keeps unasked-for software off the PC. Devices still work, though some may show a generic icon.",
         category: TweakCategory::Windows,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

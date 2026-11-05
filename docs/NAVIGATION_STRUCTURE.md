@@ -14,6 +14,7 @@ Tools
 
 Optimisations
   Tweaks           /tweaks              ?tab=core | privacy | gaming | apps | tasks | power | presets
+  Visuals          /visuals             ?tab=appearance | taskbar | explorer | signin
   Hardware         /hardware            ?tab=gpu | cpu | ram | peripherals | storage
   PC Cleaner       /cleaner             ?tab=system | services | uninstall | autoruns
   Network          /network             ?tab=tweaks | priority | adapters | bufferbloat
@@ -22,7 +23,7 @@ Optimisations
 [Account card]     opens the account menu
 ```
 
-Ten rows in three groups, named as EXM names them. The groups sit together at the top, 20 px apart, and any spare height
+Eleven rows in three groups, named as EXM names them. The groups sit together at the top, 20 px apart, and any spare height
 goes above the account card, never between groups. A row is 46 px, down to 34 px on a short screen. Settings is also in
 the account menu, as it is in EXM. Search is in the account menu, and Ctrl K opens it from anywhere. The title bar holds
 only minimise and close.
@@ -41,7 +42,8 @@ a confirmation. With none saved, the menu offers Set up account instead.
 - **Game Mode stands alone** in the brand colour: a person who wants games to run better shouldn't have to read a list.
   Everything else that changes the PC or reports on it is under Optimisations.
 - **One Tweaks page.** The Library was a second page with the same cards, so its tweaks moved to where their topic
-  already was: Core, Privacy, Gaming, Apps, Tasks and Power on Tweaks; CPU, GPU, memory and storage on Hardware; network
+  already was: Core, Privacy, Gaming, Apps and Power on Tweaks; how Windows looks (theme, taskbar, File Explorer, sign-in) on
+  Visuals, placed by section; CPU, GPU, memory and storage on Hardware; network
   on Network; services on PC Cleaner. Search covers every tab of a page, so nothing needs a page of its own to be found.
 - **Services have one home**, PC Cleaner, whether a service is switched by hand or through a preset.
 - **Monitoring folded into Home.** Home already had the chart; CPU, GPU, RAM and Network views with a one or five minute
@@ -64,7 +66,7 @@ a confirmation. With none saved, the menu offers Set up account instead.
 
 ## Search
 
-Solves one real problem: 1,300 tweaks across many tabs. It searches pages, tabs and tweak names and descriptions.
+Solves one real problem: over a thousand tweaks across many tabs. It searches pages, tabs and tweak names and descriptions.
 Selecting a tweak opens its details in the right tab. Recent items and quick actions weren't added: with this few
 pages they'd solve nothing. Each tweak page also has its own search, which looks through every tab of that page and
 matches the registry or service names a tweak touches.

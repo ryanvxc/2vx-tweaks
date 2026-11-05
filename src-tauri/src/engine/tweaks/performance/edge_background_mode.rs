@@ -6,14 +6,9 @@ use crate::engine::{
 pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "performance.edge-background-mode-off",
-        name: "Stop Microsoft Edge running in the background",
-        description: "Stops Edge running after you close its last window.",
-        details: "Sets the documented Edge policy BackgroundModeEnabled to 0 (HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge). \
-                  Closing the last Edge window then ends Edge, including extensions and web apps that would otherwise \
-                  keep running (for example to show notifications). Edge already defaults to off for most users; this \
-                  makes it fixed. Because this is a machine policy, edge://settings shows the option as managed and \
-                  Edge may show \"Your browser is managed by your organization\". Takes effect the next time Edge \
-                  starts. Reverting removes the value; the empty policy key is left in place.",
+        name: "Stop Edge running in background",
+        description: "Edge fully closes with its last window, instead of staying in the background.",
+        details: "Edge normally keeps running so extensions and notifications keep working. With this on, closing Edge really closes it and frees the memory it held. Edge notifications stop while it's closed.",
         category: TweakCategory::Performance,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

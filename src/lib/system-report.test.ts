@@ -15,7 +15,7 @@ describe("buildSystemReport", () => {
     expect(report).toContain("CPU: Preview CPU (8 cores)");
     expect(report).toContain(String.raw`Drive C:\ SSD NTFS`);
     expect(report).toContain("[Health]");
-    expect(report).toContain("[Tweaks in effect: 1]");
+    expect(report).toContain("[Tweaks applied: 1]");
     expect(report).toContain("privacy.applied-tweak");
     // Tweaks that aren't in effect stay out of the short report.
     expect(report).not.toContain("privacy.user-tweak");

@@ -89,6 +89,15 @@ Stages 1 (foundation) and 2 (safety engine) are done; **stage 3 (first real opti
 of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_BACKLOG.md` (P0–P3) and stages in
 `docs/DEVELOPMENT_ROADMAP.md`. Use those stage and task IDs, not the older "Phase N" labels.
 
+In short (0.5): 320 tweaks, 79 of them on the new Visuals page (tabs and sections in `VISUALS_SECTION_TAB`, `pages/visuals/`, one icon each in
+`lib/visual-icons.ts`). Tweaks is system optimisation; anything mainly about how Windows looks goes in Visuals, even if it saves a little, and a
+switch that stops Microsoft promotion stays in Privacy. 1000 tweaks left the catalogue into `library/retired.rs` (plus `RETIRED` in `tweaks/mod.rs`
+and `adapter::RETIRED`): they can't be listed or planned but `undoable` still finds them, the broker accepts their targets, and the Restore Centre shows
+any still on the PC. Never delete one, and never reuse its ID. IDs don't change when a tweak moves. `docs/VISUALS_SECTION_AUDIT.md` lists every decision.
+Two exceptions were added and have guard tests: `ALLOWED_VALUES` (two values under the UAC key) and `PRESENCE_KEYS` (the one key undo may remove).
+A card's name must be true when its switch is on ("Turn off X", "Block X", "No X"). A setting Windows ignores on some builds gets `.builds(n)` or `.until(n)`. Tweak presets are
+hand-written lists (`PRESET_TWEAKS`), not category rules. There's no Tasks tab: scheduled tasks sit with their topic (Privacy or GPU).
+
 In short (0.4): the app was redesigned to EXM's layout, and there is no Library or Monitoring page. A tweak's page, tab and
 section come from `category` and `section` (`CATEGORY_TAB`, `tweakPlacement` in `lib/tweak-presentation.ts`); a short hand-placed
 set comes first (`TWEAK_SECTIONS`), and every tweak is a card. Every tweak page is `TweakGrid` with a `TweakView`: one search across the
@@ -97,14 +106,14 @@ controls. The top-right action is only ever `RecommendedAction`. Presets, servic
 their facts are counts of real tweaks, never ratings. Services have one home, PC Cleaner. `docs/MODEL_CONTRIBUTIONS.md` records
 which model built what.
 
-In short (0.3): 1,221 more tweaks (1,300 in the app with 0.4's 15 adapter tweaks), generated into `engine/tweaks/library/<tab>.rs`
+In short (0.3): 1,221 more tweaks (0.5 cut these down; see above), generated into `engine/tweaks/library/<tab>.rs`
 with handwritten helpers in `library/mod.rs`. Tabs and presets are in `src/app/navigation.ts` and `lib/tweak-presets.ts`. Besides
 the registry, a `Setting` can target `ScheduledTask` (only ever turned off), `PowerPlan` (the active plan), `Gpu` (`Nvidia`,
 `Amd` or `Intel`, resolved to that vendor's display adapter key) and `Adapter` (`Ethernet` or `Wifi`, resolved to the primary
 adapter's driver key, limited to the documented keywords in `policy.rs`); all are handled in `engine/system_store.rs` and
 `engine/store.rs`, with no process spawned. One target has one owner, even for the same value. `HardwareScope` keeps vendor tweaks
 on their hardware. What was found, and why anything was left out, is in `docs/OPTIMISATION_LIBRARY_AUDIT.md` (+ `.csv`);
-`docs/OPTIMISATION_IMPLEMENTATION_STATUS.md` lists every tweak. Library and adapter writes have not run on a real PC yet: they need a VM.
+`docs/OPTIMISATION_IMPLEMENTATION_STATUS.md` lists every current tweak. Library and adapter writes have not run on a real PC yet: they need a VM.
 
 In short (0.2): the app was restructured (`docs/INFORMATION_ARCHITECTURE.md`, `docs/NAVIGATION_STRUCTURE.md`,
 `docs/DESIGN_SYSTEM.md`). Every feature has one primary location; pages and tabs live in `src/app/navigation.ts`, and

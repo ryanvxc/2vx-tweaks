@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "windows.keyboard-repeat-fast",
         name: "Fastest key repeat",
-        description: "Sets the shortest repeat delay and the fastest repeat rate Windows offers.",
-        details: "Sets KeyboardDelay to 0 and KeyboardSpeed to 31 under HKCU\\Control Panel\\Keyboard, the ends of the ranges Microsoft documents for these settings. Takes effect after you sign out.",
+        description: "Held keys repeat sooner and faster, using the quickest rates Windows offers.",
+        details: "Sets the shortest repeat delay and the fastest repeat rate, the same as the sliders in Keyboard Properties. Useful for typing, coding and holding keys in games. Some people find it too quick at first.",
         category: TweakCategory::Windows,
         risk: RiskLevel::Low,
         permission: Permission::User,

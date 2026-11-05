@@ -1,26 +1,23 @@
 import { describe, expect, it } from "vitest";
+import { HANDWRITTEN, LIBRARY, VISUALS_SOURCE } from "@/test/catalogue";
 import type { TweakCategory } from "@/types/engine";
 import { DEFAULT_GAME_MODE_TWEAKS, GAME_MODE_TWEAKS, GAMING_PROFILES } from "./profiles";
 import {
   capGroups,
   groupTweaks,
   searchRank,
+  SECTION_ICON,
   TWEAK_ICON,
   TWEAK_SECTIONS,
   tweakHref,
   tweakPlacement,
   UNAVAILABLE_SECTION,
+  VISUALS_SECTION_TAB,
+  VISUALS_SETTINGS_PAGE,
 } from "./tweak-presentation";
+import { VISUAL_ICON } from "./visual-icons";
 
-// The Rust catalogue is the source of truth; this catches a tweak added there and not here.
-const SOURCES = import.meta.glob<string>("/src-tauri/src/engine/tweaks/**/*.rs", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-});
-const CATALOGUE = Object.values(SOURCES).flatMap((source) =>
-  [...source.matchAll(/^\s+id: "([a-z]+\.[a-z0-9-]+)",/gm)].map((m) => m[1]!),
-);
+const CATALOGUE = [...HANDWRITTEN, ...LIBRARY];
 
 const PLACED = Object.values(TWEAK_SECTIONS).flatMap((sections) => sections.flatMap((s) => s.ids));
 
@@ -31,13 +28,13 @@ describe("tweak presentation", () => {
 
   it("gives every tweak its own icon", () => {
     // Network Priority's games share their section's icon.
-    const iconned = CATALOGUE.filter((id) => !id.startsWith("network.qos-"));
+    const iconned = HANDWRITTEN.filter((id) => !id.startsWith("network.qos-"));
     expect(iconned.filter((id) => !TWEAK_ICON[id])).toEqual([]);
     expect(new Set(Object.values(TWEAK_ICON)).size).toBe(Object.keys(TWEAK_ICON).length);
   });
 
   it("places every tweak once", () => {
-    expect(CATALOGUE.filter((id) => !PLACED.includes(id))).toEqual([]);
+    expect(HANDWRITTEN.filter((id) => !PLACED.includes(id))).toEqual([]);
     expect(new Set(PLACED).size).toBe(PLACED.length);
     expect(PLACED.filter((id) => !CATALOGUE.includes(id))).toEqual([]);
   });
@@ -61,6 +58,12 @@ describe("tweak presentation", () => {
     );
   });
 
+  it("names a Windows page only for Visuals sections that exist", () => {
+    expect(
+      Object.keys(VISUALS_SETTINGS_PAGE).filter((section) => !VISUALS_SECTION_TAB[section]),
+    ).toEqual([]);
+  });
+
   describe("groupTweaks", () => {
     const tweak = (id: string, blocked = false) => ({
       meta: { id, category: id.split(".")[0] as TweakCategory },
@@ -71,20 +74,9 @@ describe("tweak presentation", () => {
       groups.map((g) => [g.title, g.tweaks.map((t) => t.meta.id)]);
 
     it("follows the section's written order", () => {
-      const tweaks = [
-        tweak("windows.storage-sense-off"),
-        tweak("performance.last-access-off"),
-        tweak("performance.foreground-boost"),
-      ];
-      expect(ids(groupTweaks(tweaks, { ...options, tab: "core", catalogue: true }))).toEqual([
-        [
-          "Core",
-          [
-            "performance.foreground-boost",
-            "performance.last-access-off",
-            "windows.storage-sense-off",
-          ],
-        ],
+      const tweaks = [tweak("gaming.game-dvr-off"), tweak("gaming.mmcss-games-priority")];
+      expect(ids(groupTweaks(tweaks, { ...options, tab: "gaming", catalogue: true }))).toEqual([
+        ["Essentials", ["gaming.mmcss-games-priority", "gaming.game-dvr-off"]],
       ]);
     });
 
@@ -93,6 +85,22 @@ describe("tweak presentation", () => {
       expect(
         ids(groupTweaks([tweak(id)], { ...options, tab: "privacy", catalogue: true })),
       ).toEqual([[TWEAK_SECTIONS.privacy[1]!.title, [id]]]);
+    });
+
+    it("never pads a section with a setting for one game", () => {
+      const listed = (id: string, section: string) => ({
+        ...tweak(id),
+        meta: { ...tweak(id).meta, name: "Short", section },
+      });
+      const tweaks = [
+        tweak("gaming.mmcss-games-priority"),
+        listed("gaming.a", "Per-game priority"),
+        listed("gaming.b", "Other"),
+      ];
+      expect(ids(groupTweaks(tweaks, { ...options, tab: "gaming", catalogue: true }))).toEqual([
+        ["Essentials", ["gaming.mmcss-games-priority", "gaming.b"]],
+        ["Per-game priority", ["gaming.a"]],
+      ]);
     });
 
     it("tops a section up to a full row of cards from the library", () => {
@@ -113,22 +121,87 @@ describe("tweak presentation", () => {
     });
 
     it("keeps the user's sort inside a section", () => {
-      const tweaks = [tweak("windows.storage-sense-off"), tweak("performance.last-access-off")];
-      expect(ids(groupTweaks(tweaks, { ...options, tab: "core", catalogue: false }))).toEqual([
-        ["Core", ["windows.storage-sense-off", "performance.last-access-off"]],
+      const tweaks = [tweak("gaming.game-dvr-off"), tweak("gaming.mmcss-games-priority")];
+      expect(ids(groupTweaks(tweaks, { ...options, tab: "gaming", catalogue: false }))).toEqual([
+        ["Essentials", ["gaming.game-dvr-off", "gaming.mmcss-games-priority"]],
       ]);
     });
 
     it("always puts what can't run last, even in a flat search", () => {
       const tweaks = [
-        tweak("performance.foreground-boost", true),
-        tweak("windows.storage-sense-off"),
+        tweak("performance.last-access-off", true),
+        tweak("performance.short-names-off"),
       ];
       const last = (tab: "core" | null) =>
         groupTweaks(tweaks, { ...options, tab, catalogue: false }).at(-1);
       expect(last("core")?.title).toBe("Unavailable");
       expect(last(null)?.title).toBe("Unavailable");
-      expect(last(null)?.tweaks.map((t) => t.meta.id)).toEqual(["performance.foreground-boost"]);
+      expect(last(null)?.tweaks.map((t) => t.meta.id)).toEqual(["performance.last-access-off"]);
+    });
+  });
+
+  describe("Visuals", () => {
+    const visual = (id: string, section: string | null) => ({
+      id,
+      category: "visuals" as const,
+      section,
+    });
+
+    it("lands each tweak on the tab its section belongs to", () => {
+      const tabOf = (section: string) => tweakPlacement(visual("windows.a", section)).tab;
+      expect(tabOf("Theme and colour")).toBe("appearance");
+      expect(tabOf("Windows and desktop")).toBe("appearance");
+      expect(tabOf("Start menu")).toBe("taskbar");
+      expect(tabOf("Context menu")).toBe("explorer");
+      expect(tabOf("Startup and shutdown")).toBe("signin");
+      expect(tweakPlacement(visual("windows.a", "Taskbar")).route).toBe("/visuals");
+    });
+
+    it("keeps an id when it moves to Visuals, and links to the Visuals page", () => {
+      expect(tweakHref(visual("windows.window-animations-off", "Effects and animation"))).toBe(
+        "/visuals?tab=appearance&tweak=windows.window-animations-off",
+      );
+    });
+
+    it("lists the sections of a tab in the written order, not alphabetically", () => {
+      const tweaks = ["Open and save", "View", "Context menu", "Navigation pane"].map(
+        (section) => ({
+          meta: visual(`windows.${section.length}`, section),
+        }),
+      );
+      const groups = groupTweaks(tweaks, {
+        tab: "explorer",
+        catalogue: true,
+        unavailable: () => false,
+      });
+      expect(groups.map((g) => g.title)).toEqual([
+        "View",
+        "Navigation pane",
+        "Context menu",
+        "Open and save",
+      ]);
+    });
+
+    it("gives every section an icon of its own", () => {
+      const titles = Object.keys(VISUALS_SECTION_TAB);
+      expect(titles.filter((t) => !SECTION_ICON[t])).toEqual([]);
+      // "Startup and shutdown" is shared with the Windows section of the same name.
+      const icons = titles.filter((t) => t !== "Startup and shutdown").map((t) => SECTION_ICON[t]);
+      expect(new Set(icons).size).toBe(icons.length);
+    });
+
+    it("gives every Visuals card an icon of its own", () => {
+      const ids = [...VISUALS_SOURCE.matchAll(/"([a-z]+\.[a-z0-9-]+)",\s*Visuals,/g)].map(
+        (m) => m[1]!,
+      );
+      expect(ids.filter((id) => !VISUAL_ICON[id])).toEqual([]);
+      expect(new Set(Object.values(VISUAL_ICON)).size).toBe(Object.keys(VISUAL_ICON).length);
+    });
+
+    it("has no Visuals tweak in Rust with a section the app can't place", () => {
+      const found = [...VISUALS_SOURCE.matchAll(/"[a-z]+\.[a-z0-9-]+",\s*Visuals,\s*"([^"]+)"/g)];
+      expect(found.length).toBeGreaterThan(50);
+      expect(found.filter((m) => !(m[1]! in VISUALS_SECTION_TAB))).toEqual([]);
     });
   });
 

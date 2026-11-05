@@ -14,7 +14,8 @@ export type TweakCategory =
   | "gpu"
   | "memory"
   | "storage"
-  | "apps";
+  | "apps"
+  | "visuals";
 export type Permission = "user" | "administrator";
 export type RestartRequirement = "none" | "signOut" | "reboot";
 export type DeviceScope = "any" | "desktopOnly" | "laptopOnly";
@@ -172,6 +173,14 @@ export interface ChangeRecord {
   status: ChangeStatus;
   error: string | null;
   updatedAtMs: number;
+}
+
+/** A tweak 2VX no longer offers. It can't be applied, but what it changed can still be undone. */
+export interface RetiredTweak {
+  id: string;
+  name: string;
+  risk: RiskLevel;
+  undoable: boolean;
 }
 
 export interface OperationOutcome {

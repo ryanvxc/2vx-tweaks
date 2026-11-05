@@ -35,6 +35,8 @@ pub trait SettingStore: Send + Sync {
     fn pass(&self, reads: &mut dyn FnMut()) {
         reads();
     }
+    /// Tells Windows that appearance settings changed.
+    fn announce(&self) {}
 }
 
 /// Something that applies one write and reports what the system holds afterwards.
@@ -157,6 +159,48 @@ fn write_err(target: &RegTarget, err: windows_result::Error) -> AppError {
     }
 }
 
+/// Keys whose presence is the setting. File Explorer keeps the full right-click menu for as long as
+/// this key exists, whatever it holds, so undo has to remove the key and not only its value.
+const PRESENCE_KEYS: &[&str] =
+    &[r"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"];
+
+fn is_presence_key(target: &RegTarget) -> bool {
+    target.hive == Hive::CurrentUser
+        && PRESENCE_KEYS
+            .iter()
+            .any(|key| key.eq_ignore_ascii_case(&target.key))
+}
+
+/// Removes the key and then its parent, which the same write created, stopping at the first that
+/// holds anything. Only ever reached for `PRESENCE_KEYS`.
+fn remove_empty_keys(target: &RegTarget) -> AppResult<()> {
+    let hive = root(target.hive);
+    let mut path = target.key.as_ref();
+    for _ in 0..2 {
+        let empty = match hive.open(path) {
+            Ok(key) => {
+                let keys = key.keys().map_err(|e| write_err(target, e))?.next();
+                let values = key.values().map_err(|e| write_err(target, e))?.next();
+                keys.is_none() && values.is_none()
+            }
+            Err(e) if e.code().0 as u32 == ERROR_FILE_NOT_FOUND => true,
+            Err(e) => return Err(write_err(target, e)),
+        };
+        if !empty {
+            break;
+        }
+        let result = hive.remove_tree(path);
+        if hresult(&result) != Some(ERROR_FILE_NOT_FOUND) {
+            result.map_err(|e| write_err(target, e))?;
+        }
+        path = match path.rsplit_once('\\') {
+            Some((parent, _)) => parent,
+            None => break,
+        };
+    }
+    Ok(())
+}
+
 impl SettingStore for WindowsRegistry {
     fn read(&self, target: &RegTarget) -> AppResult<Option<RegValue>> {
         match target.hive {
@@ -259,10 +303,14 @@ impl SettingStore for WindowsRegistry {
                     Err(e) => return Err(write_err(target, e)),
                 };
                 let result = key.remove_value(name);
-                if hresult(&result) == Some(ERROR_FILE_NOT_FOUND) {
-                    return Ok(());
+                if hresult(&result) != Some(ERROR_FILE_NOT_FOUND) {
+                    result.map_err(|e| write_err(target, e))?;
                 }
-                result.map_err(|e| write_err(target, e))
+                drop(key);
+                if is_presence_key(target) {
+                    remove_empty_keys(target)?;
+                }
+                Ok(())
             }
         }
     }
@@ -290,6 +338,10 @@ impl SettingStore for WindowsRegistry {
 
     fn pass(&self, reads: &mut dyn FnMut()) {
         devices::hold_adapters(reads);
+    }
+
+    fn announce(&self) {
+        system_store::announce_appearance();
     }
 }
 
@@ -470,6 +522,44 @@ mod tests {
             // Deleting again is a no-op.
             store.write(&target, None).unwrap();
         }
+        windows_registry::CURRENT_USER
+            .remove_tree(r"Software\2VX-Test")
+            .unwrap();
+    }
+
+    /// What undo does to the classic menu key, on a private HKCU key rather than the real one.
+    #[test]
+    #[ignore = "writes to HKCU\\Software\\2VX-Test on the real registry"]
+    fn empty_keys_go_and_a_key_holding_anything_stays() {
+        let store = WindowsRegistry;
+        let menu = RegTarget::new(Hive::CurrentUser, r"Software\2VX-Test\Clsid\Inproc", "");
+        let exists = |key: &str| windows_registry::CURRENT_USER.open(key).is_ok();
+
+        store
+            .write(&menu, Some(&RegValue::String("".into())))
+            .unwrap();
+        assert_eq!(
+            store.read(&menu).unwrap(),
+            Some(RegValue::String("".into()))
+        );
+        remove_empty_keys(&menu).unwrap();
+        assert!(exists(r"Software\2VX-Test\Clsid\Inproc"), "it held a value");
+
+        store.write(&menu, None).unwrap();
+        let parent = RegTarget::new(Hive::CurrentUser, r"Software\2VX-Test\Clsid", "Kept");
+        store.write(&parent, Some(&RegValue::Dword(1))).unwrap();
+        remove_empty_keys(&menu).unwrap();
+        assert!(!exists(r"Software\2VX-Test\Clsid\Inproc"));
+        assert!(
+            exists(r"Software\2VX-Test\Clsid"),
+            "the parent held a value"
+        );
+
+        store.write(&parent, None).unwrap();
+        remove_empty_keys(&menu).unwrap();
+        assert!(!exists(r"Software\2VX-Test\Clsid"));
+        // Two levels, and no further: whatever sits above isn't this write's.
+        assert!(exists(r"Software\2VX-Test"));
         windows_registry::CURRENT_USER
             .remove_tree(r"Software\2VX-Test")
             .unwrap();

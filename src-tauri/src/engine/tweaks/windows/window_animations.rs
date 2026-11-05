@@ -7,11 +7,9 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "windows.window-animations-off",
         name: "Turn off window animations",
-        description: "Stops the animations when windows open, minimise and maximise.",
-        details: "Sets the \"Do not allow window animations\" policy (DisallowAnimations = 1 under \
-                  HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DWM). Microsoft says it needs a sign-out to apply, \
-                  and lists it for Pro and above, so it isn't offered on Home.",
-        category: TweakCategory::Windows,
+        description: "Stops the animations when windows open, close, minimise and maximise.",
+        details: "Windows appear and disappear instantly, which can feel quicker and helps if motion bothers you. Sign out to apply it. It applies to every account on this PC. It covers the desktop's window effects, not animations inside apps.",
+        category: TweakCategory::Visuals,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,
         supported_builds: BuildRange::ALL,
@@ -23,7 +21,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         warning: None,
         requires: None,
         added_in: "0.2",
-        section: None,
+        section: Some("Effects and animation"),
         evidence: crate::engine::Evidence::Documented,
         hardware: crate::engine::HardwareScope::Any,
         references: &[

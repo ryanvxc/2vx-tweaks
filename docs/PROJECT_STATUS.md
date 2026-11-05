@@ -26,6 +26,12 @@ checked at 1280×720, 1024×600 and maximised. The window has since been fixed a
 
 ## Summary
 
+Version 0.5 adds Visuals and cuts the library from 1,300 tweaks to 320 (79 in Visuals, 20 of them new). 1000 tweaks were
+retired: hidden and impossible to plan, but still undoable, and the Restore Centre lists any still on the PC. Five switches that
+wrote Windows' own default were fixed. Tested on the simulated store and read-only in the real app; nothing was applied to the
+dev PC, so what each Visuals setting actually looks like needs a VM. See
+[VISUALS_SECTION_AUDIT.md](VISUALS_SECTION_AUDIT.md).
+
 Version 0.4 is a redesign to EXM's layout, and the journal moves to schema 2 (a `device` column, so undo never touches a
 different adapter or GPU). The Library and Monitoring pages are gone and every tweak lives with its topic;
 every page has the same title, tabs, search, filter and sort; Hardware shows real details; PC Cleaner shows real progress,

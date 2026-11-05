@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "network.icmp-redirect-off",
         name: "Ignore ICMP redirects",
-        description: "Stops a device on the network changing this PC's routes with a redirect packet.",
-        details: "Sets EnableICMPRedirect to 0 under Tcpip\\Parameters, as Microsoft's hardening guide recommends, so Windows doesn't create host routes from ICMP redirects.",
+        description: "Stops devices on your network changing this PC's routes with redirects.",
+        details: "Redirect packets can send your traffic through a different device. Home PCs rarely need them, so this is a low-cost security setting from Windows hardening guides. Complex office networks may rely on them.",
         category: TweakCategory::Network,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

@@ -7,11 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.diagnostic-data-minimum",
         name: "Send the least diagnostic data",
-        description: "Sets the Windows diagnostic data policy to its lowest level.",
-        details: "Sets AllowTelemetry to 0 under HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection, as \
-                  Microsoft documents in section 18.16 of its connections guide. Only Enterprise and Education \
-                  turn diagnostic data fully off at this value; on other editions Windows treats it as the \
-                  Required level. Windows Update and Microsoft Defender are not touched.",
+        description: "Limits Windows diagnostic data to the least your edition allows.",
+        details: "Stops optional diagnostic data, such as details of the apps and sites you use. On Home and Pro the lowest level is Required, which Microsoft still collects. Takes effect after a restart.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

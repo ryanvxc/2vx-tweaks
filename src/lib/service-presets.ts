@@ -11,35 +11,24 @@ export type ServicePreset = Profile;
 
 const BASIC = [
   "services.diagtrack-off",
-  "services.wap-push-off",
-  "services.sensor-off",
-  "services.sensor-monitoring-off",
   "services.geolocation-off",
-  "services.maps-broker-off",
   "services.sync-host-off",
   "services.compat-assistant-off",
 ];
 
-const ADVANCED = [
-  ...BASIC,
-  "services.print-notify-off",
-  "services.print-spooler-off",
-  "services.bluetooth-off",
-  "services.xbox-auth-off",
-  "services.xbox-save-off",
-];
+const ADVANCED = [...BASIC, "services.print-spooler-off", "services.webclient", "services.cdp"];
 
 export const SERVICE_PRESETS: ServicePreset[] = [
   {
     id: "basic",
     name: "Basic",
-    summary: "Telemetry, sensors, location, offline maps and app sync",
+    summary: "Telemetry, location, app sync and compatibility pop-ups",
     tweakIds: BASIC,
   },
   {
     id: "advanced",
     name: "Advanced",
-    summary: "Basic, plus printing, Bluetooth and Xbox sign-in and cloud saves",
+    summary: "Basic, plus printing, WebDAV and Phone Link",
     tweakIds: ADVANCED,
   },
 ];

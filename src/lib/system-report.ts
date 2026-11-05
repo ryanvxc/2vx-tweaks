@@ -50,7 +50,7 @@ export function buildSystemReport(
       .filter((c) => c.status !== "good")
       .map((c) => `${c.label}: ${c.detail} (${c.status})`),
     "",
-    `[Tweaks in effect: ${applied.length}]`,
+    `[Tweaks applied: ${applied.length}]`,
     ...(applied.length === 0 ? ["(none)"] : applied.map((t) => t.meta.id)),
     ...(full
       ? [

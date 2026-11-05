@@ -139,7 +139,8 @@ that depend on the PC.
 
 ## The long lists
 
-`engine/tweaks/library/` holds 1,221 more tweaks, placed on their topic's page by `category` and `section`. They come from the audit in
+`engine/tweaks/library/` holds the rest, placed on their topic's page by `category` and `section`, and `library/retired.rs` keeps what the 0.5
+audit took out ([VISUALS_SECTION_AUDIT.md](VISUALS_SECTION_AUDIT.md)) so it can still be undone. They first came from the audit in
 [OPTIMISATION_LIBRARY_AUDIT.md](OPTIMISATION_LIBRARY_AUDIT.md), and [OPTIMISATION_CATEGORIES.md](OPTIMISATION_CATEGORIES.md)
 says how they're organised. They pass the same gate as everything else, with one difference: `evidence` records how well
 each one is established, so not all of them have a Microsoft page. Values no Windows or driver file contains were left out.

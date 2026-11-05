@@ -97,6 +97,7 @@ pub fn run() {
             commands::maintenance::uninstall_app,
             commands::maintenance::reinstall_app,
             commands::engine::list_tweaks,
+            commands::engine::list_retired_tweaks,
             commands::engine::get_engine_status,
             commands::engine::get_tweak_statuses,
             commands::engine::plan_tweaks,

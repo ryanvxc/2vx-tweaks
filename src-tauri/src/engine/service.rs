@@ -16,7 +16,8 @@ use crate::engine::plan::{
 use crate::engine::setting::{RegTarget, RegValue, describe};
 use crate::engine::store::{LocalWriter, SettingStore, SettingWriter};
 use crate::engine::{
-    Compatibility, RestartRequirement, TweakContext, TweakMeta, TweakRegistry, check_compatibility,
+    Compatibility, RestartRequirement, RiskLevel, TweakCategory, TweakContext, TweakMeta,
+    TweakRegistry, check_compatibility,
 };
 use crate::error::{AppError, AppResult};
 
@@ -83,6 +84,17 @@ pub struct TweakStatus {
     pub settings: Vec<SettingStatus>,
     /// 2VX has journaled changes for this tweak that it can undo (`revert_tweak`). `false`
     /// for a value set outside 2VX, which the app then leaves to the user.
+    pub undoable: bool,
+}
+
+/// A tweak that left the catalogue, for the Restore Centre: its name for old history, and whether
+/// 2VX still has a change of it to undo.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RetiredTweak {
+    pub id: &'static str,
+    pub name: &'static str,
+    pub risk: RiskLevel,
     pub undoable: bool,
 }
 
@@ -179,6 +191,33 @@ impl Engine {
             journal_error: error,
             interrupted_snapshots: interrupted,
         }
+    }
+
+    fn announce_visuals(&self, tweak_ids: &[String]) {
+        let visual = tweak_ids
+            .iter()
+            .filter_map(|id| self.registry.undoable(id))
+            .any(|t| t.meta().category == TweakCategory::Visuals);
+        if visual {
+            self.store.announce();
+        }
+    }
+
+    /// What the Restore Centre needs to name and undo tweaks 2VX no longer offers.
+    pub fn retired_tweaks(&self) -> AppResult<Vec<RetiredTweak>> {
+        let guard = self.journal()?;
+        let journal = guard.as_ref().expect("checked by journal()");
+        let undoable = journal.undoable_tweaks()?;
+        Ok(self
+            .registry
+            .retired()
+            .map(|meta| RetiredTweak {
+                id: meta.id,
+                name: meta.name,
+                risk: meta.risk,
+                undoable: undoable.contains(meta.id),
+            })
+            .collect())
     }
 
     pub fn tweak_statuses(&self) -> Vec<TweakStatus> {
@@ -463,6 +502,7 @@ impl Engine {
         };
         drop(writer);
         journal.finish_snapshot(snapshot, status, error.as_deref())?;
+        self.announce_visuals(&plan.tweak_ids);
         journal.audit(
             "apply_finished",
             serde_json::json!({ "snapshot": snapshot, "status": status.as_str() }),
@@ -550,7 +590,7 @@ impl Engine {
         let restart = original
             .tweak_ids
             .iter()
-            .filter_map(|id| self.registry.get(id))
+            .filter_map(|id| self.registry.undoable(id))
             .map(|t| t.meta().restart)
             .max()
             .unwrap_or(RestartRequirement::None);
@@ -578,6 +618,7 @@ impl Engine {
             )
         };
         journal.finish_snapshot(snapshot, status, error.as_deref())?;
+        self.announce_visuals(&original.tweak_ids);
         journal.audit(
             "revert_finished",
             serde_json::json!({ "snapshot": snapshot, "reverts": snapshot_id, "status": status.as_str() }),
@@ -714,9 +755,10 @@ impl Engine {
     pub fn revert_tweaks(&self, tweak_ids: &[String]) -> AppResult<OperationOutcome> {
         let mut restart = RestartRequirement::None;
         for id in tweak_ids {
+            // Retired tweaks count: a change made before one left the catalogue stays undoable.
             let tweak = self
                 .registry
-                .get(id)
+                .undoable(id)
                 .ok_or_else(|| AppError::InvalidInput(format!("unknown tweak `{id}`")))?;
             restart = restart.max(tweak.meta().restart);
         }
@@ -769,6 +811,7 @@ impl Engine {
             )
         };
         journal.finish_snapshot(snapshot, status, error.as_deref())?;
+        self.announce_visuals(tweak_ids);
         journal.audit(
             "tweak_revert_finished",
             serde_json::json!({ "snapshot": snapshot, "tweaks": tweak_ids, "status": status.as_str() }),
@@ -938,7 +981,7 @@ mod tests {
     use crate::engine::setting::Hive;
     use crate::engine::store::MemoryStore;
     use crate::engine::tests::{ADMIN_SETTINGS, USER_SETTINGS, ctx, meta, tweak};
-    use crate::engine::{Permission, RiskLevel, Setting, TweakMeta};
+    use crate::engine::{Permission, Setting, TweakMeta};
 
     /// Shares a MemoryStore between the engine and the test so the test can inspect and poke it.
     struct Shared(Arc<MemoryStore>);
@@ -1288,6 +1331,112 @@ mod tests {
             }
             self.inner.write(t, Some(&RegValue::Dword(77)))
         }
+    }
+
+    /// An engine holding `gaming.b` until an update retires it, on the same store and journal.
+    fn after_retiring(store: Arc<MemoryStore>, journal_path: &std::path::Path) -> (Engine, Engine) {
+        let on = |registry| {
+            Engine::new(
+                registry,
+                Box::new(Shared(store.clone())),
+                Box::new(InProcess),
+                Journal::open(journal_path),
+                Box::new(|| ctx(26_100, true)),
+            )
+        };
+        let mut before = TweakRegistry::default();
+        before.register(tweak(meta("gaming.b"), SECOND)).unwrap();
+        let mut after = TweakRegistry::default();
+        after
+            .register_retired(tweak(meta("gaming.b"), SECOND))
+            .unwrap();
+        (on(before), on(after))
+    }
+
+    /// Counts how often Windows is told about a change.
+    struct Announcing(MemoryStore, Arc<Mutex<u32>>);
+    impl SettingStore for Announcing {
+        fn read(&self, t: &RegTarget) -> AppResult<Option<RegValue>> {
+            self.0.read(t)
+        }
+        fn write(&self, t: &RegTarget, v: Option<&RegValue>) -> AppResult<()> {
+            self.0.write(t, v)
+        }
+        fn announce(&self) {
+            *self.1.lock().unwrap() += 1;
+        }
+    }
+
+    fn announcements(category: TweakCategory) -> u32 {
+        let count = Arc::new(Mutex::new(0));
+        let mut registry = TweakRegistry::default();
+        let meta = TweakMeta {
+            category,
+            ..meta("gaming.b")
+        };
+        registry.register(tweak(meta, SECOND)).unwrap();
+        let e = Engine::new(
+            registry,
+            Box::new(Announcing(MemoryStore::default(), count.clone())),
+            Box::new(InProcess),
+            Journal::open_in_memory(),
+            Box::new(|| ctx(26_100, true)),
+        );
+        let plan = e.plan(&ids(&["gaming.b"])).unwrap();
+        e.apply(&plan.id).unwrap();
+        e.revert_tweak("gaming.b").unwrap();
+        *count.lock().unwrap()
+    }
+
+    #[test]
+    fn windows_hears_about_visual_changes_only() {
+        assert_eq!(announcements(TweakCategory::Visuals), 2);
+        assert_eq!(announcements(TweakCategory::Gaming), 0);
+    }
+
+    #[test]
+    fn a_change_outlives_the_tweak_that_made_it() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("journal.db");
+        let store = Arc::new(MemoryStore::default());
+        store.set(&TWO, Some(RegValue::Dword(3)));
+        let (before, after) = after_retiring(store.clone(), &path);
+
+        let plan = before.plan(&ids(&["gaming.b"])).unwrap();
+        assert_eq!(
+            before.apply(&plan.id).unwrap().status,
+            SnapshotStatus::Completed
+        );
+        drop(before);
+
+        // The update removes the tweak: it can't be planned again, and doesn't show as a tweak.
+        assert!(after.plan(&ids(&["gaming.b"])).is_err());
+        assert!(after.tweak_statuses().is_empty());
+        let retired = after.retired_tweaks().unwrap();
+        assert_eq!(retired.len(), 1);
+        assert!(retired[0].undoable);
+
+        let out = after.revert_tweak("gaming.b").unwrap();
+        assert_eq!(out.status, SnapshotStatus::Completed);
+        assert_eq!(store.get(&TWO), Some(RegValue::Dword(3)));
+        assert!(!after.retired_tweaks().unwrap()[0].undoable);
+    }
+
+    #[test]
+    fn a_whole_batch_outlives_the_tweak_that_made_it() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("journal.db");
+        let store = Arc::new(MemoryStore::default());
+        store.set(&TWO, Some(RegValue::Dword(3)));
+        let (before, after) = after_retiring(store.clone(), &path);
+
+        let plan = before.plan(&ids(&["gaming.b"])).unwrap();
+        let snapshot = before.apply(&plan.id).unwrap().snapshot_id.unwrap();
+        drop(before);
+
+        let out = after.revert(snapshot).unwrap();
+        assert_eq!(out.status, SnapshotStatus::Completed);
+        assert_eq!(store.get(&TWO), Some(RegValue::Dword(3)));
     }
 
     #[test]

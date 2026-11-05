@@ -3,9 +3,10 @@ import {
   ArchiveRestore,
   Bolt,
   Brush,
-  CalendarClock,
   Cpu,
   EthernetPort,
+  Eye,
+  FolderOpen,
   Gamepad2,
   Gauge,
   Gpu,
@@ -15,11 +16,14 @@ import {
   Keyboard,
   Layers,
   ListOrdered,
+  LogIn,
   MemoryStick,
   MessageSquareCode,
   Monitor,
   Package,
   PackageX,
+  Palette,
+  PanelBottom,
   Rocket,
   Router,
   Server,
@@ -56,10 +60,11 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-export type TweakTab = "core" | "privacy" | "gaming" | "apps" | "tasks" | "power" | "presets";
+export type TweakTab = "core" | "privacy" | "gaming" | "apps" | "power" | "presets";
 export type CleanerTab = "system" | "services" | "uninstall" | "autoruns";
 export type HardwareTab = "gpu" | "cpu" | "ram" | "peripherals" | "storage";
 export type NetworkTab = "tweaks" | "priority" | "adapters" | "bufferbloat";
+export type VisualsTab = "appearance" | "taskbar" | "explorer" | "signin";
 export type AdvancedTab = "security" | "msi" | "devices" | "timer";
 
 export const TWEAK_TABS: NavTab<TweakTab>[] = [
@@ -67,7 +72,6 @@ export const TWEAK_TABS: NavTab<TweakTab>[] = [
   { value: "privacy", label: "Privacy", icon: HatGlasses },
   { value: "gaming", label: "Gaming", icon: Gamepad2 },
   { value: "apps", label: "Apps", icon: AppWindow },
-  { value: "tasks", label: "Tasks", icon: CalendarClock },
   { value: "power", label: "Power", icon: Zap },
   { value: "presets", label: "Presets", icon: Layers },
 ];
@@ -92,6 +96,13 @@ export const NETWORK_TABS: NavTab<NetworkTab>[] = [
   { value: "priority", label: "Network Priority", icon: ListOrdered },
   { value: "adapters", label: "Adapter Tuner", icon: EthernetPort },
   { value: "bufferbloat", label: "Bufferbloat", icon: Waves },
+];
+
+export const VISUALS_TABS: NavTab<VisualsTab>[] = [
+  { value: "appearance", label: "Appearance", icon: Palette },
+  { value: "taskbar", label: "Taskbar and Start", icon: PanelBottom },
+  { value: "explorer", label: "File Explorer", icon: FolderOpen },
+  { value: "signin", label: "Sign-in", icon: LogIn },
 ];
 
 export const ADVANCED_TABS: NavTab<AdvancedTab>[] = [
@@ -145,8 +156,15 @@ export const NAV_GROUPS: NavGroup[] = [
         to: "/tweaks",
         label: "Tweaks",
         icon: Gauge,
-        description: "Windows, privacy, games, apps, tasks and power",
+        description: "Windows, privacy, games, apps and power",
         tabs: TWEAK_TABS,
+      },
+      {
+        to: "/visuals",
+        label: "Visuals",
+        icon: Eye,
+        description: "Theme, taskbar, File Explorer and the sign-in screen",
+        tabs: VISUALS_TABS,
       },
       {
         to: "/hardware",

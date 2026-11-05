@@ -13,14 +13,14 @@ export interface Profile {
   tweakIds: string[];
 }
 
-const RESPONSIVE = ["performance.foreground-boost", "gaming.mmcss-games-priority"];
+const RESPONSIVE = ["gaming.mmcss-games-priority", "gaming.system-responsiveness"];
 const QUIET = [
   ...RESPONSIVE,
   "performance.edge-background-mode-off",
   "performance.edge-startup-boost-off",
   "privacy.background-apps-off",
 ];
-const EVERYTHING = [...QUIET, "gaming.game-dvr-off", "windows.window-animations-off"];
+const EVERYTHING = [...QUIET, "gaming.game-dvr-off"];
 
 /** Everything Game Mode can turn on, in Configure's order. */
 export const GAME_MODE_TWEAKS = EVERYTHING;
@@ -30,7 +30,6 @@ export const GAME_MODE_TWEAKS = EVERYTHING;
  * does can't help a game that's already running.
  */
 export const DEFAULT_GAME_MODE_TWEAKS = [
-  "performance.foreground-boost",
   "performance.edge-background-mode-off",
   "performance.edge-startup-boost-off",
   "privacy.background-apps-off",
@@ -40,7 +39,7 @@ export const GAMING_PROFILES: Profile[] = [
   {
     id: "responsive",
     name: "Responsive",
-    summary: "Favour the game you're playing",
+    summary: "Favour multimedia threads",
     tweakIds: RESPONSIVE,
   },
   {
@@ -52,7 +51,7 @@ export const GAMING_PROFILES: Profile[] = [
   {
     id: "everything",
     name: "Everything",
-    summary: "Recording and animations off too",
+    summary: "Game recording off too",
     tweakIds: EVERYTHING,
   },
 ];

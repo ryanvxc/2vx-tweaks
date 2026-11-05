@@ -66,8 +66,8 @@ describe("TweakList", () => {
   it("shows the detected state and only offers what can change", async () => {
     renderList();
     expect(await screen.findByText(USER_TWEAK.name)).toBeInTheDocument();
-    expect(screen.getAllByText("Not in effect")).toHaveLength(2);
-    expect(screen.getByText("In effect")).toBeInTheDocument();
+    expect(screen.getAllByText("Not applied")).toHaveLength(2);
+    expect(screen.getByText("Applied")).toBeInTheDocument();
     // Undo for an applied tweak lives in History, with the recorded before-value.
     expect(screen.getByRole("checkbox", { name: "Select Applied tweak" })).toBeDisabled();
     expect(screen.getByText("Asks for administrator permission")).toBeInTheDocument();

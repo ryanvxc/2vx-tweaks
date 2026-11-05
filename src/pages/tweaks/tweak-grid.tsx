@@ -68,6 +68,7 @@ import {
   tweakPlacement,
   UNAVAILABLE_SECTION,
   type PlacedTab,
+  VISUALS_SETTINGS_PAGE,
 } from "@/lib/tweak-presentation";
 import { play } from "@/lib/motion";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
@@ -78,6 +79,7 @@ import type {
   RiskLevel,
   TweakCategory,
   TweakState,
+  TweakMeta,
   TweakStatus,
 } from "@/types/engine";
 import { ChangeInspector } from "./change-inspector";
@@ -88,6 +90,12 @@ type StateFilter = "applied" | "notApplied";
 type FitFilter = "fits" | "blocked";
 type PermissionFilter = "administrator" | "user";
 type RestartFilter = "restart" | "none";
+const VARYING_FILTERS: Record<string, (meta: TweakMeta) => string> = {
+  impact: (meta) => meta.impact,
+  risk: (meta) => meta.risk,
+  evidence: (meta) => meta.evidence,
+};
+
 type Sort = "recommended" | "name" | "impact" | "status" | "newest" | "recent";
 
 const IMPACT_ORDER: Record<Impact, number> = { low: 0, medium: 1, high: 2 };
@@ -101,6 +109,9 @@ const STATE_ORDER: Record<TweakState, number> = {
 const CARD_BATCH = 30;
 const NO_TABS: { value: string }[] = [];
 const NO_HISTORY = new Map<string, TweakHistory>();
+
+const categoryOf = (t: TweakStatus, byTab: boolean): string =>
+  byTab ? tweakPlacement(t.meta).tab : t.meta.category;
 
 /**
  * Tweaks as a card grid. The switch shows the state detected on this PC, never a stored
@@ -133,7 +144,8 @@ export function TweakGrid({
   const [permFilter, setPermFilter] = useState<PermissionFilter[]>([]);
   const [restartFilter, setRestartFilter] = useState<RestartFilter[]>([]);
   const [evidenceFilter, setEvidenceFilter] = useState<Evidence[]>([]);
-  const [categoryFilter, setCategoryFilter] = useState<TweakCategory[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+  const [sectionFilter, setSectionFilter] = useState<string[]>([]);
   const [sort, setSort] = useState<Sort>("recommended");
 
   const [staged, setStaged] = useState<string[]>([]);
@@ -164,11 +176,25 @@ export function TweakGrid({
   const detailsId = params.get("tweak");
   const details = all.find((t) => t.meta.id === detailsId) ?? null;
 
+  // A page whose tweaks all share one engine category (Visuals) can't be told apart by it, so
+  // its Category filter names the page's tabs instead.
+  const byTab = !!view && new Set(all.map((t) => t.meta.category)).size < 2;
+
   // Filtering 1,200 tweaks on every key would make typing lag behind.
   const q = useDeferredValue(search).trim().toLowerCase();
   const onTab = useMemo(
     () => (view ? all.filter((t) => tweakPlacement(t.meta).tab === tab) : all),
     [all, view, tab],
+  );
+  // Tabs already pick Visuals' topics, so with no search its Category filter narrows the tab instead.
+  const sections = useMemo(
+    () => (byTab ? [...new Set(onTab.map((t) => tweakPlacement(t.meta).section))] : []),
+    [byTab, onTab],
+  );
+  // What was picked on another tab means nothing here, and shouldn't empty this one.
+  const inSections = useMemo(
+    () => sectionFilter.filter((section) => sections.includes(section)),
+    [sectionFilter, sections],
   );
   const shown = useMemo(() => {
     const ranks = new Map<string, number>();
@@ -205,7 +231,13 @@ export function TweakGrid({
           restartFilter.includes(t.meta.restart === "none" ? "none" : "restart"),
       )
       .filter((t) => evidenceFilter.length === 0 || evidenceFilter.includes(t.meta.evidence))
-      .filter((t) => !q || categoryFilter.length === 0 || categoryFilter.includes(t.meta.category))
+      .filter(
+        (t) => !q || categoryFilter.length === 0 || categoryFilter.includes(categoryOf(t, byTab)),
+      )
+      .filter(
+        (t) =>
+          !!q || inSections.length === 0 || inSections.includes(tweakPlacement(t.meta).section),
+      )
       .sort((a, b) => {
         switch (sort) {
           case "name":
@@ -239,6 +271,8 @@ export function TweakGrid({
     restartFilter,
     evidenceFilter,
     categoryFilter,
+    inSections,
+    byTab,
     sort,
     history,
   ]);
@@ -256,18 +290,19 @@ export function TweakGrid({
     restartFilter,
     evidenceFilter,
     categoryFilter,
+    inSections,
   ]);
 
   const hardware = [...new Set(all.map((t) => t.meta.hardware))].filter(
     (h): h is Exclude<HardwareScope, "any"> => h !== "any",
   );
-  const filters: FilterGroup[] = [
+  const allFilters: FilterGroup[] = [
     {
       id: "state",
       label: "State on this PC",
       options: [
-        { value: "applied", label: "In effect" },
-        { value: "notApplied", label: "Not in effect" },
+        { value: "applied", label: "Applied" },
+        { value: "notApplied", label: "Not applied" },
       ],
       selected: stateFilter,
       onChange: (v) => setStateFilter(v as StateFilter[]),
@@ -315,7 +350,7 @@ export function TweakGrid({
     },
     {
       id: "restart",
-      label: "Restart",
+      label: "Restart required",
       options: [
         { value: "none", label: "No restart" },
         { value: "restart", label: "Needs a restart or sign-out" },
@@ -350,16 +385,35 @@ export function TweakGrid({
           {
             id: "category",
             label: "Category",
-            options: [...new Set(all.map((t) => t.meta.category))].map((value) => ({
-              value,
-              label: CATEGORY_LABEL[value],
-            })),
+            options: byTab
+              ? (view?.tabs ?? [])
+                  .filter((tab) => all.some((t) => categoryOf(t, true) === tab.value))
+                  .map(({ value, label }) => ({ value, label }))
+              : [...new Set(all.map((t) => t.meta.category))].map((value) => ({
+                  value,
+                  label: CATEGORY_LABEL[value],
+                })),
             selected: categoryFilter,
-            onChange: (v: string[]) => setCategoryFilter(v as TweakCategory[]),
+            onChange: setCategoryFilter,
           },
         ]
-      : []),
+      : sections.length > 1
+        ? [
+            {
+              id: "section",
+              label: "Category",
+              options: sections.map((value) => ({ value, label: value })),
+              selected: inSections,
+              onChange: setSectionFilter,
+            },
+          ]
+        : []),
   ];
+  // A choice between one value filters nothing, as most of these do on Visuals.
+  const filters = allFilters.filter((group) => {
+    const read = VARYING_FILTERS[group.id];
+    return !read || new Set(all.map((t) => read(t.meta))).size > 1;
+  });
 
   // An unread setting can't be backed up, so it can't be selected either.
   const stageable = (t: TweakStatus) =>
@@ -493,7 +547,7 @@ export function TweakGrid({
                   {data && (
                     <DataSourceBadge
                       source="live"
-                      label={`${inEffect.toLocaleString()} of ${onTab.length.toLocaleString()} in effect`}
+                      label={`${inEffect.toLocaleString()} of ${onTab.length.toLocaleString()} applied`}
                     />
                   )}
                 </>
@@ -527,7 +581,7 @@ export function TweakGrid({
                     <span className="text-[12.5px] text-muted-foreground tabular">
                       {group.title === UNAVAILABLE_SECTION
                         ? whole.length
-                        : `${whole.filter((t) => t.state === "applied").length} of ${whole.length} in effect`}
+                        : `${whole.filter((t) => t.state === "applied").length} of ${whole.length} applied`}
                     </span>
                   </div>
                 )}
@@ -626,6 +680,7 @@ function TweakCard({
   const applied = state === "applied";
   // Applied by something other than 2VX: there is no recorded before-value to restore.
   const lockedOn = applied && !tweak.undoable;
+  const settingsPage = meta.category === "visuals" && VISUALS_SETTINGS_PAGE[meta.section ?? ""];
   const unread = state === "unknown";
   const restart = RESTART_HINT[meta.restart];
   // Applied since this boot, by a tweak that needs one: the change isn't finished yet.
@@ -702,7 +757,7 @@ function TweakCard({
         </Indicator>
       )}
       {state === "partial" && (
-        <Indicator boxed icon={CircleDashed} tone="warning" title="Partly in effect" />
+        <Indicator boxed icon={CircleDashed} tone="warning" title="Partly applied" />
       )}
       {unread && (
         <Indicator boxed icon={CircleHelp} tone="warning" title="Couldn't read this setting">
@@ -732,7 +787,10 @@ function TweakCard({
           Already set
         </span>
       </TooltipTrigger>
-      <TooltipContent>Set outside 2VX, so there's nothing to undo.</TooltipContent>
+      <TooltipContent>
+        Set outside 2VX, so there's nothing to undo.
+        {settingsPage ? ` To change it, use ${settingsPage}.` : null}
+      </TooltipContent>
     </Tooltip>
   ) : (
     switchControl

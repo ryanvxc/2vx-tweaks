@@ -7,12 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "privacy.background-apps-off",
         name: "Block background apps",
-        description: "Stops Store apps running in the background for every user.",
-        details: "Sets the \"Let Windows apps run in the background\" policy to Force Deny (LetAppsRunInBackground \
-                  = 2 under HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy), the most restrictive value \
-                  Microsoft documents. Every user on this PC is affected, and the matching switch in Settings > \
-                  Privacy & security is locked while the policy is set. An app that is open keeps its access until \
-                  it restarts. Microsoft lists this policy for Pro and above, so it isn't offered on Home.",
+        description: "Stops Store apps running in the background for every user on this PC.",
+        details: "Store apps can't run tasks, fetch data or send notifications unless you have them open. This saves a small amount of memory and network use. Mail and messaging apps may stop alerting you.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,
@@ -24,7 +20,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         edition: EditionScope::ProOrHigher,
         recommended: false,
         restart: RestartRequirement::None,
-        impact: Impact::Medium,
+        impact: Impact::Low,
         warning: Some(
             "Message, email and voicemail notifications and background mail sync can stop working.",
         ),

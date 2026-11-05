@@ -14,6 +14,7 @@ import { RestorePage } from "@/pages/restore/restore-page";
 import { SettingsPage } from "@/pages/settings/settings-page";
 import { ToolsPage } from "@/pages/tools/tools-page";
 import { TweaksPage } from "@/pages/tweaks/tweaks-page";
+import { VisualsPage } from "@/pages/visuals/visuals-page";
 import { useUiStore } from "@/stores/ui-store";
 
 /** Old addresses keep working, including a tweak named in the query. */
@@ -42,6 +43,7 @@ export function App() {
             <Route element={<AppShell />}>
               <Route index element={<DashboardPage />} />
               <Route path="monitoring" element={<Navigate to="/" replace />} />
+              <Route path="visuals" element={<VisualsPage />} />
               <Route path="hardware" element={<HardwarePage />} />
               <Route path="network" element={<NetworkPage />} />
               <Route path="advanced" element={<AdvancedPage />} />

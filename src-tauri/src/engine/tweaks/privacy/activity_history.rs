@@ -8,10 +8,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         id: "privacy.activity-history-off",
         name: "Turn off activity history",
         description: "Stops Windows recording and uploading the apps, files and sites you use.",
-        details: "Sets three documented policies to 0 under HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System: \
-                  EnableActivityFeed, PublishUserActivities and UploadUserActivities. Windows stops publishing \
-                  activities and stops uploading them. Microsoft lists these policies for Pro and above, so this \
-                  isn't offered on Home.",
+        details: "Activity history lets Windows and Microsoft services show what you were doing earlier. Turning it off stops that record being kept or sent to your account. Features that resume past activity stop working.",
         category: TweakCategory::Privacy,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

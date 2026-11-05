@@ -74,6 +74,48 @@ describe("App shell", () => {
     expect(await screen.findByRole("tab", { name: /Privacy/, selected: true })).toBeInTheDocument();
   });
 
+  it("lists Visuals under Tweaks and above Hardware", () => {
+    render(<App />);
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    const names = within(nav)
+      .getAllByRole("link")
+      .map((link) => link.textContent);
+    const from = names.indexOf("Tweaks");
+    expect(names.slice(from, from + 6)).toEqual([
+      "Tweaks",
+      "Visuals",
+      "Hardware",
+      "PC Cleaner",
+      "Network",
+      "Advanced",
+    ]);
+  });
+
+  it("opens Visuals with its tabs and sections in the written order", async () => {
+    window.location.hash = "#/visuals";
+    render(<App />);
+    expect(await screen.findByRole("heading", { name: "Visuals" })).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("tab").map((tab) => tab.textContent?.replace(/\d+$/, "").trim()),
+    ).toEqual(["Appearance", "Taskbar and Start", "File Explorer", "Sign-in"]);
+    // Alphabetically "Effects and animation" would come first.
+    const sections = await screen.findAllByRole("heading", { level: 2 });
+    expect(sections.map((h) => h.textContent)).toEqual([
+      "Theme and colour",
+      "Effects and animation",
+    ]);
+  });
+
+  it("finds a Visuals tweak with Ctrl K and links to its tab", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.keyboard("{Control>}k{/Control}");
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByRole("textbox"), "Lock screen");
+    await user.click(await within(dialog).findByRole("button", { name: /Lock screen.*Tweak/ }));
+    await waitFor(() => expect(window.location.hash).toMatch(/^#\/visuals\?tab=signin&tweak=/));
+  });
+
   it("keeps old addresses working", async () => {
     window.location.hash = "#/history";
     render(<App />);

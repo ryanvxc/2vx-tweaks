@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "network.prefer-ipv4",
         name: "Prefer IPv4 over IPv6",
-        description: "Uses IPv4 when a site offers both. Microsoft's advice over disabling IPv6.",
-        details: "Sets DisabledComponents to 0x20 under Tcpip6\\Parameters. IPv6 stays on. Worth trying only if your IPv6 route is worse than your IPv4 one.",
+        description: "Uses IPv4 when a site offers both IPv4 and IPv6.",
+        details: "Microsoft's advice if IPv6 causes trouble, rather than disabling it. It can fix slow connections or timeouts on networks with poor IPv6 routing. If IPv6 works well for you, there is no reason to change it.",
         category: TweakCategory::Network,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

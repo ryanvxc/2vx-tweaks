@@ -5,90 +5,15 @@ use super::*;
 pub const TWEAKS: &[SettingsTweak] = &[
     SettingsTweak {
         meta: lib(
-            "gaming.mouse-queue",
-            Gaming,
-            "Input",
-            "Mouse data queue",
-            "Sets the mouse driver's buffer.",
-            BATLEZ,
-            Observed,
-        )
-        .medium()
-        .reboot()
-        .warn("Mice with high polling rates can drop input.")
-        .admin(),
-        settings: &[hklm(
-            r"SYSTEM\CurrentControlSet\Services\mouclass\Parameters",
-            "MouseDataQueueSize",
-            20,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.keyboard-queue",
-            Gaming,
-            "Input",
-            "Keyboard data queue",
-            "Sets the keyboard driver's buffer.",
-            BATLEZ,
-            Observed,
-        )
-        .medium()
-        .reboot()
-        .warn("Fast typing can drop keys.")
-        .admin(),
-        settings: &[hklm(
-            r"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters",
-            "KeyboardDataQueueSize",
-            20,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.mouse-hover",
-            Gaming,
-            "Input",
-            "Mouse hover time",
-            "Shortens hover delay.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu_str(r"Control Panel\Mouse", "MouseHoverTime", "10")],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.mouse-sensitivity",
-            Gaming,
-            "Input",
-            "Mouse sensitivity",
-            "Sets the Windows pointer speed to 6 of 11.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu_str(r"Control Panel\Mouse", "MouseSensitivity", "10")],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.mouse-trails",
-            Gaming,
-            "Input",
-            "Mouse trails",
-            "Turns off pointer trails.",
-            TAIRIKU,
-            Community,
-        ),
-        settings: &[hkcu_str(r"Control Panel\Mouse", "MouseTrails", "0")],
-    },
-    SettingsTweak {
-        meta: lib(
             "gaming.filter-keys",
             Gaming,
             "Input",
-            "Filter Keys",
-            "Turns off Filter Keys and its shortcut.",
+            "No Filter Keys prompt",
+            "Stops the Filter Keys prompt appearing when you hold the right Shift key.",
             BATLEZ,
             Observed,
-        ),
+        )
+        .details("Holding right Shift for eight seconds normally offers Filter Keys, which is easy to trigger in games. This turns the feature and its shortcut off. Anyone who relies on it for accessibility should leave it on."),
         settings: &[
             hkcu_str(
                 r"Control Panel\Accessibility\Keyboard Response",
@@ -100,84 +25,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "gaming.keyboard-response",
-            Gaming,
-            "Input",
-            "Keyboard response",
-            "Sets faster repeat in the accessibility layer.",
-            BATLEZ,
-            Observed,
-        )
-        .medium(),
-        settings: &[
-            hkcu_str(
-                r"Control Panel\Accessibility\Keyboard Response",
-                "AutoRepeatDelay",
-                "200",
-            ),
-            hkcu_str(
-                r"Control Panel\Accessibility\Keyboard Response",
-                "AutoRepeatRate",
-                "6",
-            ),
-            hkcu_str(
-                r"Control Panel\Accessibility\Keyboard Response",
-                "BounceTime",
-                "0",
-            ),
-            hkcu_str(
-                r"Control Panel\Accessibility\Keyboard Response",
-                "DelayBeforeAcceptance",
-                "0",
-            ),
-            hkcu(
-                r"Control Panel\Accessibility\Keyboard Response",
-                "Last BounceKey Setting",
-                0,
-            ),
-            hkcu(
-                r"Control Panel\Accessibility\Keyboard Response",
-                "Last Valid Delay",
-                0,
-            ),
-            hkcu(
-                r"Control Panel\Accessibility\Keyboard Response",
-                "Last Valid Repeat",
-                0,
-            ),
-            hkcu(
-                r"Control Panel\Accessibility\Keyboard Response",
-                "Last Valid Wait",
-                1000,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.mouse-keys",
-            Gaming,
-            "Input",
-            "Mouse Keys shortcut",
-            "Stops the Mouse Keys shortcut.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu_str(
-            r"Control Panel\Accessibility\MouseKeys",
-            "Flags",
-            "38",
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "gaming.toggle-keys",
             Gaming,
             "Input",
-            "Toggle Keys shortcut",
-            "Stops the Toggle Keys shortcut.",
+            "No Toggle Keys shortcut",
+            "Stops holding Num Lock from turning on the Toggle Keys tones.",
             BATLEZ,
             Observed,
-        ),
+        )
+        .details("Holding Num Lock for five seconds normally offers Toggle Keys, which beeps when you press a lock key. This turns off that shortcut. The feature stays available in Accessibility settings."),
         settings: &[hkcu_str(
             r"Control Panel\Accessibility\ToggleKeys",
             "Flags",
@@ -190,10 +46,11 @@ pub const TWEAKS: &[SettingsTweak] = &[
             Gaming,
             "Input",
             "Num Lock at sign-in",
-            "Turns Num Lock on at sign-in.",
+            "Turns Num Lock on as soon as you sign in to your account.",
             BATLEZ,
             Community,
-        ),
+        )
+        .details("Saves pressing the key each time you start the PC. It applies to your own account, so the sign-in screen itself may still start with Num Lock off."),
         settings: &[hkcu_str(
             r"Control Panel\Keyboard",
             "InitialKeyboardIndicators",
@@ -205,11 +62,13 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "gaming.language-hotkey",
             Gaming,
             "Input",
-            "Language switch hotkey",
-            "Stops Alt+Shift switching language mid-game.",
+            "No language switch hotkey",
+            "Stops Alt+Shift switching keyboard language in the middle of a game.",
             TAIRIKU,
             Observed,
-        ),
+        )
+        .details("Easy to hit by accident if you have more than one keyboard language or layout. This clears the language and layout hotkeys. You can still switch from the taskbar or with Win+Space.")
+        .warn("Alt+Shift no longer switches keyboard language."),
         settings: &[
             hkcu_str(r"Keyboard Layout\Toggle", "Hotkey", "3"),
             hkcu_str(r"Keyboard Layout\Toggle", "Language Hotkey", "3"),
@@ -218,38 +77,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "gaming.touch-pointer",
-            Gaming,
-            "Input",
-            "Absolute pointer",
-            "Treats absolute pointers as absolute.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SYSTEM\CurrentControlSet\Services\mouhid\Parameters",
-                "TreatAbsolutePointerAsAbsolute",
-                1,
-            ),
-            hklm(
-                r"SYSTEM\CurrentControlSet\Services\mouhid\Parameters",
-                "TreatAbsoluteAsRelative",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "gaming.print-screen",
             Gaming,
             "Input",
-            "Print Screen opens Snipping",
-            "Gives Print Screen back to apps.",
+            "Print Screen skips Snipping Tool",
+            "Print Screen copies the screen as it used to, without opening Snipping Tool.",
             BATLEZ,
             Observed,
-        ),
+        )
+        .details("Windows 11 opens the snipping bar when you press the key. Turning that off lets games and screenshot apps use Print Screen again. You can still open snipping with Win+Shift+S."),
         settings: &[hkcu(
             r"Control Panel\Keyboard",
             "PrintScreenKeyForSnippingEnabled",
@@ -261,12 +97,12 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "gaming.fse-behavior",
             Gaming,
             "Game Bar and capture",
-            "Fullscreen optimisations",
-            "Asks Windows to prefer exclusive fullscreen.",
+            "Prefer exclusive fullscreen",
+            "Asks games to use true exclusive fullscreen instead of Windows' optimised mode.",
             BATLEZ,
             Observed,
         )
-        .impact(Medium),
+        .details("Can help older games that stutter or misbehave with fullscreen optimisations. Most modern games gain nothing. Alt-tab gets slower in exclusive mode and overlays may not appear."),
         settings: &[
             hkcu(r"SYSTEM\GameConfigStore", "GameDVR_FSEBehaviorMode", 2),
             hkcu(r"SYSTEM\GameConfigStore", "GameDVR_FSEBehavior", 2),
@@ -288,10 +124,11 @@ pub const TWEAKS: &[SettingsTweak] = &[
             Gaming,
             "Game Bar and capture",
             "Automatic Game Mode",
-            "Makes sure Game Mode is on.",
+            "Makes sure Game Mode is switched on for games that support it.",
             BATLEZ,
             Observed,
-        ),
+        )
+        .details("Game Mode favours the game and holds back Windows Update restarts and driver installs while you play. It is on by default, so this only matters if something turned it off. The effect on most PCs is small."),
         settings: &[
             hkcu(r"Software\Microsoft\GameBar", "AutoGameModeEnabled", 1),
             hkcu(r"Software\Microsoft\GameBar", "AllowAutoGameMode", 1),
@@ -302,11 +139,12 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "gaming.game-bar-controller",
             Gaming,
             "Game Bar and capture",
-            "Game Bar controller button",
-            "Stops the Xbox button opening Game Bar.",
+            "No Game Bar controller button",
+            "Stops the Xbox button on your controller opening Game Bar.",
             BATLEZ,
             Observed,
-        ),
+        )
+        .details("Handy if you press the button by accident or use it in another launcher. Game Bar still opens with Win+G. It is the same switch as the one in Settings under Gaming."),
         settings: &[hkcu(
             r"Software\Microsoft\GameBar",
             "UseNexusForGameBarEnabled",
@@ -315,77 +153,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "gaming.game-bar-link",
-            Gaming,
-            "Game Bar and capture",
-            "Game Bar links",
-            "Stops ms-gamebar pop-ups after removing Game Bar.",
-            ALCHEMY,
-            Community,
-        ),
-        settings: &[
-            hkcu_str(r"Software\Classes\ms-gamebar", "", "URL:ms-gamebar"),
-            hkcu_str(r"Software\Classes\ms-gamebar", "URL Protocol", ""),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.audio-capture",
-            Gaming,
-            "Game Bar and capture",
-            "Game audio capture",
-            "Stops capturing audio with clips.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\GameDVR",
-            "AudioCaptureEnabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.cursor-capture",
-            Gaming,
-            "Game Bar and capture",
-            "Game cursor capture",
-            "Stops capturing the cursor with clips.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\GameDVR",
-            "CursorCaptureEnabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.mic-capture",
-            Gaming,
-            "Game Bar and capture",
-            "Game microphone capture",
-            "Stops capturing the microphone with clips.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\GameDVR",
-            "MicrophoneCaptureEnabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "gaming.audio-ducking",
             Gaming,
             "Audio",
-            "Communications ducking",
-            "Stops Windows lowering game audio during calls.",
+            "No volume drop during calls",
+            "Stops Windows lowering game and music volume when a call starts.",
             BATLEZ,
             Observed,
-        ),
+        )
+        .details("Windows can turn other sounds down during calls. This sets it to do nothing, so your game stays at the level you chose. It matches the Do nothing option on the Communications tab in Sound settings."),
         settings: &[hkcu(
             r"Software\Microsoft\Multimedia\Audio",
             "UserDuckingPreference",
@@ -394,194 +170,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "gaming.mmcss-audio",
-            Gaming,
-            "Audio",
-            "MMCSS audio priority",
-            "Raises the audio task's priority.",
-            BATLEZ,
-            Observed,
-        )
-        .medium()
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio",
-                "Priority",
-                6,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio",
-                "Clock Rate",
-                10000,
-            ),
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio",
-                "Scheduling Category",
-                "High",
-            ),
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio",
-                "Background Only",
-                "False",
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio",
-                "Affinity",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.mmcss-pro-audio",
-            Gaming,
-            "Audio",
-            "MMCSS pro audio",
-            "Tunes the Pro Audio task.",
-            BATLEZ,
-            Observed,
-        )
-        .medium()
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Pro Audio",
-                "Priority",
-                1,
-            ),
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Pro Audio",
-                "Scheduling Category",
-                "High",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.mmcss-display",
-            Gaming,
-            "Audio",
-            "MMCSS display",
-            "Tunes the display post-processing task.",
-            BATLEZ,
-            Observed,
-        )
-        .medium()
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\DisplayPostProcessing",
-                "Priority",
-                8,
-            ),
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\DisplayPostProcessing",
-                "Scheduling Category",
-                "High",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.mmcss-games-extra",
-            Gaming,
-            "Audio",
-            "MMCSS games extras",
-            "Sets background and latency flags for games.",
-            BATLEZ,
-            Observed,
-        )
-        .medium()
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games",
-                "Affinity",
-                0,
-            ),
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games",
-                "Background Only",
-                "False",
-            ),
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games",
-                "Latency Sensitive",
-                "True",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.mmcss-lazy",
-            Gaming,
-            "Audio",
-            "MMCSS lazy mode",
-            "Sets the MMCSS idle timeout.",
-            BATLEZ,
-            Observed,
-        )
-        .medium()
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile",
-            "LazyModeTimeout",
-            10000,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.audiodg-priority",
-            Gaming,
-            "Audio",
-            "Audio engine priority",
-            "Raises Windows audio engine priority.",
-            BATLEZ,
-            Observed,
-        )
-        .medium()
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\audiodg.exe\PerfOptions",
-                "CpuPriorityClass",
-                3,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\audiodg.exe\PerfOptions",
-                "IoPriority",
-                3,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.nahimic-none",
-            Gaming,
-            "Audio",
-            "Realtek power management",
-            "Keeps Realtek audio out of power saving.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Realtek\Audio\RtkNGUI64\PowerMgnt",
-            "enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "gaming.cs2-priority",
             Gaming,
             "Per-game priority",
             "CS2 high priority",
-            "Starts Counter-Strike 2 at high priority.",
+            "Runs Counter-Strike 2 at a higher priority than background apps.",
             BATLEZ,
             Observed,
         )
-        .admin(),
+        .admin()
+        .details("Starts the game at High priority every time. It only matters when the CPU is fully busy, so many PCs will see little or no change. Voice chat or streaming can stutter if the game takes all the CPU."),
         settings: &[
             hklm(
                 r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\cs2.exe\PerfOptions",
@@ -601,11 +199,12 @@ pub const TWEAKS: &[SettingsTweak] = &[
             Gaming,
             "Per-game priority",
             "Fortnite high priority",
-            "Starts Fortnite at high priority.",
+            "Runs Fortnite at a higher priority than background apps.",
             BATLEZ,
             Observed,
         )
-        .admin(),
+        .admin()
+        .details("Starts the game at High priority every time. It only matters when the CPU is fully busy, so many PCs will see little or no change. Voice chat or streaming can stutter if the game takes all the CPU."),
         settings: &[
             hklm(
                 r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping.exe\PerfOptions",
@@ -618,40 +217,6 @@ pub const TWEAKS: &[SettingsTweak] = &[
                 3,
             ),
         ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.fortnite-be-priority",
-            Gaming,
-            "Per-game priority",
-            "Fortnite BattlEye priority",
-            "Starts the BattlEye build at high priority.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping_BE.exe\PerfOptions",
-            "CpuPriorityClass",
-            3,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.fortnite-eac-priority",
-            Gaming,
-            "Per-game priority",
-            "Fortnite EAC priority",
-            "Starts the EAC build at high priority.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping_EAC.exe\PerfOptions",
-            "CpuPriorityClass",
-            3,
-        )],
     },
     SettingsTweak {
         meta: lib(
@@ -659,387 +224,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
             Gaming,
             "Per-game priority",
             "Roblox high priority",
-            "Starts Roblox at high priority.",
+            "Runs Roblox at a higher priority than background apps.",
             BATLEZ,
             Observed,
         )
-        .admin(),
+        .admin()
+        .details("Starts the game at High priority every time. It only matters when the CPU is fully busy, so many PCs will see little or no change. Voice chat or streaming can stutter if the game takes all the CPU."),
         settings: &[hklm(
             r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\RobloxPlayerBeta.exe\PerfOptions",
             "CpuPriorityClass",
             3,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.obs-priority",
-            Gaming,
-            "Per-game priority",
-            "OBS above normal",
-            "Starts OBS above normal priority.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\obs64.exe\PerfOptions",
-            "CpuPriorityClass",
-            6,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.obs32-priority",
-            Gaming,
-            "Per-game priority",
-            "OBS 32-bit above normal",
-            "Starts 32-bit OBS above normal.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\obs32.exe\PerfOptions",
-            "CpuPriorityClass",
-            6,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.dwm-priority",
-            Gaming,
-            "Per-game priority",
-            "Desktop compositor priority",
-            "Raises DWM's priority.",
-            BATLEZ,
-            Observed,
-        )
-        .medium()
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\dwm.exe\PerfOptions",
-                "CpuPriorityClass",
-                4,
-            ),
-            hklm(
-                r"SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\dwm.exe\PerfOptions",
-                "CpuPriorityClass",
-                4,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\dwm.exe\PerfOptions",
-                "IoPriority",
-                3,
-            ),
-            hklm(
-                r"SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\dwm.exe\PerfOptions",
-                "IoPriority",
-                3,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.csrss-priority",
-            Gaming,
-            "Per-game priority",
-            "Client server priority",
-            "Raises CSRSS's priority.",
-            BATLEZ,
-            Observed,
-        )
-        .medium()
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions",
-                "CpuPriorityClass",
-                4,
-            ),
-            hklm(
-                r"SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions",
-                "CpuPriorityClass",
-                4,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions",
-                "IoPriority",
-                3,
-            ),
-            hklm(
-                r"SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions",
-                "IoPriority",
-                3,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.cod-vsync",
-            Gaming,
-            "Game settings",
-            "Modern Warfare V-Sync off",
-            "Turns off V-Sync in the game's settings.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(
-            r"Software\Activision\ModernWarfare",
-            "VerticalSyncEnabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.cod-vram",
-            Gaming,
-            "Game settings",
-            "Modern Warfare video memory",
-            "Lowers its video memory scale.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(
-            r"Software\Activision\ModernWarfare",
-            "VideoMemoryScale",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.fortnite-dx",
-            Gaming,
-            "Game settings",
-            "Fortnite prefers D3D11",
-            "Stops preferring D3D12.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(
-            r"Software\Epic Games\Unreal Engine\Identifiers\Fortnite",
-            "PreferD3D12",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.fortnite-low",
-            Gaming,
-            "Game settings",
-            "Fortnite low quality",
-            "Sets low quality in the identifiers key.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[
-            hkcu(
-                r"Software\Epic Games\Unreal Engine\Identifiers\Fortnite",
-                "sg.AntiAliasingQuality",
-                0,
-            ),
-            hkcu(
-                r"Software\Epic Games\Unreal Engine\Identifiers\Fortnite",
-                "sg.EffectsQuality",
-                0,
-            ),
-            hkcu(
-                r"Software\Epic Games\Unreal Engine\Identifiers\Fortnite",
-                "sg.ShadowQuality",
-                0,
-            ),
-            hkcu(
-                r"Software\Epic Games\Unreal Engine\Identifiers\Fortnite",
-                "sg.TexturesQuality",
-                0,
-            ),
-            hkcu(
-                r"Software\Epic Games\Unreal Engine\Identifiers\Fortnite",
-                "sg.ViewDistanceQuality",
-                1,
-            ),
-            hkcu(
-                r"Software\Epic Games\Unreal Engine\Identifiers\Fortnite",
-                "sg.bSmoothFrameRate",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.steam-overlay",
-            Gaming,
-            "Game settings",
-            "Steam overlay",
-            "Turns off the Steam in-game overlay.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(r"Software\Valve\Steam", "EnableOverlay", 0)],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.steam-gpu-web",
-            Gaming,
-            "Game settings",
-            "Steam web GPU acceleration",
-            "Turns off GPU use in Steam's browser.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(r"Software\Valve\Steam", "GPUAccelWebViews", 0)],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.steam-h264",
-            Gaming,
-            "Game settings",
-            "Steam H.264 acceleration",
-            "Turns off hardware video in Steam.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(r"Software\Valve\Steam", "H264HWAccel", 0)],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.steam-smooth",
-            Gaming,
-            "Game settings",
-            "Steam smooth scrolling",
-            "Turns off smooth scrolling in Steam.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(r"Software\Valve\Steam", "SmoothScrollWebViews", 0)],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.steam-dwrite",
-            Gaming,
-            "Game settings",
-            "Steam DirectWrite",
-            "Turns off DirectWrite in Steam.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(r"Software\Valve\Steam", "DWriteEnable", 0)],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.steam-dpi",
-            Gaming,
-            "Game settings",
-            "Steam DPI scaling",
-            "Turns off DPI scaling in Steam.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(r"Software\Valve\Steam", "DPIScaling", 0)],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.steam-silent",
-            Gaming,
-            "Game settings",
-            "Steam silent start",
-            "Starts Steam minimised.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(r"Software\Valve\Steam", "SilentStartup", 1)],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.steam-updates",
-            Gaming,
-            "Game settings",
-            "Steam auto update",
-            "Stops Steam updating itself.",
-            BATLEZ,
-            Observed,
-        )
-        .medium(),
-        settings: &[hkcu(r"Software\Valve\Steam", "AutoUpdateEnabled", 0)],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.steam-startup",
-            Gaming,
-            "Game settings",
-            "Steam startup mode",
-            "Opens Steam to the small window.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(r"Software\Valve\Steam", "StartupMode", 0)],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.steam-tcp",
-            Gaming,
-            "Game settings",
-            "Steam TCP settings",
-            "Sets Steam's TCP values.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[
-            hkcu(r"Software\Valve\Steam", "TcpAckFrequency", 1),
-            hkcu(r"Software\Valve\Steam", "TcpNoDelay", 1),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.riot-updates",
-            Gaming,
-            "Game settings",
-            "Riot auto update",
-            "Stops Riot Client updating games at launch.",
-            BATLEZ,
-            Community,
-        )
-        .medium(),
-        settings: &[hkcu(
-            r"Software\Riot Games\Riot Client",
-            "autoUpdateOnLaunch",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.game-dvr-user",
-            Gaming,
-            "Game Bar and capture",
-            "Background recording",
-            "Turns off Game DVR for your account.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[
-            hkcu(r"System\GameConfigStore", "GameDVR_Enabled", 0),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\GameDVR",
-                "AppCaptureEnabled",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "gaming.mmcss-sfio",
-            Gaming,
-            "Game settings",
-            "Games I/O priority",
-            "Raises the MMCSS I/O priority of games.",
-            BATLEZ,
-            Community,
-        )
-        .admin(),
-        settings: &[hklm_str(
-            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games",
-            "SFIO Priority",
-            "High",
         )],
     },
 ];

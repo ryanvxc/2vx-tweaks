@@ -6,9 +6,9 @@ use crate::engine::{
 pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "windows.edge-recommendations-off",
-        name: "Stop Microsoft Edge feature suggestions",
-        description: "Stops Edge's feature pop-ups and banners.",
-        details: "Sets the documented Edge policy ShowRecommendationsEnabled to 0 (HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge). Edge then stops showing in-browser assistance notifications, for example the prompt to try vertical tabs when many tabs are open. Features keep working; only the suggestions stop. Applies without restarting Edge. Because this is a machine policy, Edge shows the option as managed and may show \"Your browser is managed by your organization\". Reverting removes the value; the empty policy key is left in place.",
+        name: "Stop Edge feature suggestions",
+        description: "Stops Edge showing pop-ups and banners that suggest its features.",
+        details: "Edge can promote features and offers as you browse. This policy turns those prompts off. Browsing and settings aren't affected.",
         category: TweakCategory::Windows,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

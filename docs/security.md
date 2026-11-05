@@ -33,7 +33,8 @@ against.
   - The broker opens the pipe at `SECURITY_IDENTIFICATION`, so the unelevated app can't impersonate the admin token.
   - The broker's vocabulary is `Write { target, value }`, `Clean { id }`, `MoveStartup { key, name, enabled }` and
     `Done` (guard: `broker_vocabulary_is_fixed`). It writes a target only if it passes the policy denylist **and** is
-    declared by a built-in tweak. `Clean` takes an ID from the table in `engine/cleanup.rs` and refuses any location
+    declared by a built-in tweak, or by a retired one so what it changed can still be undone (`engine/tweaks/library/retired.rs`;
+    retired tweaks can't be planned, so this adds no write the released app couldn't already make). `Clean` takes an ID from the table in `engine/cleanup.rs` and refuses any location
     that doesn't need admin. `MoveStartup` takes a fixed Run key and a value name, and reads the value itself, so a
     command line never crosses the pipe. The broker accepts no commands, paths or code, holds no state and keeps no
     journal (the app journals every tweak).
@@ -59,7 +60,12 @@ against.
 - **Policy denylist** (`engine/policy.rs`), checked at registration, planning and in the broker: Defender, Firewall,
   Windows Update, UAC/system policies, VBS/HVCI/Device Guard, LSA, Secure Boot, SmartScreen, Windows Security,
   SAM/SECURITY/BCD hives, and the configuration of protected services (WinDefend, mpssvc, BFE, wuauserv,
-  WaaSMedicSvc, UsoSvc, BITS, TrustedInstaller, EventLog and others).
+  WaaSMedicSvc, UsoSvc, BITS, TrustedInstaller, EventLog and others). The one exception is `ALLOWED_VALUES`:
+  `EnableFirstLogonAnimation` and `VerboseStatus` under `Policies\System`, named value by value, because the same key
+  holds the UAC switches. They change what startup and first sign-in show, not what elevation does, and a guard test
+  keeps the rest of the key refused.
+- **Keys are never deleted**, with one named exception (`PRESENCE_KEYS` in `engine/store.rs`): the classic right-click
+  menu works while an empty key exists, so undo removes that key and its parent, and only while both are empty.
 
 ## Commitments (enforced by `src-tauri/tests/policy.rs`)
 

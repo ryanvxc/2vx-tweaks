@@ -6,14 +6,9 @@ use crate::engine::{
 pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "services.compat-assistant-off",
-        name: "Disable Program Compatibility Assistant",
-        description: "Turns off the service that watches programs for compatibility problems.",
-        details: "Sets the start type of the PcaSvc service to Disabled (Start = 4 under \
-                  HKLM\\SYSTEM\\CurrentControlSet\\Services\\PcaSvc). Windows stops offering compatibility fixes \
-                  after an older program fails. Microsoft's guidance on this service was written for Windows \
-                  Server 2016 with Desktop Experience, the closest published guidance; there is no equivalent for \
-                  Windows 10 or 11. The service stops at the next restart, and undoing this restores the recorded \
-                  start type.",
+        name: "Disable Compatibility Assistant",
+        description: "Stops Windows watching the programs you run and offering compatibility fixes.",
+        details: "The assistant tracks programs and suggests fixes when an older one misbehaves. Turning it off stops that tracking and the pop-ups. The saving is tiny, and an old program that needs a fix won't be offered one.",
         category: TweakCategory::Services,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

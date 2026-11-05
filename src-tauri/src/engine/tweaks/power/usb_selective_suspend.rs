@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "power.usb-selective-suspend-off",
         name: "Disable USB selective suspend",
-        description: "Keeps USB devices powered, a fix for dropouts. Uses more battery.",
-        details: "Sets DisableSelectiveSuspend to 1 under HKLM\\SYSTEM\\CurrentControlSet\\Services\\USB, for every USB controller. Microsoft documents this as a workaround for devices that stop working, so turn it on if yours do.",
+        description: "Keeps USB devices powered, which can fix dropouts and slow wake-ups.",
+        details: "Windows can cut power to idle USB devices. If a mouse, headset or hub drops out or takes a moment to respond, this keeps it awake. It uses a little more battery on a laptop.",
         category: TweakCategory::Power,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

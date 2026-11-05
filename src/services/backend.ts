@@ -4,6 +4,7 @@ import type {
   EngineStatus,
   OperationOutcome,
   Plan,
+  RetiredTweak,
   SnapshotRecord,
   TweakMeta,
   TweakStatus,
@@ -165,6 +166,10 @@ export const backend = {
 
   listTweaks: (): Promise<TweakMeta[]> =>
     isDesktop ? call("list_tweaks") : Promise.resolve(preview.tweaks()),
+
+  /** Tweaks 2VX no longer offers: names for old history, and what can still be undone. */
+  listRetiredTweaks: (): Promise<RetiredTweak[]> =>
+    isDesktop ? call("list_retired_tweaks") : Promise.resolve([]),
 
   getEngineStatus: (): Promise<EngineStatus> =>
     isDesktop ? call("get_engine_status") : Promise.resolve(preview.engineStatus()),

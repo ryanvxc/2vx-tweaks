@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "performance.short-names-off",
         name: "Stop creating 8.3 file names",
-        description: "New files skip the old DOS-style short name, saving work in big folders.",
-        details: "Sets NtfsDisable8dot3NameCreation to 1 on every NTFS volume. Names that already exist stay. A very old program that only understands short names can have trouble with new files.",
+        description: "New files skip the old DOS-style short name, saving a little work in big folders.",
+        details: "NTFS can create a second 8.3 name for each new file for very old software. Turning it off slightly speeds up folders holding many files. Existing short names stay, and a few old installers may rely on them.",
         category: TweakCategory::Performance,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

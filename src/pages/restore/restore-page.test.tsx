@@ -11,9 +11,11 @@ const mock = vi.hoisted(() => ({
   getEngineStatus: vi.fn(),
   getTweakStatuses: vi.fn(),
   listTweaks: vi.fn(),
+  listRetiredTweaks: vi.fn(),
   listSnapshots: vi.fn(),
   getSnapshotChanges: vi.fn(),
   revertSnapshot: vi.fn(),
+  revertTweak: vi.fn(),
 }));
 const toast = vi.hoisted(() => ({ success: vi.fn(), warning: vi.fn(), error: vi.fn() }));
 
@@ -40,6 +42,7 @@ beforeEach(() => {
   mock.getEngineStatus.mockResolvedValue(HEALTHY);
   mock.getTweakStatuses.mockResolvedValue([]);
   mock.listTweaks.mockResolvedValue([USER_TWEAK]);
+  mock.listRetiredTweaks.mockResolvedValue([]);
   mock.listSnapshots.mockResolvedValue([SNAPSHOT]);
   mock.getSnapshotChanges.mockResolvedValue([change()]);
 });
@@ -49,6 +52,34 @@ describe("RestorePage", () => {
     mock.listSnapshots.mockResolvedValue([]);
     renderPage();
     expect(await screen.findByText("No changes yet")).toBeInTheDocument();
+  });
+
+  it("names a removed tweak in old history and offers to undo what's still applied", async () => {
+    const user = userEvent.setup();
+    const gone = { id: "gaming.gone", name: "Gone tweak", risk: "low", undoable: true };
+    mock.listRetiredTweaks.mockResolvedValue([gone]);
+    mock.listSnapshots.mockResolvedValue([{ ...SNAPSHOT, tweakIds: [gone.id] }]);
+    mock.revertTweak.mockResolvedValue(outcome());
+    renderPage();
+
+    const section = await screen.findByRole("region", { name: "Removed from 2VX" });
+    expect(within(section).getByText("Gone tweak")).toBeInTheDocument();
+    await user.click(within(section).getByRole("button", { name: "Undo" }));
+    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Undo" }));
+
+    expect(mock.revertTweak).toHaveBeenCalledWith(gone.id);
+    expect(mock.revertSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("offers nothing when no removed tweak is still applied", async () => {
+    mock.listRetiredTweaks.mockResolvedValue([
+      { id: "gaming.gone", name: "Gone tweak", risk: "low", undoable: false },
+    ]);
+    mock.listSnapshots.mockResolvedValue([{ ...SNAPSHOT, tweakIds: ["gaming.gone"] }]);
+    renderPage();
+
+    expect(await screen.findByText("Gone tweak")).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Removed from 2VX" })).not.toBeInTheDocument();
   });
 
   it("lists snapshots with tweak names and their recorded values", async () => {

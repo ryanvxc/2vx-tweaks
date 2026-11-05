@@ -6,14 +6,9 @@ use crate::engine::{
 pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "performance.edge-startup-boost-off",
-        name: "Turn off Microsoft Edge Startup boost",
-        description: "Stops Edge loading in the background at sign-in.",
-        details: "Sets the documented Edge policy StartupBoostEnabled to 0 (HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge). \
-                  Edge processes no longer start at sign-in or stay resident after the last window closes, so they \
-                  use no memory until you open Edge; the first Edge window then opens a little slower. Because this \
-                  is a machine policy, edge://settings shows the option as managed and Edge may show \"Your browser \
-                  is managed by your organization\". Takes effect the next time Edge starts. Reverting removes the \
-                  value; the empty policy key is left in place.",
+        name: "Turn off Edge Startup boost",
+        description: "Edge no longer loads parts of itself in the background when you sign in.",
+        details: "Startup boost runs Edge processes at sign-in so the browser opens faster later. Turning it off saves a little memory and sign-in work, and Edge takes a moment longer to open the first time.",
         category: TweakCategory::Performance,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,
@@ -22,7 +17,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         edition: EditionScope::Any,
         recommended: false,
         restart: RestartRequirement::None,
-        impact: Impact::Medium,
+        impact: Impact::Low,
         warning: None,
         requires: None,
         added_in: "0.1",

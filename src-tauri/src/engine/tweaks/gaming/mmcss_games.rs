@@ -7,12 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "gaming.mmcss-games-priority",
         name: "Raise game priority in MMCSS",
-        description: "Raises the thread priority of games that register with MMCSS.",
-        details: "Sets Priority to 6 and Scheduling Category to High under the MMCSS Games task \
-                  (HKLM\\SOFTWARE\\Microsoft\\Windows \
-                  NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games), both documented values. It only \
-                  reaches games that register their threads with MMCSS, and many don't. Those threads then run \
-                  above the Audio task's Medium category. 2VX hasn't measured the effect on any game.",
+        description: "Gives games that use the multimedia scheduler higher thread priority.",
+        details: "Raises the Games task in the Multimedia Class Scheduler. It only affects games that opt in, and many do not, so the result is usually small. Needs a restart.",
         category: TweakCategory::Gaming,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,
@@ -21,7 +17,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         edition: EditionScope::Any,
         recommended: false,
         restart: RestartRequirement::Reboot,
-        impact: Impact::Medium,
+        impact: Impact::Low,
         warning: None,
         requires: None,
         added_in: "0.2",

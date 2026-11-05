@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "performance.fault-tolerant-heap-off",
         name: "Disable Fault Tolerant Heap",
-        description: "Stops Windows applying crash workarounds to apps that keep crashing, which can slow them.",
-        details: "Sets Enabled to 0 under HKLM\\SOFTWARE\\Microsoft\\FTH, as Microsoft documents. FTH is a reliability feature, not a security one. An app that crashes often may crash more without it.",
+        description: "Stops Windows adding crash workarounds to apps that keep crashing.",
+        details: "After repeated crashes, Windows can apply a memory workaround that keeps an app running but can slow it. Turn this off if a game or program got slower after crashing. Crash-prone apps may then crash more.",
         category: TweakCategory::Performance,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

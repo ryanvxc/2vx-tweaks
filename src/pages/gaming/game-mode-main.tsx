@@ -3,7 +3,6 @@ import {
   AppWindow,
   Cpu,
   Gamepad2,
-  Gauge,
   Gpu,
   Joystick,
   Loader2,
@@ -34,12 +33,6 @@ import { AddGameDialog } from "./add-game-dialog";
 
 const PROMISES: { icon: LucideIcon; colour: string; title: string; text: string }[] = [
   {
-    icon: Gauge,
-    colour: "text-chart-4",
-    title: "Game first",
-    text: "The active window gets three times the CPU time of background apps.",
-  },
-  {
     icon: MoonStar,
     colour: "text-chart-2",
     title: "Quiet background",
@@ -65,7 +58,7 @@ const ORB: Record<OrbState, { label: string; hint: string }> = {
   idle: { label: "Start a Game", hint: "Game Mode can turn on once a game is running." },
   ready: { label: "Turn on", hint: "Review what Game Mode will change." },
   on: { label: "On", hint: "Stays on until you turn it off. Click to undo its changes." },
-  inEffect: { label: "Already on", hint: "Everything you chose is already in effect." },
+  inEffect: { label: "Already on", hint: "Everything you chose is already applied." },
   blocked: { label: "Turn on", hint: "Choose something in Configure first." },
   busy: { label: "Working", hint: "Undoing Game Mode's changes." },
 };
@@ -91,7 +84,11 @@ export function GameModeMain({
   const [busy, setBusy] = useState(false);
 
   const game = detectGame(programs, games);
-  const usable = statuses.filter((t) => chosen.includes(t.meta.id) && !isBlocked(t.compatibility));
+  // Saved before 0.5, a choice can hold a tweak that has since moved to Visuals: not Game Mode's job.
+  const usable = statuses.filter(
+    (t) =>
+      chosen.includes(t.meta.id) && t.meta.category !== "visuals" && !isBlocked(t.compatibility),
+  );
   const open = usable.filter((t) => t.state !== "applied");
   const changesDisabled = isDesktop && engine.data?.journalAvailable === false;
   // Undone from the Restore Centre counts as off. The journal says so; nothing else has to.
@@ -130,7 +127,7 @@ export function GameModeMain({
 
   return (
     <>
-      <ul className="grid grid-cols-4 divide-x pt-8 pb-6">
+      <ul className="grid grid-cols-3 divide-x pt-8 pb-6">
         {PROMISES.map(({ icon: Icon, colour, title, text }) => (
           <li key={title} className="flex flex-col gap-2 px-5 first:pl-0 last:pr-0">
             <div className="flex items-center gap-2 text-[13.5px] font-medium">

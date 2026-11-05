@@ -9,6 +9,19 @@ record to be kept.
 | Fable 5.1 | `claude-fable-5-1` | Independent product and UX critic: compared the app with the references and challenged decisions |
 | Sonnet 5.5 | `claude-sonnet-5-5` | Focused implementation of single pages, with tests |
 
+## 0.5: Visuals and the library audit
+
+The owner asked for the same three models, used as real agents. The full audit is in
+[VISUALS_SECTION_AUDIT.md](VISUALS_SECTION_AUDIT.md).
+
+| Model | Job |
+| --- | --- |
+| Opus 5.5 | Lead: engine, retired-tweak undo, policy, value fixes, final decisions. Four Opus agents read all 1,300 tweaks in parallel |
+| Fable 5.1 | Challenged the audit (7 overrides, all taken), then reviewed the built section, which led to 173 card renames, build ranges, named presets and the Tasks tab going |
+| Sonnet 5.5 | The Visuals page, sidebar item, placement and filters, with tests |
+
+Where Fable and the lead disagreed, the lead decided and the reasons are in the audit document.
+
 ## How the agents ran
 
 The role files are in `.claude/agents/`. Project agent types don't load into a session that's already running, so each

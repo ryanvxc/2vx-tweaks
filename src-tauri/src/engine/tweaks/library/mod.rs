@@ -19,9 +19,11 @@ mod memory;
 mod network;
 mod power;
 mod privacy;
+mod retired;
 mod services;
 mod storage;
 mod tasks;
+mod visuals;
 mod windows;
 
 pub const ALL: &[&[SettingsTweak]] = &[
@@ -36,8 +38,11 @@ pub const ALL: &[&[SettingsTweak]] = &[
     services::TWEAKS,
     storage::TWEAKS,
     tasks::TWEAKS,
+    visuals::TWEAKS,
     windows::TWEAKS,
 ];
+
+pub const RETIRED: &[SettingsTweak] = retired::TWEAKS;
 
 type Refs = &'static [&'static str];
 
@@ -58,6 +63,21 @@ const POWER_DOCS: Refs = &[
 const CHROME_DOCS: Refs = &["https://chromeenterprise.google/policies/"];
 const EDGE_DOCS: Refs = &["https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies"];
 const FIREFOX_DOCS: Refs = &["https://mozilla.github.io/policy-templates/"];
+const TASKBAR_DOCS: Refs = &[
+    "https://support.microsoft.com/en-us/windows/experience/personalization/customize-the-taskbar-in-windows",
+];
+const START_DOCS: Refs = &[
+    "https://support.microsoft.com/en-gb/windows/experience/personalization/customize-the-windows-start-menu",
+];
+const COLOUR_DOCS: Refs = &[
+    "https://support.microsoft.com/en-us/windows/experience/personalization/personalize-your-colors-in-windows",
+];
+const DESKTOP_DOCS: Refs = &[
+    "https://support.microsoft.com/en-us/windows/experience/personalization/customize-the-desktop-icons-in-windows",
+];
+const EXPLORER_DOCS: Refs = &[
+    "https://support.microsoft.com/en-us/windows/experience/fileexplorer/file-explorer-in-windows",
+];
 const BRAVE_DOCS: Refs = &["https://support.brave.com/hc/en-us/articles/360039248271-Group-Policy"];
 
 const fn hklm(key: &'static str, name: &'static str, data: u32) -> Setting {
@@ -178,6 +198,15 @@ const fn build(
 }
 
 impl TweakMeta {
+    /// The longer text behind the card. Without it the card's line is repeated.
+    const fn details(mut self, details: &'static str) -> Self {
+        self.details = details;
+        self
+    }
+    const fn added(mut self, version: &'static str) -> Self {
+        self.added_in = version;
+        self
+    }
     const fn admin(mut self) -> Self {
         self.permission = Permission::Administrator;
         self
@@ -219,6 +248,11 @@ impl TweakMeta {
             min_build,
             max_build: None,
         };
+        self
+    }
+    /// The last build a setting does anything on. Call after `builds`.
+    const fn until(mut self, max_build: u32) -> Self {
+        self.supported_builds.max_build = Some(max_build);
         self
     }
     const fn warn(mut self, warning: &'static str) -> Self {

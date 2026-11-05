@@ -8,9 +8,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         id: "gaming.game-dvr-off",
         name: "Turn off Game DVR",
         description: "Stops Windows recording and broadcasting games in the background.",
-        details: "Sets the AllowGameDVR policy to 0 (HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR). \
-                  Windows stops background recording for every user. Microsoft lists this policy for Pro and \
-                  above, so it isn't offered on Home.",
+        details: "Sets the Windows policy that turns off game recording and broadcasting, so Game Bar capture no longer runs. Worth doing if you never use it. Clips, screenshots and broadcasts through Game Bar stop working.",
         category: TweakCategory::Gaming,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,

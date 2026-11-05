@@ -23,9 +23,9 @@ export interface Message {
 }
 
 export const TWEAK_STATE: Record<TweakState, { label: string; tone: Tone }> = {
-  applied: { label: "In effect", tone: "success" },
-  notApplied: { label: "Not in effect", tone: "neutral" },
-  partial: { label: "Partly in effect", tone: "warning" },
+  applied: { label: "Applied", tone: "success" },
+  notApplied: { label: "Not applied", tone: "neutral" },
+  partial: { label: "Partly applied", tone: "warning" },
   unknown: { label: "Unknown", tone: "warning" },
 };
 

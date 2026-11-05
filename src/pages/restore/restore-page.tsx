@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, History, SlidersHorizontal, Undo2 } from "lucide-react";
+import { Archive, ChevronDown, History, SlidersHorizontal, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { EngineBanner } from "@/components/common/engine-banner";
 import { MessageNotice, StatusLabel } from "@/components/common/notice";
+import { CardGrid, OptimisationCard } from "@/components/common/optimisation-card";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
 import { RecommendedAction } from "@/components/common/recommended-action";
 import { PageHero } from "@/components/layout/page-hero";
 import { Button } from "@/components/ui/button";
-import { refreshEngineState, useSnapshots, useTweaks } from "@/hooks/use-system";
+import { refreshEngineState, useRetiredTweaks, useSnapshots, useTweaks } from "@/hooks/use-system";
 import {
   CHANGE_STATUS,
   SNAPSHOT_STATUS,
@@ -20,7 +21,7 @@ import {
 } from "@/lib/engine-text";
 import { cn } from "@/lib/utils";
 import { backend, toBackendError } from "@/services/backend";
-import type { ChangeRecord, RiskLevel, SnapshotRecord } from "@/types/engine";
+import type { ChangeRecord, RetiredTweak, RiskLevel, SnapshotRecord } from "@/types/engine";
 import type { BackendError } from "@/types/system";
 
 // Shared by the header and every row, so the columns line up.
@@ -29,7 +30,9 @@ const COLUMNS = "grid grid-cols-[minmax(0,1fr)_9.5rem_3.25rem_4.5rem_1.5rem] ite
 export function RestorePage() {
   const { data, error, loading, refetch } = useSnapshots();
   const { data: tweaks } = useTweaks();
-  const meta = Object.fromEntries((tweaks ?? []).map((t) => [t.id, t]));
+  const { data: retired } = useRetiredTweaks();
+  const meta = Object.fromEntries([...(retired ?? []), ...(tweaks ?? [])].map((t) => [t.id, t]));
+  const stillApplied = (retired ?? []).filter((t) => t.undoable);
   const names = (ids: string[]) => ids.map((id) => meta[id]?.name ?? id).join(", ") || "—";
   const riskOf = (ids: string[]): RiskLevel =>
     ids.some((id) => meta[id]?.risk === "high")
@@ -47,6 +50,16 @@ export function RestorePage() {
       />
       <div className="flex flex-1 flex-col gap-3">
         <EngineBanner showHistoryLink={false} />
+        {stillApplied.length > 0 && (
+          <section aria-label="Removed from 2VX" className="flex flex-col gap-2">
+            <h2 className="text-[13px] font-semibold">Removed from 2VX, still on this PC</h2>
+            <CardGrid>
+              {stillApplied.map((t) => (
+                <RetiredCard key={t.id} tweak={t} />
+              ))}
+            </CardGrid>
+          </section>
+        )}
         <div className="flex flex-1 flex-col overflow-hidden panel">
           {error ? (
             <div className="p-4">
@@ -88,6 +101,65 @@ export function RestorePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** 2VX no longer offers this tweak, but what it changed stays until the user undoes it. */
+function RetiredCard({ tweak }: { tweak: RetiredTweak }) {
+  const [confirming, setConfirming] = useState(false);
+  const [reverting, setReverting] = useState(false);
+
+  const revert = () => {
+    setConfirming(false);
+    setReverting(true);
+    backend
+      .revertTweak(tweak.id)
+      .then(
+        (outcome) => {
+          const m = describeOutcome(outcome, "revert");
+          (m.tone === "success" ? toast.success : toast.warning)(m.title, {
+            description: m.description,
+          });
+        },
+        (err: unknown) => {
+          const m = describeError(toBackendError(err));
+          toast.error(m.title, { description: m.description });
+        },
+      )
+      .finally(() => {
+        setReverting(false);
+        refreshEngineState();
+      });
+  };
+
+  return (
+    <>
+      <OptimisationCard
+        icon={Archive}
+        title={tweak.name}
+        description="This tweak was removed from 2VX. Your setting stays as it is until you undo it."
+        control={
+          <Button
+            size="xs"
+            variant="ghost"
+            disabled={reverting}
+            onClick={() => setConfirming(true)}
+          >
+            <Undo2 /> Undo
+          </Button>
+        }
+      />
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title={`Undo: ${tweak.name}`}
+        description="Restores the recorded values."
+        consequences={["Anything changed since is left as is"]}
+        risk={tweak.risk}
+        confirmLabel="Undo"
+        onConfirm={revert}
+      />
+    </>
   );
 }
 

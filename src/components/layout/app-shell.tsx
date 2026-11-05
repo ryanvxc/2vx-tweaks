@@ -7,7 +7,7 @@ import { Sidebar } from "./sidebar";
 import { TitleBar } from "./title-bar";
 
 /** Tab pages that reserve the scrollbar's width, or their cards shift between short and long tabs. */
-const STEADY = ["/tweaks", "/cleaner", "/hardware", "/network", "/advanced"];
+const STEADY = ["/tweaks", "/visuals", "/cleaner", "/hardware", "/network", "/advanced"];
 
 export function AppShell() {
   const { pathname, search } = useLocation();

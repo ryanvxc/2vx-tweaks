@@ -1,14 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { HANDWRITTEN, LIBRARY } from "@/test/catalogue";
 import { STATUSES, USER_TWEAK } from "@/test/engine-fixtures";
 import type { TweakStatus } from "@/types/engine";
 import { profileProgress } from "./profiles";
 import { activePreset, SERVICE_PRESETS, undoableIn, type ServicePreset } from "./service-presets";
-
-const SOURCES = import.meta.glob<string>("/src-tauri/src/engine/tweaks/services/*.rs", {
-  eager: true,
-  query: "?raw",
-  import: "default",
-});
 
 const [basic, advanced] = SERVICE_PRESETS as [ServicePreset, ServicePreset];
 
@@ -20,8 +15,8 @@ const on = (ids: string[]) => ids.map((id) => tweak(id, { state: "applied" }));
 
 describe("service presets", () => {
   it("only name tweaks that exist in the Rust catalogue", () => {
-    const source = Object.values(SOURCES).join("\n");
-    for (const id of advanced.tweakIds) expect(source).toContain(`id: "${id}"`);
+    const catalogue = [...HANDWRITTEN, ...LIBRARY];
+    expect(advanced.tweakIds.filter((id) => !catalogue.includes(id))).toEqual([]);
   });
 
   it("keep Advanced a strict superset of Basic", () => {

@@ -8,7 +8,7 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         id: "windows.autoplay-off",
         name: "Turn off AutoPlay",
         description: "Nothing opens or runs by itself when you plug in a drive or insert a disc.",
-        details: "Sets NoDriveTypeAutoRun to 255 under the Explorer policy key, which turns AutoPlay off for every drive type.",
+        details: "Turns off AutoPlay for every drive type. It avoids pop-ups and closes an old route for malware on USB sticks. You open drives yourself in File Explorer.",
         category: TweakCategory::Windows,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

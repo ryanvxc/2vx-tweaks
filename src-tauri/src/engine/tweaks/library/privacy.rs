@@ -5,100 +5,16 @@ use super::*;
 pub const TWEAKS: &[SettingsTweak] = &[
     SettingsTweak {
         meta: lib(
-            "privacy.commercial-pipeline",
-            Privacy,
-            "Telemetry",
-            "Commercial data pipeline",
-            "Stops the commercial diagnostics pipeline.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\DataCollection",
-            "AllowCommercialDataPipeline",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.desktop-analytics",
-            Privacy,
-            "Telemetry",
-            "Desktop Analytics",
-            "Stops Desktop Analytics processing.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\DataCollection",
-            "AllowDesktopAnalyticsProcessing",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.device-name",
-            Privacy,
-            "Telemetry",
-            "Device name in telemetry",
-            "Keeps your PC's name out of telemetry.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\DataCollection",
-            "AllowDeviceNameInTelemetry",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.update-compliance",
-            Privacy,
-            "Telemetry",
-            "Update Compliance data",
-            "Stops Update Compliance processing.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\DataCollection",
-            "AllowUpdateComplianceProcessing",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.wufb-cloud",
-            Privacy,
-            "Telemetry",
-            "WUfB cloud processing",
-            "Stops Windows Update for Business reports.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\DataCollection",
-            "AllowWUfBCloudProcessing",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.onesettings",
             Privacy,
             "Telemetry",
-            "OneSettings downloads",
-            "Stops remote configuration downloads.",
+            "No OneSettings downloads",
+            "Stops Windows downloading settings that adjust its data collection.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("OneSettings lets Microsoft change some diagnostic behaviour remotely, without an update. This blocks those downloads. There's no visible change in normal use."),
         settings: &[hklm(
             r"SOFTWARE\Policies\Microsoft\Windows\DataCollection",
             "DisableOneSettingsDownloads",
@@ -107,66 +23,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.feedback-notifications",
-            Privacy,
-            "Telemetry",
-            "Feedback notifications",
-            "Stops prompts asking for feedback.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\DataCollection",
-            "DoNotShowFeedbackNotifications",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.limit-enhanced",
-            Privacy,
-            "Telemetry",
-            "Enhanced diagnostic limit",
-            "Limits data sent to Windows Analytics.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\DataCollection",
-            "LimitEnhancedDiagnosticDataWindowsAnalytics",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.edge-data-optin",
-            Privacy,
-            "Telemetry",
-            "Edge data in telemetry",
-            "Keeps Edge browsing out of Windows telemetry.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\DataCollection",
-            "MicrosoftEdgeDataOptIn",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.ceip",
             Privacy,
             "Telemetry",
-            "Customer Experience Program",
-            "Leaves the improvement program.",
+            "No Experience Program",
+            "Takes this PC out of Microsoft's older program for collecting usage data.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("This is the official opt-out for the Customer Experience Improvement Program. Windows diagnostic data has mostly replaced it, so the effect is small, but the remaining collector stops sending data."),
         settings: &[
             hklm(r"SOFTWARE\Microsoft\SQMClient\Windows", "CEIPEnable", 0),
             hklm(
@@ -183,12 +49,13 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.ait",
             Privacy,
             "Telemetry",
-            "Application telemetry",
-            "Stops app usage tracking.",
+            "No application telemetry",
+            "Stops Windows tracking how apps run and are used for compatibility reporting.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Application Telemetry records which programs you use and how they behave, as part of Windows diagnostics. Turning it off reduces that data and has no visible effect on your apps."),
         settings: &[hklm(
             r"SOFTWARE\Policies\Microsoft\Windows\AppCompat",
             "AITEnable",
@@ -200,12 +67,13 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.inventory",
             Privacy,
             "Telemetry",
-            "Application inventory",
-            "Stops the inventory collector.",
+            "No application inventory",
+            "Stops Windows listing your installed apps, files and devices to send to Microsoft.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("The Inventory Collector records the software and hardware on your PC for compatibility checks. Turning it off reduces that data. Windows may have less to go on when checking a feature update."),
         settings: &[hklm(
             r"SOFTWARE\Policies\Microsoft\Windows\AppCompat",
             "DisableInventory",
@@ -214,85 +82,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.steps-recorder",
-            Privacy,
-            "Telemetry",
-            "Steps Recorder",
-            "Turns off Steps Recorder.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\AppCompat",
-            "DisableUAR",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.pca",
-            Privacy,
-            "Telemetry",
-            "Program Compatibility Assistant",
-            "Turns off compatibility prompts.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\AppCompat",
-            "DisablePCA",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.compat-engine",
-            Privacy,
-            "Telemetry",
-            "Application compatibility engine",
-            "Stops compatibility fixes loading.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .medium()
-        .warn("Old apps that rely on shims may stop working.")
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\AppCompat",
-            "DisableEngine",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.compat-tab",
-            Privacy,
-            "Telemetry",
-            "Compatibility tab",
-            "Hides the Compatibility tab.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\AppCompat",
-            "DisablePropPage",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.mrt-report",
             Privacy,
             "Telemetry",
-            "Malicious tool reports",
-            "Stops the removal tool sending reports.",
+            "No removal tool reports",
+            "Stops the Malicious Software Removal Tool sending infection reports to Microsoft.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("The tool still runs after Windows updates and still removes what it finds. This only stops it reporting the results, so your protection doesn't change."),
         settings: &[hklm(
             r"SOFTWARE\Policies\Microsoft\MRT",
             "DontReportInfectionInformation",
@@ -304,13 +103,13 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.error-report-policy",
             Privacy,
             "Telemetry",
-            "Error reporting",
-            "Turns off Windows Error Reporting.",
+            "No error reporting",
+            "Stops Windows sending Microsoft a report when an app or Windows crashes.",
             POLICY_DOCS,
             Documented,
         )
-        .impact(Medium)
-        .admin(),
+        .admin()
+        .details("Crash reports can include details of what the app was doing. With reporting off, nothing is sent. You lose any solutions Windows would offer for a crash."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\Windows\Windows Error Reporting",
@@ -337,260 +136,17 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.error-extra",
-            Privacy,
-            "Telemetry",
-            "Additional crash data",
-            "Stops extra data going with crash reports.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows\Windows Error Reporting",
-                "DontSendAdditionalData",
-                1,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\Windows Error Reporting",
-                "DontSendAdditionalData",
-                1,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.error-ui",
-            Privacy,
-            "Telemetry",
-            "Crash report prompts",
-            "Hides crash report dialogs.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hkcu(
-                r"Software\Microsoft\Windows\Windows Error Reporting",
-                "DontShowUI",
-                1,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\Windows\Windows Error Reporting",
-                "DontShowUI",
-                1,
-            ),
-            hklm(r"SOFTWARE\Microsoft\PCHealth\ErrorReporting", "ShowUI", 0),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.error-logging",
-            Privacy,
-            "Telemetry",
-            "Error report logging",
-            "Stops logging reports.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows\Windows Error Reporting",
-                "LoggingDisabled",
-                1,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\Windows Error Reporting",
-                "LoggingDisabled",
-                1,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.error-consent",
-            Privacy,
-            "Telemetry",
-            "Error report consent",
-            "Sets consent to ask first.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows\Windows Error Reporting\Consent",
-                "DefaultConsent",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\Windows Error Reporting\Consent",
-                "DefaultConsent",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\Windows\Windows Error Reporting\Consent",
-                "DefaultOverrideBehavior",
-                1,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\Windows Error Reporting\Consent",
-                "DefaultOverrideBehavior",
-                1,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.handwriting-reports",
-            Privacy,
-            "Telemetry",
-            "Handwriting error reports",
-            "Stops handwriting reports.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\HandwritingErrorReports",
-            "PreventHandwritingErrorReports",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.handwriting-data",
-            Privacy,
-            "Telemetry",
-            "Handwriting data sharing",
-            "Stops sharing handwriting samples.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\TabletPC",
-            "PreventHandwritingDataSharing",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.ie-sqm",
-            Privacy,
-            "Telemetry",
-            "Internet Explorer CEIP",
-            "Leaves the IE improvement program.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Internet Explorer\SQM",
-                "DisableCustomerImprovementProgram",
-                1,
-            ),
-            hklm(r"SOFTWARE\Microsoft\Internet Explorer\SQM", "OptedIn", 0),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.ie-logging",
-            Privacy,
-            "Telemetry",
-            "InPrivate logging",
-            "Stops IE InPrivate logging.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Internet Explorer\Safety\PrivacIE",
-            "DisableLogging",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.messenger-ceip",
-            Privacy,
-            "Telemetry",
-            "Messenger CEIP",
-            "Leaves the Messenger program.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Messenger\Client",
-            "CEIP",
-            2,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.media-player-usage",
-            Privacy,
-            "Telemetry",
-            "Media Player usage tracking",
-            "Stops Media Player tracking.",
-            POLICY_DOCS,
-            Documented,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\MediaPlayer\Preferences",
-            "UsageTracking",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.toast-diagtrack",
-            Privacy,
-            "Telemetry",
-            "Diagnostic prompt",
-            "Marks the diagnostics prompt as seen.",
-            TAIRIKU,
-            Community,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\Diagnostics\DiagTrack",
-            "ShowedToastAtLevel",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.experimentation",
-            Privacy,
-            "Telemetry",
-            "Windows experiments",
-            "Blocks Microsoft's feature experiments.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Microsoft\PolicyManager\current\device\System",
-            "AllowExperimentation",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.autologger-diagtrack",
             Privacy,
             "Telemetry",
-            "Diagtrack listener",
-            "Stops the telemetry trace at boot.",
+            "No telemetry boot trace",
+            "Stops the trace that collects telemetry events for Microsoft from the start of boot.",
             TAIRIKU,
             Observed,
         )
         .reboot()
-        .admin(),
+        .admin()
+        .details("This early trace feeds the Windows diagnostics service and writes a log file to disk. Turning it off reduces what is captured at startup. Takes effect after a restart."),
         settings: &[
             hklm(
                 r"SYSTEM\CurrentControlSet\Control\WMI\Autologger\AutoLogger-Diagtrack-Listener",
@@ -606,68 +162,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.autologger-diaglog",
-            Privacy,
-            "Telemetry",
-            "DiagLog trace",
-            "Stops the DiagLog trace at boot.",
-            TAIRIKU,
-            Observed,
-        )
-        .reboot()
-        .admin(),
-        settings: &[hklm(
-            r"SYSTEM\CurrentControlSet\Control\WMI\Autologger\DiagLog",
-            "Start",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.autologger-sqm",
-            Privacy,
-            "Telemetry",
-            "SQM trace",
-            "Stops the SQM trace at boot.",
-            TAIRIKU,
-            Observed,
-        )
-        .reboot()
-        .admin(),
-        settings: &[hklm(
-            r"SYSTEM\CurrentControlSet\Control\WMI\AutoLogger\SQMLogger",
-            "Start",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.autologger-wifi",
-            Privacy,
-            "Telemetry",
-            "Wi-Fi session trace",
-            "Stops the Wi-Fi trace at boot.",
-            TAIRIKU,
-            Observed,
-        )
-        .reboot()
-        .admin(),
-        settings: &[hklm(
-            r"SYSTEM\CurrentControlSet\Control\WMI\Autologger\WiFiSession",
-            "Start",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.dotnet-telemetry",
             Privacy,
             "Telemetry",
-            ".NET CLI telemetry",
-            "Opts out of .NET CLI telemetry.",
+            "No .NET CLI telemetry",
+            "Stops the .NET developer tools sending Microsoft usage data when you run them.",
             BATLEZ,
             Community,
-        ),
+        )
+        .details("Only relevant if you have the .NET SDK installed and use its command line tools. This sets Microsoft's own opt-out. Apps built with .NET aren't affected."),
         settings: &[hkcu_str("Environment", "DOTNET_CLI_TELEMETRY_OPTOUT", "1")],
     },
     SettingsTweak {
@@ -675,83 +178,26 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.powershell-telemetry",
             Privacy,
             "Telemetry",
-            "PowerShell telemetry",
-            "Opts out of PowerShell telemetry.",
+            "No PowerShell telemetry",
+            "Stops PowerShell 7 sending Microsoft basic usage data when it starts.",
             BATLEZ,
             Community,
-        ),
+        )
+        .details("Only relevant if you've installed PowerShell 7 or later; the built-in Windows PowerShell doesn't send this data. This sets Microsoft's own opt-out."),
         settings: &[hkcu_str("Environment", "POWERSHELL_TELEMETRY_OPTOUT", "1")],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.consumer-features",
-            Privacy,
-            "Advertising and suggestions",
-            "Consumer features",
-            "Stops Windows installing suggested apps.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .impact(Medium)
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\CloudContent",
-                "DisableWindowsConsumerFeatures",
-                1,
-            ),
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\CloudContent",
-                "DisableConsumerFeatures",
-                1,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.cloud-optimised",
-            Privacy,
-            "Advertising and suggestions",
-            "Cloud-optimised content",
-            "Stops cloud-delivered content.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\CloudContent",
-            "DisableCloudOptimizedContent",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.soft-landing",
-            Privacy,
-            "Advertising and suggestions",
-            "Tips and tricks",
-            "Stops Windows tips.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\CloudContent",
-            "DisableSoftLanding",
-            1,
-        )],
     },
     SettingsTweak {
         meta: lib(
             "privacy.tailored-policy",
             Privacy,
             "Advertising and suggestions",
-            "Tailored experiences",
-            "Stops ads built on diagnostic data.",
+            "No tailored experiences",
+            "Stops Microsoft using your diagnostic data to tailor tips, ads and recommendations.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Tailored experiences use your diagnostic data to personalise what Windows suggests. This turns that off. Windows still collects data at your diagnostic level, but won't use it this way."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\Windows\CloudContent",
@@ -767,83 +213,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.spotlight",
-            Privacy,
-            "Advertising and suggestions",
-            "Windows Spotlight",
-            "Turns off Spotlight everywhere.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\CloudContent",
-            "DisableWindowsSpotlightFeatures",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.spotlight-action",
-            Privacy,
-            "Advertising and suggestions",
-            "Spotlight on Action Center",
-            "Stops suggestions in Action Center.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\CloudContent",
-            "DisableWindowsSpotlightOnActionCenter",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.spotlight-lock",
-            Privacy,
-            "Advertising and suggestions",
-            "Spotlight on lock screen",
-            "Stops lock screen suggestions.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\CloudContent",
-            "DisableWindowsSpotlightOnLockScreen",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.spotlight-settings",
-            Privacy,
-            "Advertising and suggestions",
-            "Spotlight in Settings",
-            "Stops suggestions in Settings.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\CloudContent",
-            "DisableWindowsSpotlightOnSettings",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.spotlight-welcome",
             Privacy,
             "Advertising and suggestions",
-            "Welcome experience",
-            "Stops the post-update welcome page.",
+            "No finish setup prompts",
+            "Stops full-screen prompts asking you to finish setting up your PC.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Windows can ask you to link a phone, try Microsoft 365 or set up OneDrive after updates. This turns those prompts off so you go straight to your desktop. Nothing is removed."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\Windows\CloudContent",
@@ -859,43 +238,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.cdm-preinstalled",
-            Privacy,
-            "Advertising and suggestions",
-            "Preinstalled apps",
-            "Stops preinstalled suggested apps.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
-                "PreInstalledAppsEnabled",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
-                "PreInstalledAppsEverEnabled",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
-                "OemPreInstalledAppsEnabled",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.cdm-silent",
             Privacy,
             "Advertising and suggestions",
-            "Silent app installs",
-            "Stops apps installing themselves.",
+            "No silent app installs",
+            "Stops Windows quietly installing sponsored apps and games.",
             BATLEZ,
             Community,
         )
-        .impact(Medium),
+        .details("Windows can add promoted apps to your account without asking, often after a big update. This turns off that delivery. Apps already installed stay until you remove them."),
         settings: &[
             hkcu(
                 r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
@@ -911,42 +262,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.cdm-lockscreen",
-            Privacy,
-            "Advertising and suggestions",
-            "Lock screen tips",
-            "Stops lock screen facts.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
-                "RotatingLockScreenEnabled",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
-                "RotatingLockScreenOverlayEnabled",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\Lock Screen",
-                "SlideshowEnabled",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.cdm-settings",
             Privacy,
             "Advertising and suggestions",
-            "Suggestions in Settings",
-            "Stops suggestions in Settings.",
+            "No suggestions in Settings",
+            "Stops the Settings app showing suggested content and app promotions.",
             BATLEZ,
             Community,
-        ),
+        )
+        .details("Settings pages can carry Microsoft suggestions, including promotions for its own services. This removes them. All the normal options stay where they are."),
         settings: &[
             hkcu(
                 r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
@@ -970,11 +294,12 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.cdm-tips",
             Privacy,
             "Advertising and suggestions",
-            "Tips while you use Windows",
-            "Stops tips as you use Windows.",
+            "No tips while you use Windows",
+            "Stops pop-ups with tips and suggestions while you use Windows.",
             BATLEZ,
             Observed,
-        ),
+        )
+        .details("Windows shows notifications about features and Microsoft services based on how you use the PC. This turns them off. You can still find help when you want it."),
         settings: &[
             hkcu(
                 r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
@@ -993,11 +318,12 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.cdm-start",
             Privacy,
             "Advertising and suggestions",
-            "Suggestions in Start",
-            "Stops suggestions in Start.",
+            "No suggestions in Start",
+            "Removes suggested apps and promotions from the Start menu.",
             BATLEZ,
             Community,
-        ),
+        )
+        .details("Stops Windows using Start to advertise apps and Microsoft services. Your pinned apps and files aren't affected. On Windows 11 the Recommended section has its own Visuals card."),
         settings: &[
             hkcu(
                 r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
@@ -1016,11 +342,12 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.cdm-welcome",
             Privacy,
             "Advertising and suggestions",
-            "Welcome suggestions",
-            "Stops welcome page suggestions.",
+            "No post-update welcome page",
+            "Stops the full-screen page showing what's new after some Windows updates.",
             BATLEZ,
             Community,
-        ),
+        )
+        .details("After updates and sometimes at sign-in, Windows can open a page promoting new features and Microsoft services. This turns it off, so you go straight to your desktop."),
         settings: &[hkcu(
             r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
             "SubscribedContent-310093Enabled",
@@ -1032,11 +359,12 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.cdm-lock-fun",
             Privacy,
             "Advertising and suggestions",
-            "Fun facts",
-            "Stops fun facts on the lock screen.",
+            "No lock screen fun facts",
+            "Removes the fun facts, tips and offers written over your lock screen picture.",
             BATLEZ,
             Community,
-        ),
+        )
+        .details("Windows can overlay text and links from Microsoft on the lock screen, some of them promotions. This turns that off and leaves your picture clean. It doesn't change the picture itself."),
         settings: &[hkcu(
             r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
             "SubscribedContent-338387Enabled",
@@ -1045,111 +373,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.cdm-mru",
-            Privacy,
-            "Advertising and suggestions",
-            "Spotlight history",
-            "Stops another suggestion feed.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
-            "SubscribedContent-314559Enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.cdm-feature-mgmt",
-            Privacy,
-            "Advertising and suggestions",
-            "Feature management",
-            "Stops feature promotions.",
-            TAIRIKU,
-            Community,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
-            "FeatureManagementEnabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.cdm-content",
-            Privacy,
-            "Advertising and suggestions",
-            "Content delivery",
-            "Stops all content delivery.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
-            "ContentDeliveryAllowed",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.cdm-slideshow",
-            Privacy,
-            "Advertising and suggestions",
-            "Content slideshow",
-            "Stops suggested slideshows.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
-            "SlideshowEnabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.cdm-rest",
-            Privacy,
-            "Advertising and suggestions",
-            "Other suggestion channels",
-            "Stops the remaining suggestion feeds.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
-            "SubscribedContent-88000326Enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.lock-creative",
-            Privacy,
-            "Advertising and suggestions",
-            "Lock screen creative",
-            "Clears Spotlight's creative id.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu_str(
-            r"Software\Microsoft\Windows\CurrentVersion\Lock Screen\Creative",
-            "CreativeId",
-            "",
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.online-tips",
             Privacy,
             "Advertising and suggestions",
-            "Online tips",
-            "Stops online tips in Settings.",
+            "No online tips",
+            "Stops the Settings app fetching online tips and help from Microsoft.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Settings pages can pull tips and help links from the internet. This keeps them offline and removes those panels. Every setting stays where it is."),
         settings: &[hklm(
             r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer",
             "AllowOnlineTips",
@@ -1158,65 +391,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.meet-now",
-            Privacy,
-            "Advertising and suggestions",
-            "Meet Now",
-            "Hides Meet Now.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\Policies\Explorer",
-                "HideSCAMeetNow",
-                1,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer",
-                "HideSCAMeetNow",
-                1,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.news-interests",
-            Privacy,
-            "Advertising and suggestions",
-            "News and interests",
-            "Turns off the feed.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .impact(Medium)
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Dsh",
-                "AllowNewsAndInterests",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\PolicyManager\default\NewsAndInterests\AllowNewsAndInterests",
-                "value",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.copilot-policy",
             Privacy,
             "Copilot and AI",
-            "Windows Copilot",
-            "Turns off Copilot.",
+            "Turn off Windows Copilot",
+            "Turns off the Copilot built into Windows and removes its taskbar entry.",
             POLICY_DOCS,
             Documented,
         )
-        .impact(Medium)
-        .admin(),
+        .admin()
+        .details("Uses Microsoft's policy to switch off Windows Copilot. Microsoft has deprecated this policy and the newer Copilot app may not be covered. If Copilot still opens, uninstall the app as well."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot",
@@ -1242,32 +426,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.copilot-large",
-            Privacy,
-            "Copilot and AI",
-            "Copilot on large screens",
-            "Stops Copilot opening by itself.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\Shell\Copilot",
-            "AutoOpenCopilotLargeScreens",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.recall",
             Privacy,
             "Copilot and AI",
-            "Recall",
-            "Turns off Recall.",
+            "Turn off Recall",
+            "Removes Recall, which saves regular snapshots of your screen to search later.",
             POLICY_DOCS,
             Documented,
         )
-        .impact(Medium)
-        .admin(),
+        .admin()
+        .details("Recall stores snapshots of what you do on the PC. This turns it off and stops it being turned on. It only exists on Copilot+ PCs, so other PCs see no change."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\Windows\WindowsAI",
@@ -1286,12 +454,13 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.click-to-do",
             Privacy,
             "Copilot and AI",
-            "Click to Do",
-            "Turns off Click to Do.",
+            "Turn off Click to Do",
+            "Turns off the AI overlay that scans what's on screen so you can act on it.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Click to Do analyses a screenshot of what you are viewing to offer actions on text and pictures. It only exists on Copilot+ PCs, so other PCs see no change."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\Windows\WindowsAI",
@@ -1307,32 +476,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.paint-cocreator",
-            Privacy,
-            "Copilot and AI",
-            "Paint Cocreator",
-            "Turns off Cocreator in Paint.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint",
-            "DisableCocreator",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.paint-fill",
             Privacy,
             "Copilot and AI",
-            "Paint generative fill",
-            "Turns off generative fill.",
+            "No Paint generative fill",
+            "Removes Paint's AI generative fill tool, for anyone who doesn't want it.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Generative fill uses AI to add or change part of a picture from a text prompt. This hides the tool. The rest of Paint is unchanged."),
         settings: &[hklm(
             r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint",
             "DisableGenerativeFill",
@@ -1344,12 +497,13 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.paint-creator",
             Privacy,
             "Copilot and AI",
-            "Paint Image Creator",
-            "Turns off Image Creator.",
+            "No Paint Image Creator",
+            "Removes Paint's Image Creator, which sends your prompts to Microsoft.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Image Creator generates pictures from text using an online service. Turning it off hides the tool, which suits anyone who doesn't want AI features in Paint. The rest of Paint is unchanged."),
         settings: &[hklm(
             r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint",
             "DisableImageCreator",
@@ -1358,50 +512,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.video-ai",
-            Privacy,
-            "Copilot and AI",
-            "Video AI enhancement",
-            "Stops automatic video enhancement.",
-            BATLEZ,
-            Community,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\VideoManagement",
-                "EnableSuperResolutionAutoEnhancement",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\VideoManagement",
-                "EnableSuperResolutionAutoEnhancement",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\VideoManagement",
-                "EnableVideoContrastEnhancement",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\VideoManagement",
-                "EnableVideoContrastEnhancement",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.web-search",
             Privacy,
             "Search",
-            "Web results in Search",
-            "Keeps Search local.",
+            "No web results in Search",
+            "Keeps Windows Search to your PC, with no Bing results or web queries.",
             POLICY_DOCS,
             Documented,
         )
-        .impact(Medium)
-        .admin(),
+        .admin()
+        .details("What you type in Start stays on this PC instead of going to Bing, and results are local only. You lose quick web answers. Recent Windows 11 builds may still show some web content."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
@@ -1427,49 +547,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.web-search-metered",
-            Privacy,
-            "Search",
-            "Web search on metered",
-            "Stops web results on metered networks.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "ConnectedSearchUseWebOverMeteredConnections",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.search-privacy",
-            Privacy,
-            "Search",
-            "Search privacy level",
-            "Sends less with search.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "ConnectedSearchPrivacy",
-            3,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.search-location",
             Privacy,
             "Search",
-            "Search location",
-            "Stops Search using location.",
+            "No location in Search",
+            "Stops Windows Search using this PC's location for its results.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Search can use your location for local results such as weather and places. This stops that, whatever your other location settings are. It matters little if web results are already off."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
@@ -1482,89 +569,19 @@ pub const TWEAKS: &[SettingsTweak] = &[
                 0,
             ),
         ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.cortana",
-            Privacy,
-            "Search",
-            "Cortana",
-            "Turns off Cortana.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-                "AllowCortana",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\PolicyManager\default\Experience\AllowCortana",
-                "value",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\Search",
-                "CortanaEnabled",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\Search",
-                "CanCortanaBeEnabled",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\Search",
-                "CortanaConsent",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\Windows Search",
-                "CortanaConsent",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\Search",
-                "CortanaInAmbientMode",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\Search",
-                "VoiceShortcut",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.cortana-lock",
-            Privacy,
-            "Search",
-            "Cortana on the lock screen",
-            "Stops Cortana above the lock screen.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "AllowCortanaAboveLock",
-            0,
-        )],
     },
     SettingsTweak {
         meta: lib(
             "privacy.cloud-search",
             Privacy,
             "Search",
-            "Cloud search",
-            "Stops searching cloud content.",
+            "No cloud search",
+            "Stops Windows Search looking through OneDrive, Outlook and cloud content.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Search can include items from your Microsoft or work account. This keeps results to this PC, so your account content isn't pulled into local searches. Files synced to the PC are still found."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
@@ -1588,12 +605,13 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.search-history",
             Privacy,
             "Search",
-            "Search history",
-            "Stops device search history.",
+            "No search history",
+            "Stops Windows keeping a record of what you search for on this PC.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Device search history improves results based on past searches. Turning it off stops that record, and past searches no longer appear in the search box. Results may be a little less personal."),
         settings: &[
             hkcu(
                 r"Software\Microsoft\Windows\CurrentVersion\SearchSettings",
@@ -1619,243 +637,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.search-highlights",
-            Privacy,
-            "Search",
-            "Search highlights",
-            "Turns off search highlights.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-                "EnableDynamicContentInWSB",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\SearchSettings",
-                "IsDynamicSearchBoxEnabled",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.search-box-suggestions",
-            Privacy,
-            "Search",
-            "Search box suggestions",
-            "Stops suggestions in Explorer's box.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "DisableSearchBoxSuggestions",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.safe-search",
-            Privacy,
-            "Search",
-            "SafeSearch",
-            "Turns off SafeSearch in Windows Search.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\SearchSettings",
-            "SafeSearchMode",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.search-background",
-            Privacy,
-            "Search",
-            "Search background toggle",
-            "Stops Search running in the background.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\Search",
-            "BackgroundAppGlobalToggle",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.search-disable",
-            Privacy,
-            "Search",
-            "Search feature",
-            "Turns off the search box entirely.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .medium()
-        .warn("Start and taskbar search stop working.")
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "DisableSearch",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.remote-queries",
-            Privacy,
-            "Search",
-            "Remote search queries",
-            "Stops remote queries of the index.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "PreventRemoteQueries",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.indexer-backoff",
-            Privacy,
-            "Search",
-            "Indexer back-off",
-            "Lets indexing run while you work.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "DisableIndexerBackoff",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.index-encrypted",
-            Privacy,
-            "Search",
-            "Index encrypted files",
-            "Keeps encrypted files out of the index.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "AllowIndexingEncryptedStoresOrItems",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.index-language",
-            Privacy,
-            "Search",
-            "Language detection",
-            "Stops auto-detecting indexed languages.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "AlwaysUseAutoLangDetection",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.index-removable",
-            Privacy,
-            "Search",
-            "Index removable drives",
-            "Keeps removable drives out of the index.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "DisableRemovableDriveIndexing",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.index-attachments",
-            Privacy,
-            "Search",
-            "Index email attachments",
-            "Stops indexing attachments.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "PreventIndexingEmailAttachments",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.index-outlook",
-            Privacy,
-            "Search",
-            "Index Outlook",
-            "Stops indexing Outlook.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .warn("Outlook search gets slower.")
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "PreventIndexingOutlook",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.index-public",
-            Privacy,
-            "Search",
-            "Index public folders",
-            "Stops indexing public folders.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\Windows Search",
-            "PreventIndexingPublicFolders",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.settings-sync",
             Privacy,
             "Sync and cross-device",
-            "Settings sync",
-            "Stops syncing settings to your account.",
+            "No settings sync",
+            "Stops Windows syncing your settings to your Microsoft account.",
             BATLEZ,
             Observed,
-        ),
+        )
+        .details("Turns off settings sync as a whole, so your preferences stay on this PC and aren't copied to other devices. Moving to a new PC won't bring your settings with it."),
         settings: &[hkcu(
             r"Software\Microsoft\Windows\CurrentVersion\SettingSync",
             "SyncPolicy",
@@ -1864,160 +654,17 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.sync-accessibility",
-            Privacy,
-            "Sync and cross-device",
-            "Sync accessibility",
-            "Stops syncing accessibility settings.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Accessibility",
-            "Enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.sync-apps",
-            Privacy,
-            "Sync and cross-device",
-            "Sync apps",
-            "Stops syncing app data.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\AppSync",
-            "Enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.sync-browser",
-            Privacy,
-            "Sync and cross-device",
-            "Sync browser",
-            "Stops syncing browser settings.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\BrowserSettings",
-            "Enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.sync-credentials",
             Privacy,
             "Sync and cross-device",
-            "Sync passwords",
-            "Stops syncing passwords.",
+            "No password sync",
+            "Stops Windows syncing saved passwords to your Microsoft account.",
             BATLEZ,
             Observed,
-        ),
+        )
+        .details("Keeps Windows' saved passwords on this PC rather than syncing them between devices. Use this if you want sync for other settings but not passwords."),
         settings: &[hkcu(
             r"Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Credentials",
-            "Enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.sync-theme",
-            Privacy,
-            "Sync and cross-device",
-            "Sync theme",
-            "Stops syncing your theme.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\DesktopTheme",
-            "Enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.sync-language",
-            Privacy,
-            "Sync and cross-device",
-            "Sync language",
-            "Stops syncing language settings.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Language",
-            "Enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.sync-packages",
-            Privacy,
-            "Sync and cross-device",
-            "Sync package state",
-            "Stops syncing package state.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\PackageState",
-            "Enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.sync-personal",
-            Privacy,
-            "Sync and cross-device",
-            "Sync personalisation",
-            "Stops syncing personalisation.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Personalization",
-            "Enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.sync-start",
-            Privacy,
-            "Sync and cross-device",
-            "Sync Start layout",
-            "Stops syncing Start.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\StartLayout",
-            "Enabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.sync-windows",
-            Privacy,
-            "Sync and cross-device",
-            "Sync Windows settings",
-            "Stops syncing other settings.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\SettingSync\Groups\Windows",
             "Enabled",
             0,
         )],
@@ -2027,14 +674,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.clipboard-history",
             Privacy,
             "Sync and cross-device",
-            "Clipboard history",
-            "Turns off Win+V.",
+            "No clipboard history",
+            "Stops Windows keeping a list of what you've copied, including any passwords.",
             POLICY_DOCS,
             Documented,
         )
         .medium()
         .warn("Win+V history stops working.")
-        .admin(),
+        .admin()
+        .details("Without clipboard history, only the last item you copied is kept. This helps if you often copy sensitive text. The Win+V list stops working."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\Windows\System",
@@ -2049,12 +697,13 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.clipboard-cloud",
             Privacy,
             "Sync and cross-device",
-            "Cloud clipboard",
-            "Stops syncing the clipboard.",
+            "No cloud clipboard",
+            "Stops what you copy being sent to the cloud and shared with your other devices.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Clipboard sync can upload copied text and images through your Microsoft account. Turning it off keeps them on this PC. You can't paste between devices, but normal copy and paste still works."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\Windows\System",
@@ -2070,66 +719,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.cross-device",
-            Privacy,
-            "Sync and cross-device",
-            "Cross-device experiences",
-            "Turns off cross-device features.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\CrossDevice",
-                "AllowCrossDevice",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\CrossDevice",
-                "EnableCrossDevice",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\CrossDevice",
-                "ResumeAllowed",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.cross-resume",
-            Privacy,
-            "Sync and cross-device",
-            "Cross-device resume",
-            "Stops resuming from your phone.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\CrossDeviceResume",
-                "Enabled",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\CrossDeviceResume",
-                "UsePerformanceMode",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.cdp",
             Privacy,
             "Sync and cross-device",
-            "Shared experiences",
-            "Stops apps continuing on other devices.",
+            "No shared experiences",
+            "Stops apps on other devices connecting to this PC or continuing tasks on it.",
             TAIRIKU,
             Observed,
-        ),
+        )
+        .details("Shared experiences let apps hand tasks between your devices through your Microsoft account. Turning it off limits what this PC shares with them. Cross-device app features stop working."),
         settings: &[
             hkcu(
                 r"Software\Microsoft\Windows\CurrentVersion\CDP",
@@ -2148,11 +746,12 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.nearby",
             Privacy,
             "Sync and cross-device",
-            "Nearby sharing",
-            "Turns off Nearby sharing.",
+            "Turn off Nearby sharing",
+            "Stops this PC being discoverable for sharing files with nearby devices.",
             TAIRIKU,
             Observed,
-        ),
+        )
+        .details("Nearby sharing sends files and links to devices around you over Bluetooth and Wi-Fi. Turning it off means nearby devices can't send to this PC. It's already off on many PCs."),
         settings: &[hkcu(
             r"Software\Microsoft\Windows\CurrentVersion\CDP",
             "NearShareChannelUserAuthzPolicy",
@@ -2164,11 +763,12 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.mobility",
             Privacy,
             "Sync and cross-device",
-            "Phone Link suggestion",
-            "Stops linking prompts.",
+            "No Phone Link suggestions",
+            "Stops Windows suggesting you link your phone to this PC.",
             TAIRIKU,
             Observed,
-        ),
+        )
+        .details("Turns off the prompts that promote Phone Link and using your mobile device with Windows. If you already use Phone Link, it carries on working."),
         settings: &[hkcu(
             r"Software\Microsoft\Windows\CurrentVersion\Mobility",
             "OptedIn",
@@ -2180,14 +780,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.find-my-device",
             Privacy,
             "Sync and cross-device",
-            "Find My Device",
-            "Turns off Find My Device.",
+            "Turn off Find My Device",
+            "Stops this PC regularly saving its location to your Microsoft account.",
             POLICY_DOCS,
             Documented,
         )
         .medium()
         .warn("A lost PC can't be located.")
-        .admin(),
+        .admin()
+        .details("Find My Device lets you locate a lost PC or lock it remotely. Turning it off stops that location tracking. It's most useful on laptops, so think before using this on one you carry around."),
         settings: &[
             hklm(
                 r"SOFTWARE\Policies\Microsoft\FindMyDevice",
@@ -2203,123 +804,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.ms-account",
-            Privacy,
-            "Sync and cross-device",
-            "Microsoft accounts",
-            "Blocks Microsoft account sign-in.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .high()
-        .warn("Store, OneDrive and Xbox sign-in stop working.")
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\MicrosoftAccount",
-            "DisableUserAuth",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.device-registration",
-            Privacy,
-            "Sync and cross-device",
-            "Device registration",
-            "Stops joining Microsoft cloud directories.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\DeviceRegistration",
-            "DisableRegistration",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.mdm-enrol",
-            Privacy,
-            "Sync and cross-device",
-            "Automatic MDM enrolment",
-            "Stops enrolling in device management.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\MDM",
-                "AutoEnrollMDM",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\MDM",
-                "DisableRegistration",
-                1,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-activity",
-            Privacy,
-            "App permissions",
-            "Motion and activity",
-            "Blocks apps reading activity.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\activity",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\activity",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-diagnostics",
-            Privacy,
-            "App permissions",
-            "App diagnostics",
-            "Blocks apps reading other apps.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\appDiagnostics",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\appDiagnostics",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.perm-appointments",
             Privacy,
             "App permissions",
-            "Calendar",
-            "Blocks apps reading your calendar.",
+            "Block calendar access",
+            "Stops apps reading the calendar and appointments stored in Windows.",
             BATLEZ,
             Observed,
         )
-        .admin(),
+        .admin()
+        .details("This is the Calendar switch in Windows privacy settings, set off for the PC. It mainly affects Store apps. Apps that rely on Windows' calendar store can't show your events."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\appointments",
@@ -2335,75 +829,18 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.perm-bg-spatial",
-            Privacy,
-            "App permissions",
-            "Background spatial",
-            "Blocks spatial data in the background.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm_str(
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\backgroundSpatialPerception",
-            "Value",
-            "Deny",
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-bluetooth",
-            Privacy,
-            "App permissions",
-            "Bluetooth access",
-            "Blocks apps using Bluetooth.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm_str(
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\bluetooth",
-            "Value",
-            "Deny",
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-bluetooth-sync",
-            Privacy,
-            "App permissions",
-            "Bluetooth sync",
-            "Blocks apps syncing over Bluetooth.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\bluetoothSync",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\bluetoothSync",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.perm-files",
             Privacy,
             "App permissions",
-            "Full file system access",
-            "Blocks apps reading all files.",
+            "Block full file system access",
+            "Stops Store apps reading every file you can reach, not just their own folders.",
             BATLEZ,
             Observed,
         )
         .medium()
         .warn("Some Store apps lose file access.")
-        .admin(),
+        .admin()
+        .details("A few Store apps ask for access to your whole file system. This denies it for the PC. Apps can still open files you pick. Desktop programs are not limited by this setting."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\broadFileSystemAccess",
@@ -2419,39 +856,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.perm-chat",
-            Privacy,
-            "App permissions",
-            "Messaging",
-            "Blocks apps reading messages.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\chat",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\chat",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.perm-contacts",
             Privacy,
             "App permissions",
-            "Contacts",
-            "Blocks apps reading contacts.",
+            "Block contacts access",
+            "Stops apps reading the contacts stored in Windows.",
             BATLEZ,
             Observed,
         )
-        .admin(),
+        .admin()
+        .details("This is the Contacts switch in Windows privacy settings, set off for the PC. It mainly affects Store apps. Apps can't use your address book until you undo this."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\contacts",
@@ -2470,12 +884,14 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.perm-documents",
             Privacy,
             "App permissions",
-            "Documents",
-            "Blocks apps reading Documents.",
+            "Block Documents access",
+            "Stops Store apps reading your Documents folder without you choosing a file.",
             BATLEZ,
             Observed,
         )
-        .admin(),
+        .admin()
+        .details("Apps can still open a file you pick yourself. This only removes their blanket access to the folder. Desktop programs are not limited by this setting.")
+        .warn("Store apps that browse your Documents folder lose access."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\documentsLibrary",
@@ -2494,12 +910,14 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.perm-downloads",
             Privacy,
             "App permissions",
-            "Downloads",
-            "Blocks apps reading Downloads.",
+            "Block Downloads access",
+            "Stops Store apps reading your Downloads folder without you choosing a file.",
             TAIRIKU,
             Observed,
         )
-        .admin(),
+        .admin()
+        .details("Apps can still open a file you pick yourself. This only removes their blanket access to the folder. Desktop programs are not limited by this setting.")
+        .warn("Store apps that browse your Downloads folder lose access."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\downloadsFolder",
@@ -2518,12 +936,13 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.perm-email",
             Privacy,
             "App permissions",
-            "Email",
-            "Blocks apps reading email.",
+            "Block email access",
+            "Stops apps reading the email accounts and messages stored in Windows.",
             BATLEZ,
             Observed,
         )
-        .admin(),
+        .admin()
+        .details("This is the Email switch in Windows privacy settings, set off for the PC. It only affects apps using Windows' own mail store, not web mail or Outlook from Office."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\email",
@@ -2539,34 +958,18 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.perm-gaze",
-            Privacy,
-            "App permissions",
-            "Eye tracking",
-            "Blocks apps using eye tracking.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm_str(
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\gazeInput",
-            "Value",
-            "Deny",
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.perm-capture",
             Privacy,
             "App permissions",
-            "Screen capture",
-            "Blocks apps capturing the screen.",
+            "Block screen capture access",
+            "Stops apps taking screenshots of or recording your screen through Windows.",
             BATLEZ,
             Observed,
         )
         .medium()
-        .warn("Store recording apps stop working.")
-        .admin(),
+        .admin()
+        .details("Apps can't capture your screen or other windows through the Windows capture feature. It's a strong privacy limit but it can affect recording and streaming. Undo it if a capture app shows a black window.")
+        .warn("Apps that record or share your screen can stop working."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\graphicsCaptureProgrammatic",
@@ -2587,75 +990,18 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.perm-capture-border",
-            Privacy,
-            "App permissions",
-            "Borderless capture",
-            "Blocks capture without a border.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\graphicsCaptureWithoutBorder",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\graphicsCaptureWithoutBorder",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-hid",
-            Privacy,
-            "App permissions",
-            "Human interface devices",
-            "Blocks apps reading HID devices.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm_str(
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\humanInterfaceDevice",
-            "Value",
-            "Deny",
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-presence",
-            Privacy,
-            "App permissions",
-            "Presence sensing",
-            "Blocks apps using presence sensors.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm_str(
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\humanPresence",
-            "Value",
-            "Deny",
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.perm-microphone",
             Privacy,
             "App permissions",
-            "Microphone",
-            "Blocks apps using the microphone.",
+            "Block microphone access",
+            "Turns the microphone off for every app, the same as the main switch in Settings.",
             BATLEZ,
             Observed,
         )
         .medium()
         .warn("Voice chat stops working.")
-        .admin(),
+        .admin()
+        .details("No app can use the microphone, including desktop programs such as game voice chat. Only worth it if you never use a microphone on this PC."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone",
@@ -2676,87 +1022,17 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.perm-music",
-            Privacy,
-            "App permissions",
-            "Music",
-            "Blocks apps reading Music.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\musicLibrary",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\musicLibrary",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-phone",
-            Privacy,
-            "App permissions",
-            "Phone calls",
-            "Blocks apps making calls.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\phoneCall",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\phoneCall",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-phone-history",
-            Privacy,
-            "App permissions",
-            "Call history",
-            "Blocks apps reading call history.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\phoneCallHistory",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\phoneCallHistory",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.perm-pictures",
             Privacy,
             "App permissions",
-            "Pictures",
-            "Blocks apps reading Pictures.",
+            "Block Pictures access",
+            "Stops Store apps reading your Pictures folder without you choosing a file.",
             BATLEZ,
             Observed,
         )
-        .admin(),
+        .admin()
+        .details("Apps can still open a file you pick yourself. This only removes their blanket access to the folder. Desktop programs are not limited by this setting.")
+        .warn("Store apps that browse your Pictures folder lose access."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\picturesLibrary",
@@ -2772,129 +1048,17 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.perm-radios",
-            Privacy,
-            "App permissions",
-            "Radios",
-            "Blocks apps controlling radios.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\radios",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\radios",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-serial",
-            Privacy,
-            "App permissions",
-            "Serial devices",
-            "Blocks apps using serial ports.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\serialCommunication",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\serialCommunication",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-spatial",
-            Privacy,
-            "App permissions",
-            "Spatial perception",
-            "Blocks apps reading spatial data.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm_str(
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\spatialPerception",
-            "Value",
-            "Deny",
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-tasks",
-            Privacy,
-            "App permissions",
-            "Tasks",
-            "Blocks apps reading tasks.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\userDataTasks",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\userDataTasks",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perm-notifications",
-            Privacy,
-            "App permissions",
-            "Notification access",
-            "Blocks apps reading notifications.",
-            BATLEZ,
-            Observed,
-        )
-        .medium()
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\userNotificationListener",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\userNotificationListener",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.perm-videos",
             Privacy,
             "App permissions",
-            "Videos",
-            "Blocks apps reading Videos.",
+            "Block Videos access",
+            "Stops Store apps reading your Videos folder without you choosing a file.",
             BATLEZ,
             Observed,
         )
-        .admin(),
+        .admin()
+        .details("Apps can still open a file you pick yourself. This only removes their blanket access to the folder. Desktop programs are not limited by this setting.")
+        .warn("Store apps that browse your Videos folder lose access."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\videosLibrary",
@@ -2913,14 +1077,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.perm-camera",
             Privacy,
             "App permissions",
-            "Camera",
-            "Blocks apps using the camera.",
+            "Block camera access",
+            "Turns the camera off for every app, the same as the main switch in Settings.",
             BATLEZ,
             Observed,
         )
         .medium()
         .warn("Video calls stop working.")
-        .admin(),
+        .admin()
+        .details("No app can use the camera, including desktop programs. A strong choice if you never use a webcam on this PC. You can undo it whenever you need a video call."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam",
@@ -2936,82 +1101,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.perm-wifi",
-            Privacy,
-            "App permissions",
-            "Wi-Fi data",
-            "Blocks apps reading Wi-Fi data.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\wifiData",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\wifiData",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.camera-policy",
-            Privacy,
-            "App permissions",
-            "Camera policy",
-            "Turns off the camera for all users.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .high()
-        .warn("Every app loses the camera.")
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Camera",
-            "AllowCamera",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.camera-effects",
-            Privacy,
-            "App permissions",
-            "Camera effects",
-            "Stops camera effects.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\PolicyManager\default\Camera\AllowCameraEffects",
-                "value",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\PolicyManager\default\Experience\AllowVideoFilters",
-                "value",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.lock-camera",
             Privacy,
             "App permissions",
-            "Lock screen camera",
-            "Turns off the camera on the lock screen.",
+            "No lock screen camera",
+            "Stops anyone using the camera from the lock screen without signing in.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Some tablets and laptops can open the camera from the lock screen. This turns that off. On a PC with no lock screen camera there's no change, and the camera works as normal once you sign in."),
         settings: &[hklm(
             r"SOFTWARE\Policies\Microsoft\Windows\Personalization",
             "NoLockScreenCamera",
@@ -3020,231 +1119,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.location-policy",
-            Privacy,
-            "App permissions",
-            "Location policy",
-            "Turns off location for all users.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .medium()
-        .warn("Maps and Find My Device stop working.")
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors",
-            "DisableLocation",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.sensors-policy",
-            Privacy,
-            "App permissions",
-            "Sensors policy",
-            "Turns off sensors.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .medium()
-        .warn("Auto-rotate and adaptive brightness stop working.")
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors",
-            "DisableSensors",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.ie-geolocation",
-            Privacy,
-            "App permissions",
-            "IE geolocation",
-            "Stops websites asking for location in IE.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hkcu(
-                r"Software\Microsoft\Internet Explorer\Geolocation",
-                "BlockAllWebsites",
-                1,
-            ),
-            hklm(
-                r"SOFTWARE\Microsoft\Internet Explorer\Geolocation",
-                "BlockAllWebsites",
-                1,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.sensor-permission",
-            Privacy,
-            "App permissions",
-            "Location sensor override",
-            "Clears the location sensor state.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Sensor\Overrides\{BFA794E4-F964-4FDB-90F6-51056BFE4B44}",
-            "SensorPermissionState",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.background-global",
-            Privacy,
-            "App permissions",
-            "Background apps (user)",
-            "Stops Store apps in the background.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications",
-            "GlobalUserDisabled",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.push-policy",
-            Privacy,
-            "App permissions",
-            "Cloud notifications policy",
-            "Stops notifications from the cloud.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\PushNotifications",
-                "NoCloudApplicationNotification",
-                1,
-            ),
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications",
-                "NoToastApplicationNotification",
-                1,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.input-personalization",
-            Privacy,
-            "Speech and typing",
-            "Online speech policy",
-            "Turns off typing and speech learning.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\InputPersonalization",
-            "AllowInputPersonalization",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.ink-collection",
-            Privacy,
-            "Speech and typing",
-            "Ink collection",
-            "Stops learning from handwriting.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\InputPersonalization",
-                "RestrictImplicitInkCollection",
-                1,
-            ),
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\InputPersonalization",
-                "RestrictImplicitTextCollection",
-                1,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.harvest-contacts",
-            Privacy,
-            "Speech and typing",
-            "Contact harvesting",
-            "Stops learning from contacts.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\InputPersonalization\TrainedDataStore",
-            "HarvestContacts",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.privacy-policy-input",
-            Privacy,
-            "Speech and typing",
-            "Inking privacy flag",
-            "Clears the accepted privacy flag.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Personalization\Settings",
-            "AcceptedPrivacyPolicy",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.speech-model",
-            Privacy,
-            "Speech and typing",
-            "Speech model updates",
-            "Stops speech model downloads.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Speech",
-                "AllowSpeechModelUpdate",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Speech_OneCore\Preferences",
-                "ModelDownloadAllowed",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.voice-activation",
             Privacy,
             "Speech and typing",
-            "Voice activation",
-            "Stops apps listening for keywords.",
+            "No voice activation",
+            "Stops apps listening for wake words such as voice assistant keywords.",
             BATLEZ,
             Community,
         )
-        .admin(),
+        .admin()
+        .details("Voice activation keeps an app listening through the microphone for its keyword. This turns it off for all apps, so assistants only respond when you open them yourself."),
         settings: &[
             hkcu(
                 r"Software\Microsoft\Speech_OneCore\Preferences",
@@ -3265,117 +1149,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.voice-lock",
-            Privacy,
-            "Speech and typing",
-            "Voice on the lock screen",
-            "Stops voice activation when locked.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[
-            hkcu(
-                r"Software\Microsoft\Speech_OneCore\Preferences",
-                "VoiceActivationEnableAboveLockscreen",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Speech_OneCore\Settings\VoiceActivation\UserPreferenceForAllApps",
-                "AgentActivationOnLockScreenEnabled",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.enhanced-audio",
-            Privacy,
-            "Speech and typing",
-            "Enhanced speech audio",
-            "Stops enhanced speech audio.",
-            BATLEZ,
-            Community,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Speech_OneCore\AudioProcessing",
-                "EnableEnhancedAudio",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\WOW6432Node\Microsoft\Speech_OneCore\AudioProcessing",
-                "EnableEnhancedAudio",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.voice-typing",
-            Privacy,
-            "Speech and typing",
-            "Voice typing",
-            "Turns off voice typing.",
-            TAIRIKU,
-            Community,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Input\Settings",
-            "VoiceTypingEnabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.typing-insights",
-            Privacy,
-            "Speech and typing",
-            "Typing insights",
-            "Turns off typing insights.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Input\Settings",
-            "InsightsEnabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.text-prediction",
-            Privacy,
-            "Speech and typing",
-            "Hardware keyboard prediction",
-            "Turns off text suggestions.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[
-            hkcu(
-                r"Software\Microsoft\Input\Settings",
-                "EnableHwkbTextPrediction",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Input\Settings",
-                "MultilingualEnabled",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.tipc",
             Privacy,
             "Speech and typing",
-            "Inking and typing data",
-            "Stops sending typing data.",
+            "No inking and typing data",
+            "Stops Windows sending samples of your typing and handwriting to Microsoft.",
             BATLEZ,
             Observed,
         )
-        .admin(),
+        .admin()
+        .details("This is the setting for improving inking and typing recognition, separate from your personal dictionary. Turning it off stops that contribution and doesn't change how typing works."),
         settings: &[
             hklm(r"SOFTWARE\Microsoft\Input\TIPC", "Enabled", 0),
             hkcu(r"Software\Microsoft\Input\TIPC", "Enabled", 0),
@@ -3383,196 +1166,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.autocorrect",
-            Privacy,
-            "Speech and typing",
-            "Touch keyboard autocorrect",
-            "Turns off autocorrect.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\TabletTip\1.7",
-            "EnableAutocorrection",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.spellcheck-touch",
-            Privacy,
-            "Speech and typing",
-            "Touch keyboard spelling",
-            "Turns off spell check.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\TabletTip\1.7",
-            "EnableSpellchecking",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.touch-auto",
-            Privacy,
-            "Speech and typing",
-            "Touch keyboard auto-show",
-            "Stops it appearing in desktop mode.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\TabletTip\1.7",
-            "EnableDesktopModeAutoInvoke",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.touch-button",
-            Privacy,
-            "Speech and typing",
-            "Touch keyboard button",
-            "Hides the taskbar button.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\TabletTip\1.7",
-            "TipbandDesiredVisibility",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.touch-keyboard",
-            Privacy,
-            "Speech and typing",
-            "Touch keyboard policy",
-            "Turns off the touch keyboard.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .medium()
-        .warn("Touch typing stops working.")
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\TabletPC",
-            "DisableTouchKeyboard",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.input-preload",
-            Privacy,
-            "Speech and typing",
-            "Input app preload",
-            "Stops preloading the input app.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Input",
-            "IsInputAppPreloadEnabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.ink-workspace",
-            Privacy,
-            "Speech and typing",
-            "Windows Ink Workspace",
-            "Turns off Ink Workspace.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\WindowsInkWorkspace",
-                "AllowWindowsInkWorkspace",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\PenWorkspace",
-                "PenWorkspaceButtonDesiredVisibility",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.snipping-tool",
-            Privacy,
-            "Speech and typing",
-            "Snipping Tool policy",
-            "Turns off the Snipping Tool.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .medium()
-        .warn("Win+Shift+S stops working.")
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\TabletPC",
-            "DisableSnippingTool",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.cpss-advertising",
-            Privacy,
-            "System reports",
-            "Advertising setting store",
-            "Turns off the setting's store copy.",
-            BATLEZ,
-            Observed,
-        ),
-        settings: &[
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\CPSS\Store\AdvertisingInfo",
-                "Value",
-                0,
-            ),
-            hkcu(
-                r"Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo",
-                "Enabled",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.cpss-ink",
-            Privacy,
-            "System reports",
-            "Inking store",
-            "Turns off the setting's store copy.",
-            TAIRIKU,
-            Observed,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\Windows\CurrentVersion\CPSS\Store\ImproveInkingAndTyping",
-            "Value",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.push-to-install",
             Privacy,
             "System reports",
-            "PushToInstall policy",
-            "Stops apps being pushed from the web.",
+            "No remote app installs",
+            "Stops apps being installed on this PC remotely from the Store website.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Anyone signed in to your Microsoft account can start an install from the web. This blocks that route. Installing apps from the Store on this PC still works."),
         settings: &[hklm(
             r"SOFTWARE\Policies\Microsoft\PushToInstall",
             "DisablePushToInstall",
@@ -3581,109 +1184,18 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.kms-ticket",
-            Privacy,
-            "System reports",
-            "KMS online validation",
-            "Stops sending activation data to KMS.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows NT\CurrentVersion\Software Protection Platform",
-            "NoGenTicket",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.map-traffic",
-            Privacy,
-            "System reports",
-            "Maps traffic",
-            "Stops Maps using the network unprompted.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\Maps",
-                "AllowUntriggeredNetworkTrafficOnSettingsPage",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\Maps",
-                "AutoDownloadAndUpdateMapData",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.media-player-codecs",
-            Privacy,
-            "System reports",
-            "Media Player codec download",
-            "Stops codec downloads.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\WindowsMediaPlayer",
-            "PreventCodecDownload",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.wmdrm",
-            Privacy,
-            "System reports",
-            "WMDRM online",
-            "Stops DRM licence updates.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\WMDRM",
-            "DisableOnline",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.device-metadata",
-            Privacy,
-            "System reports",
-            "Device metadata",
-            "Stops downloading device metadata.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Device Metadata",
-            "PreventDeviceMetadataFromNetwork",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.driver-search",
             Privacy,
             "System reports",
-            "Driver search",
-            "Stops searching Windows Update for drivers.",
+            "No automatic driver downloads",
+            "Stops Windows fetching drivers and device software for new hardware by itself.",
             POLICY_DOCS,
             Documented,
         )
         .medium()
         .warn("New hardware needs drivers installed by hand.")
-        .admin(),
+        .admin()
+        .details("Useful if you want to keep a particular driver, such as your graphics driver. Windows stops looking online when hardware is connected, so you install new drivers yourself."),
         settings: &[
             hklm(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\DriverSearching",
@@ -3707,14 +1219,15 @@ pub const TWEAKS: &[SettingsTweak] = &[
             "privacy.exclude-drivers",
             Privacy,
             "System reports",
-            "Driver updates in Windows Update",
-            "Keeps drivers out of quality updates.",
+            "No Windows Update drivers",
+            "Stops Windows Update replacing your drivers during monthly updates.",
             POLICY_DOCS,
             Documented,
         )
         .medium()
         .warn("You update drivers yourself.")
-        .admin(),
+        .admin()
+        .details("Helps if updates keep replacing a driver you chose, such as a graphics driver. Windows security updates are not affected. You keep your drivers up to date yourself."),
         settings: &[
             hklm(
                 r"SOFTWARE\Microsoft\PolicyManager\current\device\Update",
@@ -3730,138 +1243,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.scheduled-diagnostics",
-            Privacy,
-            "System reports",
-            "Scheduled diagnostics",
-            "Stops scheduled troubleshooting.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Microsoft\Windows\ScheduledDiagnostics",
-                "EnabledExecution",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\ScheduledDiagnostics",
-                "EnabledExecution",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.online-troubleshooters",
-            Privacy,
-            "System reports",
-            "Online troubleshooters",
-            "Stops downloading troubleshooters.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\ScriptedDiagnosticsProvider\Policy",
-                "EnableQueryRemoteServer",
-                0,
-            ),
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\Windows\ScriptedDiagnosticsProvider\Policy",
-                "DisableQueryRemoteServer",
-                0,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.perftrack",
-            Privacy,
-            "System reports",
-            "PerfTrack",
-            "Stops the responsiveness tracker.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\WDI\{9c5a40da-b965-4fc3-8781-88dd50a6299d}",
-            "ScenarioExecutionEnabled",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.vs-feedback",
-            Privacy,
-            "System reports",
-            "Visual Studio feedback",
-            "Turns off feedback tools.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\VisualStudio\Feedback",
-                "DisableEmailInput",
-                1,
-            ),
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\VisualStudio\Feedback",
-                "DisableFeedbackDialog",
-                1,
-            ),
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\VisualStudio\Feedback",
-                "DisableScreenshotCapture",
-                1,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.vs-intellicode",
-            Privacy,
-            "System reports",
-            "IntelliCode remote analysis",
-            "Stops sending code to Microsoft.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .admin(),
-        settings: &[
-            hklm(
-                r"SOFTWARE\Policies\Microsoft\VisualStudio\IntelliCode",
-                "DisableRemoteAnalysis",
-                1,
-            ),
-            hkcu(
-                r"Software\Microsoft\VSCommon\16.0\IntelliCode",
-                "DisableRemoteAnalysis",
-                1,
-            ),
-            hkcu(
-                r"Software\Microsoft\VSCommon\17.0\IntelliCode",
-                "DisableRemoteAnalysis",
-                1,
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.vs-sqm",
             Privacy,
             "System reports",
-            "Visual Studio CEIP",
-            "Leaves the VS improvement program.",
+            "No Visual Studio feedback",
+            "Takes Visual Studio out of its program for collecting usage data.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Only relevant if Visual Studio is installed. This is the documented opt-out and it covers several versions. The editor works the same."),
         settings: &[
             hklm(r"SOFTWARE\Policies\Microsoft\VisualStudio\SQM", "OptIn", 0),
             hklm(r"SOFTWARE\Microsoft\VSCommon\14.0\SQM", "OptIn", 0),
@@ -3892,50 +1283,16 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.vs-telemetry",
-            Privacy,
-            "System reports",
-            "Visual Studio telemetry",
-            "Turns off VS telemetry.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[hkcu(
-            r"Software\Microsoft\VisualStudio\Telemetry",
-            "TurnOffSwitch",
-            1,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.vscode-telemetry",
-            Privacy,
-            "System reports",
-            "VS Code telemetry flags",
-            "Sets VS Code's telemetry keys.",
-            BATLEZ,
-            Community,
-        ),
-        settings: &[
-            hkcu(
-                r"Software\Microsoft\VSCode",
-                "telemetry.enableCrashReporter",
-                0,
-            ),
-            hkcu(r"Software\Microsoft\VSCode", "telemetry.enableTelemetry", 0),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.ad-id-policy",
             Privacy,
             "Advertising and suggestions",
-            "Advertising ID policy",
-            "Turns the advertising ID off for every account.",
+            "Block the advertising ID",
+            "Turns the advertising ID off for every account on this PC and locks the setting.",
             POLICY_DOCS,
             Documented,
         )
-        .admin(),
+        .admin()
+        .details("Apps can't use your advertising ID to link your activity for targeted ads. As a policy, it applies to all users and greys out the switch in Settings. You will still see ads, just less targeted ones."),
         settings: &[hklm(
             r"SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo",
             "DisabledByGroupPolicy",
@@ -3944,36 +1301,18 @@ pub const TWEAKS: &[SettingsTweak] = &[
     },
     SettingsTweak {
         meta: lib(
-            "privacy.mic-policy",
-            Privacy,
-            "App permissions",
-            "Microphone for apps",
-            "Denies Store apps the microphone by policy.",
-            POLICY_DOCS,
-            Documented,
-        )
-        .medium()
-        .warn("Voice chat and dictation in Store apps stop working.")
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Policies\Microsoft\Windows\AppPrivacy",
-            "LetAppsAccessMicrophone",
-            2,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
             "privacy.location-consent",
             Privacy,
             "App permissions",
-            "Location consent",
-            "Denies location to apps on this PC.",
+            "Turn off location",
+            "Turns off location for the whole PC, the same as the main switch in Settings.",
             BATLEZ,
             Observed,
         )
         .medium()
         .warn("Maps, weather and Find my device lose your location.")
-        .admin(),
+        .admin()
+        .details("No app or Windows feature can ask for your location, including desktop programs that use Windows location services. Weather, maps and automatic time zone will need manual input."),
         settings: &[
             hklm_str(
                 r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location",
@@ -3986,63 +1325,5 @@ pub const TWEAKS: &[SettingsTweak] = &[
                 "Deny",
             ),
         ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.account-consent",
-            Privacy,
-            "App permissions",
-            "Account info consent",
-            "Denies apps your name and picture.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[
-            hklm_str(
-                r"SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\userAccountInformation",
-                "Value",
-                "Deny",
-            ),
-            hkcu_str(
-                r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\userAccountInformation",
-                "Value",
-                "Deny",
-            ),
-        ],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.telemetry-machine",
-            Privacy,
-            "Telemetry",
-            "Telemetry level",
-            "Sets this PC's telemetry level to the lowest.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection",
-            "AllowTelemetry",
-            0,
-        )],
-    },
-    SettingsTweak {
-        meta: lib(
-            "privacy.steps-recorder-log",
-            Privacy,
-            "Telemetry",
-            "Steps Recorder log",
-            "Turns off the Steps Recorder event log.",
-            BATLEZ,
-            Observed,
-        )
-        .admin(),
-        settings: &[hklm(
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Application-Experience/Steps-Recorder",
-            "Enabled",
-            0,
-        )],
     },
 ];

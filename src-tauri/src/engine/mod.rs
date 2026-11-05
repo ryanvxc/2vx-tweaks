@@ -61,6 +61,7 @@ pub enum TweakCategory {
     Memory,
     Storage,
     Apps,
+    Visuals,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -311,6 +312,10 @@ pub struct TweakRegistry {
     /// Which tweak owns each target, by [`target_key`]. One owner per target, so the library can't
     /// hold the same change twice or two tweaks that undo each other.
     owners: BTreeMap<String, &'static str>,
+    /// Tweaks taken out of the catalogue. They can't be listed or planned, but what 2VX changed
+    /// with one stays undoable: the journal names the tweak, and the broker must still accept its
+    /// targets. Dropping one from here would strand that change on the PC.
+    retired: BTreeMap<&'static str, Box<dyn Tweak>>,
 }
 
 fn target_key(target: &RegTarget) -> String {
@@ -341,9 +346,23 @@ impl TweakRegistry {
     }
 
     pub fn register(&mut self, tweak: Box<dyn Tweak>) -> AppResult<()> {
-        validate(tweak.as_ref())?;
+        self.claim(tweak.as_ref())?;
+        self.tweaks.insert(tweak.meta().id, tweak);
+        Ok(())
+    }
+
+    /// Registers a tweak that left the catalogue but may still be applied on someone's PC.
+    pub fn register_retired(&mut self, tweak: Box<dyn Tweak>) -> AppResult<()> {
+        self.claim(tweak.as_ref())?;
+        self.retired.insert(tweak.meta().id, tweak);
+        Ok(())
+    }
+
+    /// The gate every tweak passes, and its claim on its targets.
+    fn claim(&mut self, tweak: &dyn Tweak) -> AppResult<()> {
+        validate(tweak)?;
         let meta = tweak.meta();
-        if self.tweaks.contains_key(meta.id) {
+        if self.tweaks.contains_key(meta.id) || self.retired.contains_key(meta.id) {
             return Err(AppError::Internal(format!(
                 "duplicate tweak id `{}`",
                 meta.id
@@ -360,12 +379,21 @@ impl TweakRegistry {
         for setting in tweak.settings() {
             self.owners.insert(target_key(&setting.target), meta.id);
         }
-        self.tweaks.insert(meta.id, tweak);
         Ok(())
     }
 
     pub fn get(&self, id: &str) -> Option<&dyn Tweak> {
         self.tweaks.get(id).map(|t| t.as_ref())
+    }
+
+    /// A tweak whose changes can be undone: one in the catalogue, or one that has left it.
+    pub fn undoable(&self, id: &str) -> Option<&dyn Tweak> {
+        self.get(id)
+            .or_else(|| self.retired.get(id).map(|t| t.as_ref()))
+    }
+
+    pub fn retired(&self) -> impl Iterator<Item = &TweakMeta> {
+        self.retired.values().map(|t| t.meta())
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &dyn Tweak> {
@@ -389,9 +417,11 @@ impl TweakRegistry {
         names.into_iter().map(str::to_owned).collect()
     }
 
-    /// Whether some registered tweak declares this target. The elevated broker writes nothing else.
+    /// Whether some registered tweak declares this target, retired ones included so their changes
+    /// can be undone. The elevated broker writes nothing else.
     pub fn declares_target(&self, target: &RegTarget) -> bool {
         self.iter()
+            .chain(self.retired.values().map(|t| t.as_ref()))
             .any(|t| t.settings().iter().any(|s| s.target.same_as(target)))
     }
 
@@ -672,6 +702,46 @@ pub(crate) mod tests {
             r"SOFTWARE\Other",
             "Admin"
         )));
+    }
+
+    #[test]
+    fn a_retired_tweak_leaves_the_catalogue_but_stays_undoable() {
+        let mut r = TweakRegistry::default();
+        r.register(tweak(meta("gaming.ok"), USER_SETTINGS)).unwrap();
+        r.register_retired(tweak(
+            TweakMeta {
+                permission: Permission::Administrator,
+                ..meta("gaming.gone")
+            },
+            ADMIN_SETTINGS,
+        ))
+        .unwrap();
+
+        assert!(r.get("gaming.gone").is_none());
+        assert_eq!(r.list().count(), 1);
+        assert_eq!(r.len(), 1);
+        assert!(r.undoable("gaming.gone").is_some());
+        assert_eq!(
+            r.retired().map(|m| m.id).collect::<Vec<_>>(),
+            ["gaming.gone"]
+        );
+        assert!(r.declares_target(&ADMIN_SETTINGS[0].target));
+    }
+
+    #[test]
+    fn a_retired_tweak_still_owns_its_targets_and_id() {
+        let mut r = TweakRegistry::default();
+        r.register_retired(tweak(meta("gaming.gone"), USER_SETTINGS))
+            .unwrap();
+
+        assert!(
+            r.register(tweak(meta("gaming.new"), USER_SETTINGS))
+                .is_err()
+        );
+        assert!(
+            r.register(tweak(meta("gaming.gone"), ADMIN_SETTINGS))
+                .is_err()
+        );
     }
 
     #[test]

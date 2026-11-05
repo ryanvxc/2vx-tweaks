@@ -6,9 +6,9 @@ use crate::engine::{
 pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "windows.sticky-keys-shortcut-off",
-        name: "Turn off the Sticky Keys shortcut",
+        name: "Turn off Sticky Keys shortcut",
         description: "Pressing Shift five times no longer brings up the Sticky Keys prompt.",
-        details: "Sets Flags to 506 under HKCU\\Control Panel\\Accessibility\\StickyKeys, which clears SKF_HOTKEYACTIVE and leaves the default flags as they were. Sticky Keys itself still works from Settings. Takes effect after you sign out.",
+        details: "A common interruption in games that lean on Shift. Sticky Keys itself still works if you turn it on in Accessibility settings.",
         category: TweakCategory::Windows,
         risk: RiskLevel::Low,
         permission: Permission::User,

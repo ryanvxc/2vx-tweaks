@@ -7,8 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "network.llmnr-off",
         name: "Disable LLMNR",
-        description: "Stops Windows resolving names over the local network, a common spoofing target.",
-        details: "Sets EnableMulticast to 0 under the DNS Client policy key, the Turn off multicast name resolution policy, which is on in Microsoft's security baselines. Names on your own network may stop resolving unless DNS or mDNS handles them.",
+        description: "Stops Windows asking the local network to resolve names, a common spoofing target.",
+        details: "LLMNR is a fallback that an attacker on the same network can answer falsely to capture sign-in data. Turning it off is standard hardening. Finding nearby PCs by name then relies on DNS or mDNS.",
         category: TweakCategory::Network,
         risk: RiskLevel::Low,
         permission: Permission::Administrator,

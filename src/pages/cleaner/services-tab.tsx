@@ -67,7 +67,7 @@ function Preset({ preset, statuses }: { preset: ServicePreset; statuses: TweakSt
         title={preset.name}
         summary={preset.summary}
         status={presetStatus(progress.inEffect, progress.usable.length)}
-        facts={[{ label: "In effect", value: `${progress.inEffect} of ${progress.usable.length}` }]}
+        facts={[{ label: "Applied", value: `${progress.inEffect} of ${progress.usable.length}` }]}
       >
         {canRevert ? (
           <Button

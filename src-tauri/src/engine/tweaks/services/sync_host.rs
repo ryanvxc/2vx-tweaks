@@ -7,13 +7,8 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
     meta: TweakMeta {
         id: "services.sync-host-off",
         name: "Disable Sync Host",
-        description: "Turns off the service that syncs mail, contacts and calendars.",
-        details: "Sets the start type of the OneSyncSvc service to Disabled (Start = 4 under \
-                  HKLM\\SYSTEM\\CurrentControlSet\\Services\\OneSyncSvc). Each signed-in user gets a copy created \
-                  from this service, so it applies to all of them. Microsoft's guidance on this service was \
-                  written for Windows Server 2016 with Desktop Experience, the closest published guidance; there \
-                  is no equivalent for Windows 10 or 11. The service stops at the next restart, and undoing this \
-                  restores the recorded start type.",
+        description: "Stops the background sync of Windows mail, contacts and calendar data.",
+        details: "It serves the older Mail and Calendar apps and the People data behind them. If your mail lives in a browser or a separate app, you won't notice. Those older apps stop syncing, and the change applies after a restart.",
         category: TweakCategory::Services,
         risk: RiskLevel::Moderate,
         permission: Permission::Administrator,
