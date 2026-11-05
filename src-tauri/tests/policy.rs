@@ -916,7 +916,39 @@ fn updater_is_signed_https_and_opt_in() {
     );
     assert!(
         !workflow.contains("releases/latest/download"),
-        "main builds are prereleases; the stable `latest` URL would never see them"
+        "the feed stays on updater-main, the one reviewed URL"
+    );
+}
+
+/// The owner's rule: every update can be downloaded by anyone, not only installed by the updater.
+#[test]
+fn every_release_publishes_an_installer_for_download() {
+    let workflow = fs::read_to_string(root().join("../.github/workflows/release.yml")).unwrap();
+    for needed in [
+        "prerelease: false",
+        "gh release upload \"$TAG\" 2VX-Tweaks-Setup.exe",
+        "--notes-file release-body.md --latest",
+    ] {
+        assert!(workflow.contains(needed), "release.yml lost `{needed}`");
+    }
+    // It must stay a prerelease, or GitHub could show it as the latest release: it has no installer.
+    assert!(
+        workflow
+            .contains("gh release create updater-main --repo \"$GITHUB_REPOSITORY\" --prerelease"),
+        "updater-main must stay a prerelease"
+    );
+    // The check that stops the feed must run before the feed can go out.
+    let check = workflow.find("Publish the installer for download").unwrap();
+    let feed = workflow.find("Publish the feed to updater-main").unwrap();
+    assert!(
+        check < feed,
+        "an update must never go out without its installer"
+    );
+
+    let readme = fs::read_to_string(root().join("../README.md")).unwrap();
+    assert!(
+        readme.contains("releases/latest/download/2VX-Tweaks-Setup.exe"),
+        "the README's download link"
     );
 }
 

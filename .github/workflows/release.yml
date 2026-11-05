@@ -1,11 +1,12 @@
 # Main-channel release: every push to main that touches the app builds a signed NSIS installer,
-# publishes it as a GitHub prerelease and points installed copies at it.
+# publishes it as the latest GitHub release and points installed copies at it.
 #
-#   checks (ci.yml) → version (monotonic) → notes → signed build → GitHub prerelease v<version>
-#   → validate latest.json (signed, HTTPS, newer) → upload it to the rolling `updater-main` release
+#   checks (ci.yml) → version (monotonic) → notes → signed build → GitHub release v<version>
+#   → public installer and download link → validate latest.json (signed, HTTPS, newer)
+#   → upload it to the rolling `updater-main` release
 #
-# Installed copies poll only `updater-main/latest.json`. GitHub's "latest release" URL is never
-# used: main builds are prereleases and would not appear there.
+# People download from the latest release; installed copies poll only `updater-main/latest.json`.
+# `updater-main` stays a prerelease so it can never become the latest release.
 #
 # Without the TAURI_SIGNING_PRIVATE_KEY secret the workflow builds an unsigned installer as a
 # workflow artifact, publishes nothing and says so. See docs/UPDATE_SETUP_GUIDE.md.
@@ -128,8 +129,8 @@ jobs:
             echo "Follow docs/UPDATE_SETUP_GUIDE.md to add TAURI_SIGNING_PRIVATE_KEY and TAURI_SIGNING_PRIVATE_KEY_PASSWORD."
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # --- With a signing key: signed build, prerelease, feed. ---------------------------------
-      - name: Build, sign and create the prerelease
+      # --- With a signing key: signed build, release, installer, feed. -------------------------
+      - name: Build, sign and create the release
         id: build
         if: steps.signing.outputs.configured == 'true'
         uses: tauri-apps/tauri-action@v1
@@ -142,13 +143,48 @@ jobs:
           releaseName: 2VX Tweaks ${{ steps.version.outputs.version }}
           releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
-          prerelease: true
+          prerelease: false
           uploadUpdaterJson: true
           updaterJsonPreferNsis: true
           # Only this build signs updater artifacts. The update feed itself is in tauri.conf.json.
           args: >-
             --bundles nsis
             --config '{"bundle":{"createUpdaterArtifacts":true}}'
+
+      # The action's release body also becomes the notes in latest.json, so the download link goes
+      # on afterwards and the app's update screen doesn't show it. The same bytes go up under one
+      # fixed name, which gives the README a link that always means the newest installer.
+      - name: Publish the installer for download
+        if: steps.signing.outputs.configured == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          installer=(src-tauri/target/release/bundle/nsis/*_"${VERSION}"_x64-setup.exe)
+          if [ "${#installer[@]}" -ne 1 ] || [ ! -f "${installer[0]}" ]; then
+            echo "::error title=No installer::Expected one setup.exe for $VERSION, found: ${installer[*]}"
+            exit 1
+          fi
+          cp "${installer[0]}" 2VX-Tweaks-Setup.exe
+          gh release upload "$TAG" 2VX-Tweaks-Setup.exe --repo "$GITHUB_REPOSITORY" --clobber
+          {
+            echo "**[Download 2VX Tweaks](https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/2VX-Tweaks-Setup.exe)** for 64-bit Windows 10 and 11."
+            echo
+            echo "Windows SmartScreen may warn you, because the installer isn't code-signed yet: choose More info, then Run anyway. Already installed? Use Check for updates in the app."
+            echo
+            cat release-notes.md
+          } > release-body.md
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file release-body.md --latest
+
+          # No update goes out unless people can download the same build.
+          published=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease,assets \
+            --jq '[(.isPrerelease | not), (.assets | any(.name == "2VX-Tweaks-Setup.exe"))] | all')
+          if [ "$published" != "true" ]; then
+            echo "::error title=Installer not public::$TAG is a prerelease or has no 2VX-Tweaks-Setup.exe."
+            exit 1
+          fi
 
       - name: Validate the new update feed
         if: steps.signing.outputs.configured == 'true'

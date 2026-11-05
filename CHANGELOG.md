@@ -3,6 +3,12 @@
 Main-channel builds are released automatically from `main` (see `docs/GITHUB_RELEASE_PIPELINE.md`); their
 notes come from commit subjects. This file records the larger milestones.
 
+## 0.5.1
+
+### Downloads
+- Every new version now comes with an installer on GitHub, so anyone can download 2VX Tweaks from the releases page.
+- Nothing changes inside the app.
+
 ## 0.5.0
 
 ### Visuals

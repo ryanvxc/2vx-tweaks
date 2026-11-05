@@ -129,6 +129,7 @@ System Cleaner, Services (two presets, a read-out of real service states, and th
 table) and Autoruns (which replaced Startup; `/startup` redirects).
 A signed Tauri updater with an Update Centre is built (`docs/UPDATE_SYSTEM.md`); the feed URL
 is in `tauri.conf.json`, so every release build can update, and only `.github/workflows/release.yml` signs and publishes.
+Every release is public with an installer for people to download (`2VX-Tweaks-Setup.exe`): the owner wants this for every update, and a guard test enforces it.
 P0-8b (no updater) is superseded; P0-8a/c stand. The repo is public at `ryanvxc/2vx-tweaks`. Still open: the broker's real UAC path on a VM
 (P0-7), a real update test on a VM. `HKCU\Software\Policies` is admin-only on Windows: never
 target it from a `User` tweak. The updater private key lives in `%USERPROFILE%\.tauri\`, never in the repo.

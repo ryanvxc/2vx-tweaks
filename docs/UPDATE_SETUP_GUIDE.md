@@ -63,8 +63,8 @@ publish step fails with a 403 and nothing is published.
 
 Actions → "Release (main channel)" → Run workflow (or push a change to `main`). Expected result:
 
-- a prerelease `v0.2.0` (or the next patch after the latest tag) with the NSIS setup, its `.sig` and
-  `latest.json`;
+- a release `v0.2.0` (or the next patch after the latest tag), marked latest, with the NSIS setup, its
+  `.sig`, `2VX-Tweaks-Setup.exe` and `latest.json`;
 - a prerelease `updater-main` holding `latest.json`;
 - the job summary lists the release notes and "Published update feed".
 

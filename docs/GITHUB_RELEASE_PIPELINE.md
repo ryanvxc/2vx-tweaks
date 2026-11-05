@@ -5,7 +5,7 @@ Two workflows in `.github/workflows/`:
 | Workflow | Trigger | Permissions | Does |
 | --- | --- | --- | --- |
 | `ci.yml` | Pull requests, pushes to branches other than `main`, manual, and called by `release.yml` | `contents: read` | Frontend checks on Ubuntu (typecheck, lint, Prettier, Vitest); backend on Windows (build frontend, `cargo fmt`, clippy `-D warnings`, `cargo test`) |
-| `release.yml` | Push to `main` touching app paths, or manual | `contents: read`; the release job alone gets `contents: write` | Checks → version → notes → signed build → prerelease → feed validation → feed publish |
+| `release.yml` | Push to `main` touching app paths, or manual | `contents: read`; the release job alone gets `contents: write` | Checks → version → notes → signed build → release → public installer → feed validation → feed publish |
 
 ## Release flow
 
@@ -24,14 +24,19 @@ Two workflows in `.github/workflows/`:
 5. **Signing key check**: if `TAURI_SIGNING_PRIVATE_KEY` is empty the job builds an unsigned installer,
    attaches it to the run as a 14-day artifact, writes "Not published" in the summary and stops there:
    no release, no tag, no feed. It never publishes an unsigned or fake feed.
-6. **Build and prerelease** (`tauri-apps/tauri-action@v1`): NSIS bundle only, signed updater artifacts,
-   GitHub **prerelease** `v<version>` on the pushed commit, with `latest.json` attached
+6. **Build and release** (`tauri-apps/tauri-action@v1`): NSIS bundle only, signed updater artifacts,
+   GitHub release `v<version>` on the pushed commit, with `latest.json` attached
    (`updaterJsonPreferNsis: true`). The feed URL is injected with `--config`; it isn't in the committed
    config.
-7. **Validate** (`scripts/check-update-feed.mjs`): the new `latest.json` must have the expected version,
+7. **Publish the installer**: uploads the same setup as `2VX-Tweaks-Setup.exe`, adds the download link to
+   the release body and marks the release as latest, so
+   `releases/latest/download/2VX-Tweaks-Setup.exe` always means the newest build. The link goes on after
+   the build because the action copies the release body into `latest.json`. The job fails here, before
+   any feed goes out, if the release is a prerelease or has no installer. `tests/policy.rs` guards this.
+8. **Validate** (`scripts/check-update-feed.mjs`): the new `latest.json` must have the expected version,
    a `windows-x86_64` entry, a signature on every platform, HTTPS URLs, and a version newer than the
    feed currently on `updater-main`.
-8. **Publish**: creates the `updater-main` prerelease if it doesn't exist and uploads `latest.json` with
+9. **Publish the feed**: creates the `updater-main` prerelease if it doesn't exist and uploads `latest.json` with
    `--clobber`. Installed copies see the update on their next check.
 
 `concurrency: release-main` with `cancel-in-progress: false` runs one release at a time and never
@@ -54,7 +59,7 @@ cancels one half-way.
 - **Authenticode code signing** of the installer and exe. Without it Windows SmartScreen warns on
   download. Add a certificate (EV, or Azure Trusted Signing) and `bundle.windows.signCommand` when one
   is available; see `build-release.md`.
-- **Stable channel**: only the main (prerelease) channel exists. A stable channel would use a second
+- **Stable channel**: only the main channel exists. A stable channel would use a second
   rolling tag (for example `updater-stable`) and a second build of the app pointing at it.
 - **Repository visibility**: release downloads must be public for installed copies to fetch them. A
   private repository needs a different feed host.

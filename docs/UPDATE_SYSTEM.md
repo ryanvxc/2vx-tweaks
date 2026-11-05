@@ -18,9 +18,10 @@ Settings › Updates (Update Centre)                       GitHub
 ```
 
 - **Feed**: `https://github.com/<owner>/<repo>/releases/download/updater-main/latest.json`. `updater-main`
-  is a rolling prerelease that only holds `latest.json`; each build is its own prerelease `v<version>`.
-  GitHub's `releases/latest/download` URL is deliberately not used: it only sees non-prerelease
-  releases, so it would never offer main builds (enforced by `tests/policy.rs`).
+  is a rolling prerelease that only holds `latest.json`, so it can never become GitHub's latest release;
+  each build is its own release `v<version>`. The feed deliberately doesn't use `releases/latest/download`,
+  which is for people downloading the installer: updates stay on the one reviewed URL (enforced by
+  `tests/policy.rs`).
 - **Signature**: Tauri's minisign-based scheme. The public key is in `tauri.conf.json`
   (`plugins.updater.pubkey`); the private key exists only on the owner's machine and as a GitHub secret.
   A download whose signature doesn't verify is rejected by the plugin before anything runs. Signature
