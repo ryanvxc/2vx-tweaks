@@ -86,14 +86,14 @@ of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_
 
 In short (0.2): the app was restructured (`docs/INFORMATION_ARCHITECTURE.md`, `docs/NAVIGATION_STRUCTURE.md`,
 `docs/DESIGN_SYSTEM.md`). Every feature has one primary location; pages and tabs live in `src/app/navigation.ts`, and
-`/system` and `/history` redirect. 37 documented tweaks ship (`engine/tweaks/`, table in `docs/optimisation-modules.md`)
+`/system` and `/history` redirect. 64 documented tweaks ship (`engine/tweaks/`, table in `docs/optimisation-modules.md`), placed by `lib/tweak-presentation.ts` on Tweaks, Hardware, Network and Advanced,
 with per-tweak undo (`revert_tweak`), an impact rating, and a `warning` only when a named feature can break. A new tweak
 needs an icon and a section in `lib/tweak-presentation.ts`; a test reads the Rust catalogue to enforce it. Gaming
 profiles (`lib/profiles.ts`) are named lists of existing tweaks: "active" is derived from detected state, never stored,
 and they make no FPS claims. Game Mode (`pages/gaming/`) applies a chosen list through the normal review and undoes that
-batch with `revert_snapshot`; the game list stays in the UI because commands never take process names. Home, Game Mode, PC Cleaner and Tweaks keep their title in the page (`PageHero`), with a thin
+batch with `revert_snapshot`; the game list stays in the UI because commands never take process names. Home, Game Mode, PC Cleaner, Tweaks, Hardware, Network and Advanced keep their title in the page (`PageHero`), with a thin
 title bar; the window is a fixed 1280×820 with only minimise and close; Quickstart's ticks are derived where the PC can say (`lib/quickstart.ts`) and Patch Notes reads `CHANGELOG.md`, so write its
-newest section for users. Monitoring, Hardware, the Restore Centre and Tools are real pages. PC Cleaner has four tabs (`pages/cleaner/`):
+newest section for users. Monitoring, the Restore Centre and Tools are real pages. Hardware, Network and Advanced are `TweakGrid` with a `TweakView` (`pages/tweaks/tweak-views.ts`); device facts come from `get_device_report` (`system/devices.rs`, read-only) and links only from the fixed list in `links.rs`. Advanced's Security tab is a read-out: it must never gain a switch for a security feature. PC Cleaner has four tabs (`pages/cleaner/`):
 System Cleaner, Services (two presets over existing tweaks), Uninstall (fixed app table) and Autoruns (which replaced
 Startup; `/startup` redirects).
 A signed Tauri updater with an Update Centre is built (`docs/UPDATE_SYSTEM.md`); the feed URL

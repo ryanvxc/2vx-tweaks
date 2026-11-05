@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import {
   AlertTriangle,
+  Check,
   CircleDashed,
   LogOut,
   PackageOpen,
@@ -10,12 +11,16 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { TWEAK_TABS } from "@/app/navigation";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { FilterBar, type FilterGroup } from "@/components/common/filter-bar";
 import { ImpactMeter, Indicator } from "@/components/common/indicator";
-import { CardGrid, NewBadge, OptimisationCard } from "@/components/common/optimisation-card";
+import {
+  CardGrid,
+  NewBadge,
+  OptimisationCard,
+  OptimisationRow,
+} from "@/components/common/optimisation-card";
 import { PageTabs } from "@/components/common/page-tabs";
 import { RecommendedAction } from "@/components/common/recommended-action";
 import { EmptyState, ErrorState } from "@/components/common/states";
@@ -39,43 +44,49 @@ import {
   isBlocked,
   RESTART_HINT,
 } from "@/lib/engine-text";
-import { groupTweaks, isNewTweak, tweakIcon, tweakPlacement } from "@/lib/tweak-presentation";
+import {
+  groupTweaks,
+  isNewTweak,
+  tweakIcon,
+  tweakPlacement,
+  type PlacedTab,
+} from "@/lib/tweak-presentation";
 import { play } from "@/lib/motion";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
 import type { Impact, RiskLevel, TweakCategory, TweakStatus } from "@/types/engine";
 import { ChangeInspector } from "./change-inspector";
 import { TweakDetails } from "./tweak-details";
+import type { RowStyle, TweakView } from "./tweak-views";
 
 type StateFilter = "applied" | "notApplied";
 type PermissionFilter = "administrator" | "user";
 type Sort = "recommended" | "name" | "impact" | "newest";
 
 const IMPACT_ORDER: Record<Impact, number> = { low: 0, medium: 1, high: 2 };
+const NO_TABS: { value: string }[] = [];
 
 /**
  * Tweaks as a card grid. The switch shows the state detected on this PC, never a stored
  * flag. Switching on selects a tweak for review (the dry-run plan in ChangeInspector);
  * switching off undoes exactly what 2VX recorded, after a confirmation.
  *
- * `browse` adds the page's title, topic tabs, search and filters. A search looks through every
- * tab, because its point is not having to know the tab.
+ * A `view` makes it a whole page: title, tabs, search and filters over the tweaks placed on that
+ * page. A search looks through every tab of the page, because its point is not having to know the
+ * tab. Without one it's a plain grid of `categories`.
  */
 export function TweakGrid({
+  view,
   categories,
-  browse = false,
-  banner,
 }: {
-  categories: TweakCategory[];
-  browse?: boolean;
-  /** Shown between the tabs and the search row. */
-  banner?: ReactNode;
+  view?: TweakView;
+  categories?: TweakCategory[];
 }) {
   const { data, error, loading, refetch } = useTweakStatuses();
   const engine = useEngineStatus();
   const app = useAppInfo();
   const [params, setParams] = useSearchParams();
 
-  const [tab, setTab] = useTabParam(TWEAK_TABS, "core");
+  const [tab, setTab] = useTabParam(view?.tabs ?? NO_TABS, view?.defaultTab ?? "");
   const [search, setSearch] = useState("");
   const [stateFilter, setStateFilter] = useState<StateFilter[]>([]);
   const [impactFilter, setImpactFilter] = useState<Impact[]>([]);
@@ -89,9 +100,13 @@ export function TweakGrid({
   const [busy, setBusy] = useState<string | null>(null);
   const root = useStaggerIn<HTMLDivElement>(data ? tab : null);
 
+  const route = view?.route;
   const all = useMemo(
-    () => (data ?? []).filter((t) => categories.includes(t.meta.category)),
-    [data, categories],
+    () =>
+      (data ?? []).filter((t) =>
+        route ? tweakPlacement(t.meta).route === route : categories?.includes(t.meta.category),
+      ),
+    [data, route, categories],
   );
   const names = Object.fromEntries((data ?? []).map((t) => [t.meta.id, t.meta.name]));
   const warnings = Object.fromEntries((data ?? []).map((t) => [t.meta.id, t.meta.warning]));
@@ -102,7 +117,7 @@ export function TweakGrid({
 
   const q = search.trim().toLowerCase();
   const shown = all
-    .filter((t) => !browse || q !== "" || tweakPlacement(t.meta).tab === tab)
+    .filter((t) => !view || q !== "" || tweakPlacement(t.meta).tab === tab)
     .filter(
       (t) =>
         !q || t.meta.name.toLowerCase().includes(q) || t.meta.description.toLowerCase().includes(q),
@@ -229,60 +244,73 @@ export function TweakGrid({
       disabled={changesDisabled}
       isNew={markNew && isNewTweak(t.meta, app.data?.version)}
       onSwitch={(on) => onSwitch(t, on)}
+      row={q === "" ? view?.rows?.[tab] : undefined}
       onOpen={() => openDetails(t.meta.id)}
     />
   );
 
-  const groups = groupTweaks(shown, {
-    tab: browse && q === "" ? tab : null,
+  const body = view?.body?.(tab);
+  const groups = groupTweaks(body ? [] : shown, {
+    tab: view && q === "" && !body ? (tab as PlacedTab) : null,
     // Sections keep their written order unless the user asked for another.
     catalogue: sort === "recommended",
     unavailable: (t) => isBlocked(t.compatibility),
   });
+  const headings = view?.headings === "always" || groups.length > 1;
 
   return (
     <div
       ref={root}
       className="flex flex-1 flex-col gap-3 font-nav [--font-heading:var(--font-nav)]"
     >
-      {browse && (
+      {view && (
         <>
           <PageHero
-            title="Tweaks"
-            subtitle="Documented settings, each with an undo."
+            title={view.title}
+            subtitle={view.subtitle}
             action={
               <RecommendedAction
                 otherwise={{ to: "/gaming", label: "Open Game Mode" }}
                 disabled={changesDisabled}
-                onSelect={() =>
-                  setStaged((s) => [...new Set([...s, ...recommendedOpen.map((t) => t.meta.id)])])
+                onSelect={
+                  recommendedOpen.length > 0
+                    ? () =>
+                        setStaged((s) => [
+                          ...new Set([...s, ...recommendedOpen.map((t) => t.meta.id)]),
+                        ])
+                    : undefined
                 }
               />
             }
           />
-          <PageTabs label="Topics" tabs={TWEAK_TABS} value={tab} onChange={setTab} filled />
-          {banner}
-          <FilterBar
-            search={search}
-            onSearch={setSearch}
-            placeholder="Search tweaks"
-            filters={filters}
-            sort={{
-              value: sort,
-              onChange: (v) => setSort(v as Sort),
-              options: [
-                { value: "recommended", label: "Recommended first" },
-                { value: "name", label: "Name" },
-                { value: "impact", label: "Expected effect" },
-                { value: "newest", label: "Newest" },
-              ],
-            }}
-            end={<DataSourceBadge source="live" />}
-          />
+          <PageTabs label="Topics" tabs={view.tabs} value={tab} onChange={setTab} filled />
+          {view.banner}
+          {!body && (
+            <FilterBar
+              search={search}
+              onSearch={setSearch}
+              placeholder="Search tweaks"
+              filters={filters}
+              sort={{
+                value: sort,
+                onChange: (v) => setSort(v as Sort),
+                options: [
+                  { value: "recommended", label: "Recommended first" },
+                  { value: "name", label: "Name" },
+                  { value: "impact", label: "Expected effect" },
+                  { value: "newest", label: "Newest" },
+                ],
+              }}
+              end={view.end ? view.end(tab) : <DataSourceBadge source="live" />}
+            />
+          )}
+          {q === "" && !body && view.intro?.(tab)}
         </>
       )}
 
-      {error ? (
+      {body ? (
+        body
+      ) : error ? (
         <ErrorState message={error.message} onRetry={refetch} />
       ) : loading && !data ? (
         <CardGrid>
@@ -298,13 +326,19 @@ export function TweakGrid({
         <div className="flex flex-col gap-6">
           {groups.map((group) => (
             <section key={group.title ?? "all"} className="flex flex-col gap-3">
-              {group.title && <h2 className="text-[19px] leading-tight">{group.title}</h2>}
-              {/* A catalogue keeps its column width; a short fixed list spreads across the row. */}
-              <CardGrid
-                className={browse ? undefined : "grid-cols-[repeat(auto-fit,minmax(19rem,1fr))]"}
-              >
-                {group.tweaks.map(card)}
-              </CardGrid>
+              {group.title && headings && (
+                <h2 className="text-[19px] leading-tight">{group.title}</h2>
+              )}
+              {q === "" && view?.rows?.[tab] ? (
+                <div className="flex flex-col gap-2">{group.tweaks.map(card)}</div>
+              ) : (
+                // A catalogue keeps its column width; a short fixed list spreads across the row.
+                <CardGrid
+                  className={view ? undefined : "grid-cols-[repeat(auto-fit,minmax(19rem,1fr))]"}
+                >
+                  {group.tweaks.map(card)}
+                </CardGrid>
+              )}
             </section>
           ))}
         </div>
@@ -374,6 +408,7 @@ function TweakCard({
   busy,
   disabled,
   isNew,
+  row,
   onSwitch,
   onOpen,
 }: {
@@ -382,6 +417,8 @@ function TweakCard({
   busy: boolean;
   disabled: boolean;
   isNew: boolean;
+  /** Draw it as a row instead of a card. */
+  row?: RowStyle;
   onSwitch: (on: boolean) => void;
   onOpen: () => void;
 }) {
@@ -423,6 +460,70 @@ function TweakCard({
     />
   );
 
+  const indicators = (
+    <>
+      <ImpactMeter impact={meta.impact} />
+      {(meta.warning || restart || blocked || state === "partial") && (
+        <span aria-hidden className="mx-0.5 h-4 w-px bg-hairline" />
+      )}
+      {meta.warning && (
+        <Indicator boxed icon={AlertTriangle} tone="destructive" title="Can break features">
+          {meta.warning}
+        </Indicator>
+      )}
+      {restart && <Indicator boxed icon={LogOut} tone="neutral" title={restart} />}
+      {blocked && (
+        <Indicator boxed icon={AlertTriangle} tone="neutral" title="Not for this PC">
+          {COMPATIBILITY[compatibility]}
+        </Indicator>
+      )}
+      {state === "partial" && (
+        <Indicator boxed icon={CircleDashed} tone="warning" title="Partly in effect" />
+      )}
+    </>
+  );
+  const control = lockedOn ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span tabIndex={0}>{switchControl}</span>
+      </TooltipTrigger>
+      <TooltipContent>Set outside 2VX, so there's nothing to undo.</TooltipContent>
+    </Tooltip>
+  ) : (
+    switchControl
+  );
+
+  if (row) {
+    return (
+      <OptimisationRow
+        ref={card}
+        leading={
+          row === "letter" ? (
+            <span className="flex size-9 items-center justify-center rounded-lg bg-brand/12 text-[15px] font-semibold text-brand">
+              {meta.name.charAt(0)}
+            </span>
+          ) : applied ? (
+            <Check className="size-5 text-success" strokeWidth={2.5} aria-label="In effect" />
+          ) : (
+            createElement(tweakIcon(meta), {
+              className: "size-[22px] text-brand",
+              strokeWidth: 1.75,
+              "aria-hidden": true,
+            })
+          )
+        }
+        title={meta.name}
+        description={row === "letter" ? undefined : meta.description}
+        highlighted={staged}
+        muted={blocked}
+        onOpen={onOpen}
+        openLabel={`Details for ${meta.name}`}
+        indicators={indicators}
+        control={control}
+      />
+    );
+  }
+
   return (
     <OptimisationCard
       ref={card}
@@ -434,40 +535,8 @@ function TweakCard({
       onOpen={onOpen}
       openLabel={`Details for ${meta.name}`}
       badge={isNew ? <NewBadge /> : undefined}
-      indicators={
-        <>
-          <ImpactMeter impact={meta.impact} />
-          {(meta.warning || restart || blocked || state === "partial") && (
-            <span aria-hidden className="mx-0.5 h-4 w-px bg-hairline" />
-          )}
-          {meta.warning && (
-            <Indicator boxed icon={AlertTriangle} tone="destructive" title="Can break features">
-              {meta.warning}
-            </Indicator>
-          )}
-          {restart && <Indicator boxed icon={LogOut} tone="neutral" title={restart} />}
-          {blocked && (
-            <Indicator boxed icon={AlertTriangle} tone="neutral" title="Not for this PC">
-              {COMPATIBILITY[compatibility]}
-            </Indicator>
-          )}
-          {state === "partial" && (
-            <Indicator boxed icon={CircleDashed} tone="warning" title="Partly in effect" />
-          )}
-        </>
-      }
-      control={
-        lockedOn ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span tabIndex={0}>{switchControl}</span>
-            </TooltipTrigger>
-            <TooltipContent>Set outside 2VX, so there's nothing to undo.</TooltipContent>
-          </Tooltip>
-        ) : (
-          switchControl
-        )
-      }
+      indicators={indicators}
+      control={control}
     />
   );
 }

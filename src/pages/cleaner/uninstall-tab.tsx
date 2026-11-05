@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Download, Package, SearchX, Trash2 } from "lucide-react";
+import { createElement, useState } from "react";
+import { Download, SearchX, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
@@ -8,6 +8,7 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states"
 import { Button } from "@/components/ui/button";
 import { useStaggerIn } from "@/hooks/use-motion";
 import { useRemovableApps } from "@/hooks/use-system";
+import { appIcon } from "@/lib/app-icons";
 import { backend, toBackendError } from "@/services/backend";
 import type { RemovableApp } from "@/types/system";
 
@@ -18,6 +19,16 @@ const SORTS: Record<string, (a: RemovableApp, b: RemovableApp) => number> = {
   nameDesc: (a, b) => b.name.localeCompare(a.name),
   installed: (a, b) => Number(b.installed) - Number(a.installed) || a.name.localeCompare(b.name),
 };
+
+function AppLogo({ app }: { app: RemovableApp }) {
+  if (app.icon)
+    return <img src={app.icon} alt="" className="size-8 shrink-0 rounded-md object-contain" />;
+  return (
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand/12 text-brand">
+      {createElement(appIcon(app.id), { className: "size-4", "aria-hidden": true })}
+    </span>
+  );
+}
 
 export function UninstallTab() {
   const { data, error, loading, refetch } = useRemovableApps();
@@ -91,13 +102,7 @@ export function UninstallTab() {
               data-stagger
               className="flex h-14 items-center gap-3.5 panel px-4 transition-colors hover:bg-raised"
             >
-              {app.icon ? (
-                <img src={app.icon} alt="" className="size-8 shrink-0 rounded-md object-contain" />
-              ) : (
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                  <Package className="size-4" aria-hidden />
-                </span>
-              )}
+              <AppLogo app={app} />
               <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">{app.name}</span>
               <span className="truncate text-right text-[12.5px] text-muted-foreground">
                 {app.description}

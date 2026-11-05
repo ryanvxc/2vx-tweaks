@@ -8,7 +8,8 @@ against.
 
 ## Boundary: frontend ↔ backend
 
-- The WebView has **no** shell, fs or opener plugins. It can only call app commands.
+- The WebView has **no** shell, fs or opener plugins. It can only call app commands. `open_link` is one of those commands:
+  it takes an entry from the fixed list in `links.rs` (https pages and Windows Settings pages), never an address.
 - Each command is declared in `src-tauri/build.rs` (`AppManifest::commands`), so it is **denied by default** until
   `capabilities/default.json` grants it. Adding a command without a capability entry makes it unreachable.
 - Commands accept typed arguments only (enums, numbers, IDs validated against the registry). They never accept
@@ -66,7 +67,7 @@ against.
 | No remote kill switch or remote content | Tweaks are compiled in, never downloaded. The only network client is the signed updater (decision P0-8b, superseded): it fetches the release feed and, on request, a signed installer |
 | No background persistence | No service or scheduled task is created; nothing runs when the app is closed |
 | No kernel drivers | None bundled; not in scope |
-| No unrestricted command execution | The backend source may not spawn processes or shells (`Command::new`, PowerShell, cmd, reg, sc, schtasks, bcdedit, wmic…). The only process launch is the broker's self-relaunch. |
+| No unrestricted command execution | The backend source may not spawn processes or shells (`Command::new`, PowerShell, cmd, reg, sc, schtasks, bcdedit, wmic…). The only process launch is the broker's self-relaunch. `links.rs` may call `ShellExecuteW` on its fixed list of pages, so Hardware, Network and Advanced can point to driver downloads and Windows Settings for what 2VX won't do itself; it never takes an address from the frontend. |
 | No unnecessary privilege | `asInvoker`, per-batch broker, never SYSTEM or TrustedInstaller |
 | No undocumented or protected changes | Metadata gate (https references) and the policy denylist |
 | Every IPC command is deliberate | `build.rs` manifest, capability grants and `generate_handler!` must list the same commands; plugin permissions limited to window chrome, `updater:default` and `process:allow-restart` |
@@ -121,7 +122,7 @@ brief asked for an in-app Tauri updater). The updater is allowed under these con
 may launch `sfc.exe` and `dism.exe` from `%SystemRoot%\System32`, with argument lists that are compile-time
 constants (no user input, no paths), elevated through the broker, with output shown to the user. The guard test in
 `tests/policy.rs` and the "No unrestricted command execution" row above change in that same change to allow exactly
-those constants in that one file. Until then, the guard forbids all process launches except the broker relaunch.
+those constants in that one file. Until then, the guard forbids all process launches except the broker relaunch and the fixed list in `links.rs`.
 
 ## Logging and privacy
 

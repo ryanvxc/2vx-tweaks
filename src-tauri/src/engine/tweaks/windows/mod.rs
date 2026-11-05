@@ -1,4 +1,11 @@
+pub mod autoplay;
+pub mod device_metadata;
 pub mod edge_recommendations;
 pub mod edge_sidebar;
+pub mod keyboard_repeat;
+pub mod mouse_acceleration;
+pub mod rdp_com_redirect;
+pub mod rdp_pnp_redirect;
+pub mod sticky_keys_shortcut;
 pub mod storage_sense;
 pub mod window_animations;

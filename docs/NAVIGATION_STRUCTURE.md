@@ -14,20 +14,18 @@ Tools
   2VX Game Mode    /gaming              ?view=configure (brand colour)
 
 Optimisations
-  Core             /tweaks?tab=core     (also /tweaks)
-  Privacy          /tweaks?tab=privacy
-  Apps             /tweaks?tab=apps
-  Services         /tweaks?tab=services
-  Hardware         /hardware
+  Tweaks           /tweaks              ?tab=core | privacy | apps | services
+  Hardware         /hardware            ?tab=gpu | cpu | ram | peripherals | storage
   PC Cleaner       /cleaner             ?tab=system | services | uninstall | autoruns
+  Network          /network             ?tab=tweaks | priority | adapters | bufferbloat
+  Advanced         /advanced            ?tab=security | msi | devices | timer
 
 [Account card]     opens the account menu
 ```
 
-Eleven rows in three groups. Rows and groups share out the sidebar's height, so the list ends a little above the account
-card at any window size. A row stops growing at 64 px; on a taller window the spare height goes between the groups. The
-rows for Core, Privacy, Apps and Services are the Tweaks page's tabs (`tabsInSidebar`), so they stay in step with the tabs
-on the page, and Search still lists the page as Tweaks. Settings has no sidebar row: it's in the account menu, Search and the title of its
+Ten rows in three groups. Rows and groups share out the sidebar's height, so the list ends a little above the account
+card at any window size. A row stops growing at 64 px; on a taller window the spare height goes between the groups.
+Settings has no sidebar row: it's in the account menu, Search and the title of its
 own page. Search is in the account menu, and Ctrl K opens it from anywhere. The title bar holds only minimise and close.
 
 ## Account menu

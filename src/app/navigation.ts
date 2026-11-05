@@ -5,19 +5,30 @@ import {
   Bolt,
   Brush,
   Cpu,
+  EthernetPort,
   Gamepad2,
   Gauge,
   Gpu,
+  HardDrive,
   HatGlasses,
   House,
+  Keyboard,
+  ListOrdered,
   MemoryStick,
+  MessageSquareCode,
+  Monitor,
   Network,
   Package,
   PackageX,
   Rocket,
+  Router,
   Server,
   Settings,
+  Shield,
+  SlidersHorizontal,
+  Timer,
   Trash2,
+  Waves,
   type LucideIcon,
 } from "lucide-react";
 
@@ -35,8 +46,6 @@ export interface NavItem {
   description: string;
   /** Sections of the page, chosen with `?tab=`. */
   tabs?: NavTab[];
-  /** The sidebar gives each tab its own row instead of one row for the page. */
-  tabsInSidebar?: boolean;
   /** Drawn in the brand colour, to stand out from the list. */
   highlight?: boolean;
 }
@@ -49,6 +58,9 @@ export interface NavGroup {
 export type MonitoringTab = "cpu" | "memory" | "gpu" | "network";
 export type TweakTab = "core" | "privacy" | "apps" | "services";
 export type CleanerTab = "system" | "services" | "uninstall" | "autoruns";
+export type HardwareTab = "gpu" | "cpu" | "ram" | "peripherals" | "storage";
+export type NetworkTab = "tweaks" | "priority" | "adapters" | "bufferbloat";
+export type AdvancedTab = "security" | "msi" | "devices" | "timer";
 
 export const MONITORING_TABS: NavTab<MonitoringTab>[] = [
   { value: "cpu", label: "CPU", icon: Cpu },
@@ -69,6 +81,28 @@ export const CLEANER_TABS: NavTab<CleanerTab>[] = [
   { value: "services", label: "Services", icon: Server },
   { value: "uninstall", label: "Uninstall", icon: PackageX },
   { value: "autoruns", label: "Autoruns", icon: Rocket },
+];
+
+export const HARDWARE_TABS: NavTab<HardwareTab>[] = [
+  { value: "gpu", label: "GPU", icon: Gpu },
+  { value: "cpu", label: "CPU", icon: Cpu },
+  { value: "ram", label: "RAM", icon: MemoryStick },
+  { value: "peripherals", label: "Peripherals", icon: Keyboard },
+  { value: "storage", label: "Storage", icon: HardDrive },
+];
+
+export const NETWORK_TABS: NavTab<NetworkTab>[] = [
+  { value: "tweaks", label: "Tweaks", icon: SlidersHorizontal },
+  { value: "priority", label: "Network Priority", icon: ListOrdered },
+  { value: "adapters", label: "Adapter Tuner", icon: EthernetPort },
+  { value: "bufferbloat", label: "Bufferbloat", icon: Waves },
+];
+
+export const ADVANCED_TABS: NavTab<AdvancedTab>[] = [
+  { value: "security", label: "Security", icon: Shield },
+  { value: "msi", label: "MSI Mode", icon: MessageSquareCode },
+  { value: "devices", label: "Devices", icon: Monitor },
+  { value: "timer", label: "Timer Resolution", icon: Timer },
 ];
 
 export const NAV_GROUPS: NavGroup[] = [
@@ -118,13 +152,13 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Gauge,
         description: "Documented settings, each with an undo",
         tabs: TWEAK_TABS,
-        tabsInSidebar: true,
       },
       {
         to: "/hardware",
         label: "Hardware",
         icon: Cpu,
-        description: "What's inside this PC",
+        description: "Settings for the parts inside this PC",
+        tabs: HARDWARE_TABS,
       },
       {
         to: "/cleaner",
@@ -132,6 +166,20 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Trash2,
         description: "Clean files, services, apps and startup",
         tabs: CLEANER_TABS,
+      },
+      {
+        to: "/network",
+        label: "Network",
+        icon: Router,
+        description: "Network settings, game priority and adapters",
+        tabs: NETWORK_TABS,
+      },
+      {
+        to: "/advanced",
+        label: "Advanced",
+        icon: Rocket,
+        description: "Security status, interrupts, devices and the system timer",
+        tabs: ADVANCED_TABS,
       },
     ],
   },

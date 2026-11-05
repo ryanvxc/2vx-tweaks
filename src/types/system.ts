@@ -165,6 +165,69 @@ export interface UpdateSupport {
   channel: string;
 }
 
+export interface GpuDriver {
+  name: string;
+  version: string | null;
+  /** `YYYY-MM-DD`. */
+  date: string | null;
+}
+
+export type AdapterKind = "ethernet" | "wifi";
+
+export interface NetworkAdapter {
+  name: string;
+  kind: AdapterKind;
+  driverVersion: string | null;
+}
+
+export type MsiGroup = "gpu" | "audio" | "network" | "nvme" | "sata" | "usb";
+
+export interface MsiDevice {
+  group: MsiGroup;
+  name: string;
+  enabled: boolean;
+}
+
+export type ProtectionId = "memoryIntegrity" | "secureBoot" | "smartScreen" | "uac" | "firewall";
+export type ProtectionState = "on" | "off" | "unknown";
+
+export interface Protection {
+  id: ProtectionId;
+  state: ProtectionState;
+}
+
+export interface TimerResolution {
+  currentMs: number;
+  coarsestMs: number;
+  finestMs: number;
+}
+
+export interface SleepSample {
+  resolutionMs: number;
+  sleptMs: number;
+  deltaMs: number;
+}
+
+export interface DeviceReport {
+  gpus: GpuDriver[];
+  drives: string[];
+  adapters: NetworkAdapter[];
+  msi: MsiDevice[];
+  protections: Protection[];
+  timer: TimerResolution | null;
+}
+
+/** The backend's fixed list of pages. Names, never addresses. */
+export type ExternalLink =
+  | "nvidiaDrivers"
+  | "amdDrivers"
+  | "intelDrivers"
+  | "bufferbloatTest"
+  | "bufferbloatFixes"
+  | "graphicsSettings"
+  | "networkSettings"
+  | "timerDocs";
+
 /** Serialised `AppError` from the backend. */
 export interface BackendError {
   code:

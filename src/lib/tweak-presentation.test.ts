@@ -27,7 +27,9 @@ describe("tweak presentation", () => {
   });
 
   it("gives every tweak its own icon", () => {
-    expect(CATALOGUE.filter((id) => !TWEAK_ICON[id])).toEqual([]);
+    // Network Priority's game rows show a letter, not an icon.
+    const iconned = CATALOGUE.filter((id) => !id.startsWith("network.qos-"));
+    expect(iconned.filter((id) => !TWEAK_ICON[id])).toEqual([]);
     expect(new Set(Object.values(TWEAK_ICON)).size).toBe(Object.keys(TWEAK_ICON).length);
   });
 
@@ -107,6 +109,7 @@ describe("tweak presentation", () => {
     expect(tweakPlacement({ id: "services.new-one", category: "services" })).toEqual({
       tab: "services",
       section: "More",
+      route: "/tweaks",
     });
   });
 });

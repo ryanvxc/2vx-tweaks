@@ -27,12 +27,15 @@ checked at 1280×720, 1024×600 and maximised. The window has since been fixed a
 ## Summary
 
 Version 0.2: the app was restructured and restyled (`INFORMATION_ARCHITECTURE.md`, `REDESIGN_ROADMAP.md`,
-`DESIGN_SYSTEM.md`). 37 documented tweaks ship with per-tweak undo, grouped under Tweaks, with Game Mode and its
-presets built from those same tweaks. Monitoring, Hardware, PC Cleaner (System Cleaner, Services, Uninstall, Autoruns), the
-Restore Centre and Tools are real pages,
+`DESIGN_SYSTEM.md`). 64 documented tweaks ship with per-tweak undo, placed on Tweaks, Hardware, Network and Advanced, with Game Mode and its
+presets built from those same tweaks. Monitoring, Hardware (GPU, CPU, RAM, Peripherals, Storage), Network (Tweaks, Network
+Priority, Adapter Tuner, Bufferbloat), Advanced (Security, MSI Mode, Devices, Timer Resolution), PC Cleaner (System
+Cleaner, Services, Uninstall, Autoruns), the Restore Centre and Tools are real pages,
 and a signed Tauri updater with an Update Centre is built (`UPDATE_SYSTEM.md`). The repository is public at `ryanvxc/2vx-tweaks`,
 the signing secrets are set, and the pipeline published prereleases v0.2.0 and v0.2.1 with the update feed. The
-broker's real UAC path (P0-7) and a real update install still need a VM.
+update from v0.2.2 to v0.2.3 installed through Check for updates, the first CI-to-CI update. The broker's real UAC path
+(P0-7) still needs a VM. Not built: Adapter Tuner's per-adapter settings (read-only for now), and changing MSI mode or
+disabling devices, which need new engine primitives and a VM to test on.
 
 ## Status by area
 

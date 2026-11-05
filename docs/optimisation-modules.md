@@ -109,6 +109,52 @@ The policy denylist also protects the Edge policies that must not be weakened (`
 
 ## Added from the third-party pack review (0.2)
 
+### Hardware, Network and Advanced
+
+Each was checked against the page cited in the tweak. `recommended` is off for all of them: they're fixes or preferences
+that depend on the PC.
+
+| ID | Target = value | Edition | Source |
+| --- | --- | --- | --- |
+| `gaming.mpo-off` | `HKLM\SOFTWARE\Microsoft\Windows\Dwm\OverlayTestMode` = `5` | All | NVIDIA KB 5157, which ships this as `mpo_disable.reg`. The KB blocks automated reading, so the value name was checked against reports of the file, not the file. |
+| `gaming.system-responsiveness` | `...\Multimedia\SystemProfile\SystemResponsiveness` = `10` | All | MMCSS |
+| `power.power-throttling-off` | `HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling\PowerThrottlingOff` = `1` | All | ADMX_Power |
+| `performance.kernel-in-ram` | `...\Memory Management\DisablePagingExecutive` = `1` | All | ENABLE_TRACE_PARAMETERS |
+| `windows.mouse-acceleration-off` | `HKCU\Control Panel\Mouse\MouseSpeed`, `MouseThreshold1`, `MouseThreshold2` = `"0"` | All | SystemParametersInfo; the value names come from an archived copy of Microsoft's NT resource kit |
+| `windows.keyboard-repeat-fast` | `HKCU\Control Panel\Keyboard\KeyboardDelay` = `"0"`, `KeyboardSpeed` = `"31"` | All | SystemInformation.KeyboardSpeed and KeyboardDelay |
+| `windows.sticky-keys-shortcut-off` | `HKCU\Control Panel\Accessibility\StickyKeys\Flags` = `"506"` | All | STICKYKEYS |
+| `power.usb-selective-suspend-off` | `HKLM\SYSTEM\CurrentControlSet\Services\USB\DisableSelectiveSuspend` = `1` | All | KB 968132 |
+| `performance.short-names-off` | `...\Control\FileSystem\NtfsDisable8dot3NameCreation` = `1` | All | fsutil 8dot3name |
+| `network.delivery-optimization-http` | `HKLM\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization\DODownloadMode` = `0` | All | Delivery Optimization reference |
+| `network.prefer-ipv4` | `...\Services\Tcpip6\Parameters\DisabledComponents` = `0x20` | All | Configure IPv6 |
+| `network.smb-throttling-off` | `...\Services\LanmanWorkstation\Parameters\DisableBandwidthThrottling` = `1` | All | File server tuning |
+| `network.llmnr-off` | `HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient\EnableMulticast` = `0` | Pro+ | ADMX_DnsClient |
+| `network.icmp-redirect-off` | `...\Services\Tcpip\Parameters\EnableICMPRedirect` = `0` | All | WSUS security settings |
+| `network.qos-*` | `HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\2VX <game>`: Application Name, DSCP Value `46`, Throttle Rate `-1`, the rest `*` | All | Teams QoS guide, Manage QoS Policy. Not tested on Home. |
+| `performance.fault-tolerant-heap-off` | `HKLM\SOFTWARE\Microsoft\FTH\Enabled` = `0` | All | Fault Tolerant Heap |
+| `windows.autoplay-off` | `HKLM\...\Policies\Explorer\NoDriveTypeAutoRun` = `255` | All | AutoPlay troubleshooting |
+| `windows.device-metadata-off` | `HKLM\SOFTWARE\Policies\Microsoft\Windows\Device Metadata\PreventDeviceMetadataFromNetwork` = `1` | Pro+ | DeviceInstallation policy |
+| `windows.rdp-com-redirect-off` | `HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\fDisableCcm` = `1` | Pro+ | ADMX_TerminalServer |
+| `windows.rdp-pnp-redirect-off` | same key, `fDisablePNPRedir` = `1` | Pro+ | ADMX_TerminalServer |
+
+Looked at and left out:
+
+- **Security switches.** BottomUp and HighEntropy ASLR, Memory integrity, kernel stack randomization and SmartScreen are
+  security features; Advanced shows their state and never changes them. Fault Tolerant Heap is a reliability feature, so
+  it stays.
+- **`TdrDelay` and friends.** Microsoft: "End users shouldn't manipulate these registry keys."
+- **No official page.** `HwSchMode`, `NetworkThrottlingIndex`, `EnablePrefetcher`, `SvcHostSplitThresholdInKB`,
+  `HibernateEnabled`, `GlobalTimerResolutionRequests`.
+- **`GPU Priority`.** Microsoft: "This priority is not yet used."
+- **`NonBestEffortLimit`.** The reserved 20% only applies to programs that reserve bandwidth, so there's nothing to gain.
+- **Needs something the engine doesn't have.** NVIDIA profiles, driver installs and `netsh` settings start other
+  programs. Power plans, per-adapter driver settings and writing MSI mode need new primitives. Disabling devices (HPET, COM
+  ports, the GS synth, Hyper-V drivers) needs SetupAPI, has no documented benefit, and the Hyper-V driver underpins VBS.
+- **Timer resolution.** Since Windows 10 2004 `timeBeginPeriod` only affects the calling process, so 2VX can measure the
+  timer but can't set one for games.
+
+### From the 375+ line pack
+
 A 375+ line batch file (titled "EXM TWEAKING PACK V2") was read, not run, and every line triaged. Only settings Microsoft
 documents were taken; names, descriptions and details are written here, and a setting is implemented from Microsoft's
 page, not the script, where the two differ (`PeriodInNanoSeconds` is set to 0, not deleted; the supported

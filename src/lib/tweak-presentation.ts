@@ -1,56 +1,76 @@
 import {
   AppWindow,
+  BatteryCharging,
   Ban,
   BellOff,
   BellRing,
   BluetoothOff,
+  Bug,
+  Cable,
   ChartNoAxesColumn,
+  CirclePlay,
+  CloudDownload,
   CloudOff,
   Eye,
   EyeOff,
   FileClock,
+  FileType,
   Fingerprint,
+  FolderSync,
   Gamepad2,
   Gauge,
   Globe,
   HardDriveDownload,
   History,
+  Keyboard,
+  KeyboardOff,
   KeyRound,
   Languages,
   Layers,
+  Layers2,
   Map as MapIcon,
   MapPin,
   MapPinOff,
   Megaphone,
+  MemoryStick,
   MessageSquareOff,
   MessagesSquare,
   MicOff,
   MonitorCog,
+  MonitorSmartphone,
+  Mouse,
   Network,
+  PackageSearch,
   PanelRight,
   PenLine,
   Power,
   Printer,
   Puzzle,
+  Radar,
   Radio,
   RefreshCcw,
   Rocket,
   RotateCw,
+  Route,
   Server,
   ShoppingBag,
   Stethoscope,
   SunDim,
+  Usb,
   UserRound,
   VideoOff,
   Wind,
   type LucideIcon,
 } from "lucide-react";
-import type { TweakTab } from "@/app/navigation";
+import type { HardwareTab, TweakTab } from "@/app/navigation";
 import type { TweakCategory, TweakMeta } from "@/types/engine";
 
 // How tweaks look and where they sit in the UI. Kept apart from the engine metadata: icons
 // and grouping are presentation, the Rust catalogue stays about behaviour. Engine categories
 // say what a tweak touches; tabs are what someone goes looking for.
+
+/** Every tab that lists tweaks, across the pages that have them. */
+export type PlacedTab = TweakTab | HardwareTab | "tweaks" | "priority" | "security" | "devices";
 
 export const CATEGORY_LABEL: Record<TweakCategory, string> = {
   gaming: "Gaming",
@@ -75,10 +95,22 @@ const CATEGORY_ICON: Record<TweakCategory, LucideIcon> = {
 export const TWEAK_ICON: Record<string, LucideIcon> = {
   "gaming.game-dvr-off": VideoOff,
   "gaming.mmcss-games-priority": Gamepad2,
+  "gaming.mpo-off": Layers2,
+  "gaming.system-responsiveness": Gauge,
+  "network.delivery-optimization-http": CloudDownload,
+  "network.icmp-redirect-off": Route,
+  "network.llmnr-off": Radar,
+  "network.prefer-ipv4": Network,
+  "network.smb-throttling-off": FolderSync,
   "performance.edge-background-mode-off": Ban,
   "performance.edge-startup-boost-off": Rocket,
+  "performance.fault-tolerant-heap-off": Bug,
   "performance.foreground-boost": AppWindow,
+  "performance.kernel-in-ram": MemoryStick,
   "performance.last-access-off": FileClock,
+  "performance.short-names-off": FileType,
+  "power.power-throttling-off": BatteryCharging,
+  "power.usb-selective-suspend-off": Usb,
   "privacy.activity-history-off": History,
   "privacy.advertising-id-off": Fingerprint,
   "privacy.app-account-info-off": UserRound,
@@ -106,8 +138,15 @@ export const TWEAK_ICON: Record<string, LucideIcon> = {
   "services.wap-push-off": MessagesSquare,
   "services.xbox-auth-off": KeyRound,
   "services.xbox-save-off": CloudOff,
+  "windows.autoplay-off": CirclePlay,
+  "windows.device-metadata-off": PackageSearch,
   "windows.edge-recommendations-off": Megaphone,
   "windows.edge-sidebar-off": PanelRight,
+  "windows.keyboard-repeat-fast": Keyboard,
+  "windows.mouse-acceleration-off": Mouse,
+  "windows.rdp-com-redirect-off": Cable,
+  "windows.rdp-pnp-redirect-off": MonitorSmartphone,
+  "windows.sticky-keys-shortcut-off": KeyboardOff,
   "windows.storage-sense-off": HardDriveDownload,
   "windows.window-animations-off": Wind,
 };
@@ -117,7 +156,7 @@ export function tweakIcon(meta: Pick<TweakMeta, "id" | "category">): LucideIcon 
 }
 
 /** Sections per tab, in display order. */
-export const TWEAK_SECTIONS: Record<TweakTab, { title: string; ids: string[] }[]> = {
+export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[]> = {
   // One section: split by topic, each of these would be a lone card in an empty row.
   core: [
     {
@@ -188,22 +227,100 @@ export const TWEAK_SECTIONS: Record<TweakTab, { title: string; ids: string[] }[]
       ],
     },
   ],
+  gpu: [{ title: "GPU", ids: ["gaming.mpo-off"] }],
+  cpu: [{ title: "CPU", ids: ["gaming.system-responsiveness", "power.power-throttling-off"] }],
+  ram: [{ title: "RAM", ids: ["performance.kernel-in-ram"] }],
+  peripherals: [
+    {
+      title: "Keyboard & Mouse",
+      ids: [
+        "windows.mouse-acceleration-off",
+        "windows.keyboard-repeat-fast",
+        "windows.sticky-keys-shortcut-off",
+      ],
+    },
+    { title: "USB", ids: ["power.usb-selective-suspend-off"] },
+  ],
+  storage: [{ title: "Storage", ids: ["performance.short-names-off"] }],
+  tweaks: [
+    {
+      title: "Network",
+      ids: [
+        "network.delivery-optimization-http",
+        "network.prefer-ipv4",
+        "network.smb-throttling-off",
+      ],
+    },
+  ],
+  priority: [
+    {
+      title: "Games",
+      ids: [
+        "network.qos-apex",
+        "network.qos-cs2",
+        "network.qos-fortnite",
+        "network.qos-league",
+        "network.qos-overwatch",
+        "network.qos-rainbow-six",
+        "network.qos-rocket-league",
+        "network.qos-valorant",
+      ],
+    },
+  ],
+  security: [
+    {
+      title: "Settings",
+      ids: [
+        "network.llmnr-off",
+        "network.icmp-redirect-off",
+        "performance.fault-tolerant-heap-off",
+      ],
+    },
+  ],
+  devices: [
+    {
+      title: "Devices",
+      ids: [
+        "windows.autoplay-off",
+        "windows.device-metadata-off",
+        "windows.rdp-com-redirect-off",
+        "windows.rdp-pnp-redirect-off",
+      ],
+    },
+  ],
+};
+
+/** The page each tab is on. */
+const TAB_ROUTE: Record<PlacedTab, string> = {
+  core: "/tweaks",
+  privacy: "/tweaks",
+  apps: "/tweaks",
+  services: "/tweaks",
+  gpu: "/hardware",
+  cpu: "/hardware",
+  ram: "/hardware",
+  peripherals: "/hardware",
+  storage: "/hardware",
+  tweaks: "/network",
+  priority: "/network",
+  security: "/advanced",
+  devices: "/advanced",
 };
 
 export const MORE_SECTION = "More";
 export const UNAVAILABLE_SECTION = "Unavailable";
 
 const PLACEMENT = new Map(
-  (Object.keys(TWEAK_SECTIONS) as TweakTab[]).flatMap((tab) =>
+  (Object.keys(TWEAK_SECTIONS) as PlacedTab[]).flatMap((tab) =>
     TWEAK_SECTIONS[tab].flatMap((s) => s.ids.map((id) => [id, { tab, section: s.title }] as const)),
   ),
 );
 
-const FALLBACK_TAB: Record<TweakCategory, TweakTab> = {
+const FALLBACK_TAB: Record<TweakCategory, PlacedTab> = {
   gaming: "core",
   performance: "core",
-  power: "core",
-  network: "core",
+  power: "cpu",
+  network: "tweaks",
   windows: "core",
   privacy: "privacy",
   services: "services",
@@ -211,7 +328,9 @@ const FALLBACK_TAB: Record<TweakCategory, TweakTab> = {
 
 /** Where a tweak lives. One not placed yet still shows, in its category's tab. */
 export function tweakPlacement(meta: Pick<TweakMeta, "id" | "category">) {
-  return PLACEMENT.get(meta.id) ?? { tab: FALLBACK_TAB[meta.category], section: MORE_SECTION };
+  const placed = PLACEMENT.get(meta.id);
+  const tab = placed?.tab ?? FALLBACK_TAB[meta.category];
+  return { tab, section: placed?.section ?? MORE_SECTION, route: TAB_ROUTE[tab] };
 }
 
 export interface TweakGroup<T> {
@@ -231,7 +350,7 @@ export function groupTweaks<T extends { meta: Pick<TweakMeta, "id" | "category">
     tab,
     catalogue,
     unavailable,
-  }: { tab: TweakTab | null; catalogue: boolean; unavailable: (tweak: T) => boolean },
+  }: { tab: PlacedTab | null; catalogue: boolean; unavailable: (tweak: T) => boolean },
 ): TweakGroup<T>[] {
   const usable = tweaks.filter((t) => !unavailable(t));
   const blocked = tweaks.filter(unavailable);
@@ -257,7 +376,8 @@ export function groupTweaks<T extends { meta: Pick<TweakMeta, "id" | "category">
 
 /** A tweak's primary location, with its details open. */
 export function tweakHref(meta: Pick<TweakMeta, "id" | "category">) {
-  return `/tweaks?tab=${tweakPlacement(meta).tab}&tweak=${encodeURIComponent(meta.id)}`;
+  const { route, tab } = tweakPlacement(meta);
+  return `${route}?tab=${tab}&tweak=${encodeURIComponent(meta.id)}`;
 }
 
 /** "New" for tweaks first shipped in the running app's `major.minor`. */

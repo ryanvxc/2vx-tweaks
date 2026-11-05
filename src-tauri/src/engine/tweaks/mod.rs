@@ -4,7 +4,9 @@
 //! here; [`register_all`] runs every one through the metadata gate.
 
 mod gaming;
+mod network;
 mod performance;
+mod power;
 mod privacy;
 mod services;
 mod windows;
@@ -50,6 +52,33 @@ const ALL: &[SettingsTweak] = &[
     services::xbox_save::TWEAK,
     services::diagtrack::TWEAK,
     services::geolocation::TWEAK,
+    gaming::mpo::TWEAK,
+    gaming::system_responsiveness::TWEAK,
+    power::power_throttling::TWEAK,
+    performance::kernel_in_ram::TWEAK,
+    windows::mouse_acceleration::TWEAK,
+    windows::keyboard_repeat::TWEAK,
+    windows::sticky_keys_shortcut::TWEAK,
+    power::usb_selective_suspend::TWEAK,
+    performance::short_names::TWEAK,
+    network::delivery_optimization::TWEAK,
+    network::prefer_ipv4::TWEAK,
+    network::smb_throttling::TWEAK,
+    network::llmnr::TWEAK,
+    network::icmp_redirect::TWEAK,
+    performance::fault_tolerant_heap::TWEAK,
+    windows::autoplay::TWEAK,
+    windows::device_metadata::TWEAK,
+    windows::rdp_com_redirect::TWEAK,
+    windows::rdp_pnp_redirect::TWEAK,
+    network::qos::CS2,
+    network::qos::VALORANT,
+    network::qos::FORTNITE,
+    network::qos::APEX,
+    network::qos::LEAGUE,
+    network::qos::OVERWATCH,
+    network::qos::ROCKET_LEAGUE,
+    network::qos::RAINBOW_SIX,
 ];
 
 pub fn register_all(registry: &mut TweakRegistry) -> AppResult<()> {
@@ -233,9 +262,12 @@ mod tests {
                 .settings
                 .iter()
                 .filter(|s| {
-                    s.target
-                        .key
-                        .starts_with(r"SYSTEM\CurrentControlSet\Services\")
+                    // Start is the value that disables a service. Others under Services\ are that
+                    // driver's own parameters, such as Tcpip's EnableICMPRedirect.
+                    s.target.value == "Start"
+                        && s.target
+                            .key
+                            .starts_with(r"SYSTEM\CurrentControlSet\Services\")
                 })
                 .collect();
             if starts.is_empty() {
@@ -243,7 +275,6 @@ mod tests {
             }
             // One service per tweak: the rules forbid bulk service disabling.
             assert_eq!(t.settings.len(), 1, "{}", t.meta.id);
-            assert_eq!(starts[0].target.value, "Start", "{}", t.meta.id);
             assert_eq!(starts[0].value, Some(RegValue::Dword(4)), "{}", t.meta.id);
             assert!(t.meta.warning.is_some(), "{}", t.meta.id);
             let required = t.meta.requires.as_ref().expect(t.meta.id);

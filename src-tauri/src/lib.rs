@@ -12,6 +12,7 @@ pub mod account;
 pub mod commands;
 pub mod engine;
 pub mod error;
+pub mod links;
 pub mod logging;
 pub mod system;
 
@@ -71,6 +72,9 @@ pub fn run() {
             commands::account::set_account,
             commands::account::clear_account,
             commands::system::get_system_snapshot,
+            commands::system::get_device_report,
+            commands::system::measure_sleep,
+            commands::system::open_link,
             commands::system::get_metrics,
             commands::system::get_running_programs,
             commands::system::list_startup_items,

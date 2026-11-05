@@ -60,18 +60,17 @@ describe("App shell", () => {
     expect(screen.queryByRole("button", { name: /Maximise|Restore/ })).not.toBeInTheDocument();
   });
 
-  it("gives each Tweaks tab a sidebar row and marks only the one on screen", async () => {
-    const user = userEvent.setup();
-    window.location.hash = "#/tweaks";
+  it("gives Tweaks one sidebar row, with its tabs on the page", async () => {
+    window.location.hash = "#/tweaks?tab=privacy";
     render(<App />);
     const nav = screen.getByRole("navigation", { name: "Main" });
-    const row = (name: string) => within(nav).getByRole("link", { name });
-    await waitFor(() => expect(row("Core")).toHaveAttribute("aria-current", "page"));
-    expect(row("Privacy")).not.toHaveAttribute("aria-current");
-
-    await user.click(row("Privacy"));
-    expect(row("Privacy")).toHaveAttribute("aria-current", "page");
-    expect(row("Core")).not.toHaveAttribute("aria-current");
+    await waitFor(() =>
+      expect(within(nav).getByRole("link", { name: "Tweaks" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      ),
+    );
+    expect(within(nav).queryByRole("link", { name: "Privacy" })).not.toBeInTheDocument();
     expect(await screen.findByRole("tab", { name: /Privacy/, selected: true })).toBeInTheDocument();
   });
 

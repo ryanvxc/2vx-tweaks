@@ -3,6 +3,8 @@ use tauri::State;
 use crate::engine::cleanup::{self, CleanupLocation};
 use crate::engine::startup::{self, StartupInventory};
 use crate::error::{AppError, AppResult};
+use crate::links::{self, Link};
+use crate::system::devices::{self, DeviceReport, SleepSample};
 use crate::system::hardware::{self, SystemSnapshot};
 use crate::system::metrics::{MetricsSample, MetricsSampler};
 use crate::system::processes::{self, RunningProgram};
@@ -12,6 +14,28 @@ pub async fn get_system_snapshot() -> AppResult<SystemSnapshot> {
     tauri::async_runtime::spawn_blocking(hardware::collect_snapshot)
         .await
         .map_err(|e| AppError::Internal(format!("snapshot task failed: {e}")))?
+}
+
+/// Drivers, adapters, interrupt modes, protections and the timer. Read-only.
+#[tauri::command]
+pub async fn get_device_report() -> AppResult<DeviceReport> {
+    tauri::async_runtime::spawn_blocking(devices::collect_report)
+        .await
+        .map_err(|e| AppError::Internal(format!("device report task failed: {e}")))
+}
+
+/// How long a one-millisecond sleep really takes. Only sleeps; takes under a second.
+#[tauri::command]
+pub async fn measure_sleep() -> AppResult<Vec<SleepSample>> {
+    tauri::async_runtime::spawn_blocking(devices::measure_sleep)
+        .await
+        .map_err(|e| AppError::Internal(format!("sleep test failed: {e}")))
+}
+
+/// Opens one page from the fixed list in `links.rs`.
+#[tauri::command]
+pub fn open_link(link: Link) -> AppResult<()> {
+    links::open(link)
 }
 
 /// Running programs, for Game Mode's detected game. Read-only, with no arguments.

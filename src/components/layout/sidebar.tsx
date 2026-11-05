@@ -1,9 +1,8 @@
 import { Link, useLocation, useMatch } from "react-router";
 import logo from "@/assets/logo.svg";
-import { NAV_GROUPS, type NavGroup, type NavItem, type NavTab } from "@/app/navigation";
+import { NAV_GROUPS, type NavItem } from "@/app/navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSlidingIndicator } from "@/hooks/use-motion";
-import { useTabParam } from "@/hooks/use-tab-param";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
 import { AccountMenu } from "./account-menu";
@@ -13,11 +12,6 @@ const GROUP_HEAD_PX = 24;
 const GROUP_LINE_PX = 9;
 /** Rows stop growing here. On a taller window the spare height goes between the groups. */
 const ROW_MAX_PX = 64;
-
-const rowsOf = (group: NavGroup): { item: NavItem; tab?: NavTab }[] =>
-  group.items.flatMap((item) =>
-    item.tabsInSidebar ? (item.tabs ?? []).map((tab) => ({ item, tab })) : [{ item }],
-  );
 
 export function Sidebar({ onSearch }: { onSearch: () => void }) {
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
@@ -59,7 +53,6 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
           className="absolute top-0 left-0 -z-10 h-(--h) w-(--w) translate-x-(--x) translate-y-(--y) rounded-[10px] bg-sidebar-accent transition-[translate,width,height,opacity] duration-220"
         />
         {NAV_GROUPS.map((group, i) => {
-          const rows = rowsOf(group);
           const head = collapsed ? (i > 0 ? GROUP_LINE_PX : 0) : GROUP_HEAD_PX;
           return (
             // Growing by row count, from the heading's height, keeps every row the same height
@@ -68,8 +61,8 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
               key={group.label}
               className="flex flex-col"
               style={{
-                flex: `${rows.length} 1 ${head}px`,
-                maxHeight: head + rows.length * ROW_MAX_PX,
+                flex: `${group.items.length} 1 ${head}px`,
+                maxHeight: head + group.items.length * ROW_MAX_PX,
               }}
             >
               {!collapsed && (
@@ -78,12 +71,9 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
                 </div>
               )}
               {collapsed && i > 0 && <div className="mx-3 mb-2 h-px shrink-0 bg-sidebar-border" />}
-              {rows.map(({ item, tab }) => (
-                <div
-                  key={tab?.value ?? item.to}
-                  className="flex min-h-8.5 flex-1 flex-col justify-center"
-                >
-                  <SidebarLink item={item} tab={tab} collapsed={collapsed} />
+              {group.items.map((item) => (
+                <div key={item.to} className="flex min-h-8.5 flex-1 flex-col justify-center">
+                  <SidebarLink item={item} collapsed={collapsed} />
                 </div>
               ))}
             </div>
@@ -98,25 +88,13 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
   );
 }
 
-function SidebarLink({
-  item,
-  tab,
-  collapsed,
-}: {
-  item: NavItem;
-  tab?: NavTab;
-  collapsed: boolean;
-}) {
-  const Icon = tab?.icon ?? item.icon;
-  const label = tab?.label ?? item.label;
-  // A plain Link with these worked out here: NavLink ignores the query, so it would mark every tab
-  // of a page, and the tooltip's Slot can only merge a string className anyway.
-  const onPage = useMatch({ path: item.to, end: item.to === "/" }) !== null;
-  const [shownTab] = useTabParam(item.tabs ?? [], item.tabs?.[0]?.value ?? "");
-  const isActive = onPage && (!tab || tab.value === shownTab);
+function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
+  const { icon: Icon, label } = item;
+  // A plain Link with this worked out here: the tooltip's Slot can only merge a string className.
+  const isActive = useMatch({ path: item.to, end: item.to === "/" }) !== null;
   const link = (
     <Link
-      to={tab ? `${item.to}?tab=${tab.value}` : item.to}
+      to={item.to}
       aria-current={isActive ? "page" : undefined}
       aria-label={collapsed ? label : undefined}
       className={cn(

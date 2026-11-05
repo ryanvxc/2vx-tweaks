@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-device-report"
+description = "Enables the get_device_report command without any pre-configured scope."
+commands.allow = ["get_device_report"]
+
+[[permission]]
+identifier = "deny-get-device-report"
+description = "Denies the get_device_report command without any pre-configured scope."
+commands.deny = ["get_device_report"]

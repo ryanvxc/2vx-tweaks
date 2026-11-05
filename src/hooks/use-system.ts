@@ -3,6 +3,7 @@ import { invalidateQueries, useBackendQuery } from "./use-backend-query";
 
 export const useSystemSnapshot = () =>
   useBackendQuery("system-snapshot", backend.getSystemSnapshot);
+export const useDeviceReport = () => useBackendQuery("device-report", backend.getDeviceReport);
 export const useAppInfo = () => useBackendQuery("app-info", backend.getAppInfo);
 export const useAccount = () => useBackendQuery("account", backend.getAccount);
 export const useTweaks = () => useBackendQuery("tweaks", backend.listTweaks);

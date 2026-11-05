@@ -1,5 +1,6 @@
 //! Read-only system information. Nothing in this module modifies the system.
 
+pub mod devices;
 pub mod file_info;
 pub mod folders;
 pub mod hardware;

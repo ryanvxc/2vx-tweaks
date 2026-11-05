@@ -50,8 +50,8 @@ exe stays where it is, unchanged. The local version stays below the feed because
 tags, not from the committed config.
 
 Tested on 2026-11-04 in a local release build against the live feed: the check, download and signature check passed,
-and the owner's click installed v0.2.2 over the old 0.1.0 copy in Program Files, which then reopened. An update from
-one CI build to the next hasn't run yet.
+and the owner's click installed v0.2.2 over the old 0.1.0 copy in Program Files, which then reopened. The same route
+then took it from v0.2.2 to v0.2.3, the first update from one CI build to the next.
 
 ## User-facing behaviour
 

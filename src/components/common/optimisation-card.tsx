@@ -84,6 +84,64 @@ export function OptimisationCard({
   );
 }
 
+/** The same thing as a full-width row, for lists: EXM's Security, Devices and game lists. */
+export function OptimisationRow({
+  leading,
+  title,
+  description,
+  indicators,
+  control,
+  onOpen,
+  openLabel,
+  highlighted,
+  muted,
+  ref,
+}: {
+  leading: ReactNode;
+  title: string;
+  description?: string;
+  indicators?: ReactNode;
+  control?: ReactNode;
+  onOpen?: () => void;
+  openLabel?: string;
+  highlighted?: boolean;
+  muted?: boolean;
+  ref?: Ref<HTMLDivElement>;
+}) {
+  return (
+    <div
+      ref={ref}
+      data-stagger
+      className={cn(
+        "group relative flex h-[68px] items-center gap-4 panel px-5 transition-colors",
+        "hover:bg-raised",
+        highlighted && "border-primary/50",
+        muted && "opacity-60",
+      )}
+    >
+      <span className="flex size-9 shrink-0 items-center justify-center">{leading}</span>
+      <div className="min-w-0 flex-1">
+        {onOpen ? (
+          <button
+            type="button"
+            onClick={onOpen}
+            aria-label={openLabel ?? `Details for ${title}`}
+            title={title}
+            className="block w-full truncate text-left text-[14.5px] font-semibold outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
+          >
+            {title}
+          </button>
+        ) : (
+          <div className="truncate text-[14.5px] font-semibold">{title}</div>
+        )}
+        {description && <p className="truncate text-[13px] text-muted-foreground">{description}</p>}
+      </div>
+      {indicators && <div className="relative flex items-center gap-1.5">{indicators}</div>}
+      {control && <div className="relative shrink-0">{control}</div>}
+    </div>
+  );
+}
+
 export function NewBadge() {
   return (
     <span className="rounded-md border border-success/25 bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">

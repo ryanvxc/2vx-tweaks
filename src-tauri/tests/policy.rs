@@ -71,7 +71,8 @@ fn backend_never_spawns_shells_or_processes() {
                 file.display()
             );
         }
-        if !file.ends_with("broker.rs") {
+        // The broker relaunches 2VX elevated; links.rs opens a fixed list of pages.
+        if !file.ends_with("broker.rs") && !file.ends_with("links.rs") {
             assert!(
                 !text.contains("shellexecute"),
                 "{} launches processes",

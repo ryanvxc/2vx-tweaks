@@ -24,6 +24,22 @@ something that breaks Game Pass.
 | Windows data | `privacy.diagnostic-data-minimum`, `privacy.activity-history-off`, `privacy.feedback-requests-off`, `privacy.advertising-id-off`, `privacy.app-launch-tracking-off`, `privacy.language-list-opt-out`, `privacy.online-speech-off`, `privacy.inking-typing-collection-off` |
 | App permissions | `privacy.app-location-off`, `privacy.app-account-info-off`, `privacy.app-diagnostics-off`, `privacy.app-notification-access-off`, `privacy.background-apps-off` |
 
+### Hardware, Network and Advanced
+
+| Tab | Tweak |
+| --- | --- |
+| Hardware › GPU | `gaming.mpo-off` |
+| Hardware › CPU | `gaming.system-responsiveness`, `power.power-throttling-off` |
+| Hardware › RAM | `performance.kernel-in-ram` |
+| Hardware › Peripherals | `windows.mouse-acceleration-off`, `windows.keyboard-repeat-fast`, `windows.sticky-keys-shortcut-off`, `power.usb-selective-suspend-off` |
+| Hardware › Storage | `performance.short-names-off` |
+| Network › Tweaks | `network.delivery-optimization-http`, `network.prefer-ipv4`, `network.smb-throttling-off` |
+| Network › Network Priority | `network.qos-*`, one per game |
+| Advanced › Security | `network.llmnr-off`, `network.icmp-redirect-off`, `performance.fault-tolerant-heap-off` |
+| Advanced › Devices | `windows.autoplay-off`, `windows.device-metadata-off`, `windows.rdp-com-redirect-off`, `windows.rdp-pnp-redirect-off` |
+
+Core keeps its six tweaks: moving any to Hardware would leave Core empty on PCs where the rest are unavailable.
+
 ### Tweaks › Apps
 
 | Section | Tweak |

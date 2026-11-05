@@ -8,7 +8,9 @@ import { Sidebar } from "./sidebar";
 import { TitleBar } from "./title-bar";
 
 /** Pages that carry their own title (`PageHero`), so the title bar stays thin. */
-const OWN_TITLE = ["/", "/gaming", "/cleaner", "/tweaks"];
+const OWN_TITLE = ["/", "/gaming", "/cleaner", "/tweaks", "/hardware", "/network", "/advanced"];
+/** Tab pages that reserve the scrollbar's width, or their cards shift between short and long tabs. */
+const STEADY = ["/tweaks", "/hardware", "/network", "/advanced"];
 
 export function AppShell() {
   const { pathname, search } = useLocation();
@@ -17,8 +19,7 @@ export function AppShell() {
   const [searching, setSearching] = useState(false);
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
 
-  // Each page and tab opens at the top: a tab can be a sidebar row, clicked from anywhere down the
-  // page. Details change the rest of the query, so they don't move it.
+  // Each page and tab opens at the top. Details change the rest of the query, so they don't move it.
   useEffect(() => {
     if (main.current) main.current.scrollTop = 0;
   }, [pathname, tab]);
@@ -28,12 +29,11 @@ export function AppShell() {
       <Sidebar onSearch={() => setSearching(true)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <TitleBar slot={setHeaderSlot} thin={OWN_TITLE.includes(pathname)} />
-        {/* Tweaks reserves the scrollbar's width, or its cards shift between short and long tabs. */}
         <main
           ref={main}
           className={cn(
             "flex-1 overflow-y-auto",
-            pathname === "/tweaks" && "[scrollbar-gutter:stable]",
+            STEADY.includes(pathname) && "[scrollbar-gutter:stable]",
           )}
         >
           {/* Keyed by route so an error on one page doesn't stick after navigating away. */}

@@ -15,6 +15,7 @@ import {
 } from "@/test/engine-fixtures";
 import { useUiStore } from "@/stores/ui-store";
 import { TweakGrid } from "./tweak-grid";
+import { TWEAKS_VIEW } from "./tweak-views";
 
 const mock = vi.hoisted(() => ({
   getEngineStatus: vi.fn(),
@@ -43,7 +44,11 @@ function renderGrid(initial = "/tweaks", browse = false) {
   render(
     <MemoryRouter initialEntries={[initial]}>
       <TooltipProvider>
-        <TweakGrid categories={["privacy", "performance"]} browse={browse} />
+        {browse ? (
+          <TweakGrid view={TWEAKS_VIEW} />
+        ) : (
+          <TweakGrid categories={["privacy", "performance"]} />
+        )}
       </TooltipProvider>
     </MemoryRouter>,
   );

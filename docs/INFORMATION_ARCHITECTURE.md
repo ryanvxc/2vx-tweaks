@@ -7,7 +7,7 @@ Every feature has one primary location. Other pages may summarise it and link th
 | Information | Primary location | Elsewhere |
 | --- | --- | --- |
 | Live usage, history, per-thread load | Monitoring | Home chart (the one exception, kept by request: it names the device) |
-| Specifications, drives, board, Windows edition | Hardware | – |
+| Specifications, drives, board, Windows edition | Hardware (the chip's menu) | – |
 | Whether a tweak is in effect | Tweaks (read from the PC) | Home counts; Game Mode and its presets reference tweaks by ID |
 | Past changes and undo | Restore Centre | Home: the newest one and the backup count; a tweak's switch can undo that tweak |
 | System health | Home (a dialog from the System health card) | – |
@@ -21,8 +21,10 @@ Every feature has one primary location. Other pages may summarise it and link th
 | --- | --- | --- | --- |
 | **Home** | Is my PC okay, and what should I do next? | Backups, tweaks in effect, live chart, Quickstart, Patch Notes, newest change, health | Everything else |
 | **Monitoring** | What is it doing right now? | Four live tiles that choose the graph | Per-thread load (CPU only) |
-| **Hardware** | What's in this PC? | One specification sheet: processor, graphics, memory, Windows, board, drives | – |
-| **Tweaks** | What can I change? | Tabs (each also a sidebar row), search, filters, cards in titled sections, with anything this PC can't run in a last Unavailable section | Details dialog with values and sources |
+| **Hardware** | What can I tune on each part? | Tabs per part, a device chip with the specifications, tweak cards | – |
+| **Network** | What can I tune on my connection? | Tweaks, Network Priority, Adapter Tuner, Bufferbloat | – |
+| **Advanced** | What's protecting this PC, and how does it run? | Security status, MSI mode, device settings, timer resolution | – |
+| **Tweaks** | What can I change? | Tabs, search, filters, cards in titled sections, with anything this PC can't run in a last Unavailable section | Details dialog with values and sources |
 | **Game Mode** | Is a game running, and what should change for it? | Ring, detected game, live CPU and GPU | Configure (what it turns on), Add a Game |
 | **PC Cleaner** | What can I clear, turn off or remove? | Four tabs: System Cleaner, Services, Uninstall, Autoruns | The review before each change |
 | **Restore Centre** | What did 2VX change, and can I undo it? | One table of batches | Exact old and new values |

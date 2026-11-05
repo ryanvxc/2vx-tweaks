@@ -15,7 +15,10 @@ import type {
   MetricsSample,
   CleanupLocation,
   CleanupResult,
+  DeviceReport,
+  ExternalLink,
   RemovableApp,
+  SleepSample,
   StartupInventory,
   SystemSnapshot,
   UpdateSupport,
@@ -70,6 +73,18 @@ export const backend = {
 
   getSystemSnapshot: (): Promise<SystemSnapshot> =>
     isDesktop ? call("get_system_snapshot") : Promise.resolve(preview.snapshot()),
+
+  /** Drivers, adapters, interrupt modes, protections and the timer. Read-only. */
+  getDeviceReport: (): Promise<DeviceReport> =>
+    isDesktop ? call("get_device_report") : Promise.resolve(preview.deviceReport()),
+
+  /** How long a one-millisecond sleep really takes. Only sleeps. */
+  measureSleep: (): Promise<SleepSample[]> =>
+    isDesktop ? call("measure_sleep") : Promise.resolve(preview.sleepSamples()),
+
+  /** Opens a page from the backend's fixed list. Takes an entry name, never an address. */
+  openLink: (link: ExternalLink): Promise<void> =>
+    isDesktop ? call("open_link", { link }) : Promise.resolve(),
 
   /** Samples newer than `sinceMs`, or the full backend history (up to 5 min) when omitted. */
   getMetrics: (sinceMs?: number): Promise<MetricsSample[]> =>

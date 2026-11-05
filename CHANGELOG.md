@@ -9,9 +9,24 @@ notes come from commit subjects. This file records the larger milestones.
 - Check for updates now works in every release build, including ones built on your own PC.
 - Slow connections no longer fail the download after 30 seconds.
 
+### Hardware, Network and Advanced
+- Hardware is rebuilt: GPU, CPU, RAM, Peripherals and Storage tabs, each with its own tweaks. The chip beside the search
+  shows your part, and its menu holds the details the old page listed.
+- The GPU tab shows your driver version, with a link to your GPU maker's driver page and to Windows graphics settings.
+- New Network page: Tweaks, Network Priority (a QoS rule per game), Adapter Tuner and Bufferbloat.
+- New Advanced page: Security shows whether Memory integrity, Secure Boot, SmartScreen, UAC and the Firewall are on, MSI
+  Mode shows each device's interrupt mode, Devices has device settings, and Timer Resolution measures how long a sleep
+  really takes.
+- 27 new documented tweaks, including mouse acceleration, the Sticky Keys shortcut, USB selective suspend and power
+  throttling. None of them turn a security feature off.
+
+### PC Cleaner icons
+- Apps in Uninstall that aren't installed now show an icon of their own instead of the same box.
+
 ### Tweaks
 - Tweaks is rebuilt: a new header and tab bar, larger cards, and sections inside each tab.
 - Tabs are now Core, Privacy, Apps and Services. Windows became Core, and the Microsoft Edge tweaks moved to Apps.
+- Tweaks is one row in the sidebar again, with its tabs at the top of the page.
 - Tweaks that can't run on this PC always sit in an Unavailable section at the bottom.
 
 ### PC Cleaner
