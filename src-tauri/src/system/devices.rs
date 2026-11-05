@@ -5,13 +5,15 @@
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 
 use serde::Serialize;
 use windows::Win32::Devices::DeviceAndDriverInstallation::{
-    CM_DEVNODE_STATUS_FLAGS, CM_Get_DevNode_PropertyW, CM_Get_DevNode_Status,
-    CM_LOCATE_DEVNODE_NORMAL, CM_Locate_DevNodeW, CM_PROB, CM_PROB_DISABLED, CR_SUCCESS,
-    DN_HAS_PROBLEM,
+    ALLOC_LOG_CONF, CM_DEVNODE_STATUS_FLAGS, CM_Free_Log_Conf_Handle, CM_Free_Res_Des_Handle,
+    CM_Get_DevNode_PropertyW, CM_Get_DevNode_Status, CM_Get_First_Log_Conf, CM_Get_Next_Res_Des,
+    CM_Get_Res_Des_Data, CM_LOCATE_DEVNODE_NORMAL, CM_Locate_DevNodeW, CM_PROB, CM_PROB_DISABLED,
+    CM_RESTYPE, CR_SUCCESS, DN_HAS_PROBLEM, MEM_DES, ResType_Mem, ResType_MemLarge,
 };
 use windows::Win32::Devices::Properties::{DEVPROP_TYPE_UINT32, DEVPROPTYPE};
 use windows::Win32::Foundation::{DEVPROPKEY, NO_ERROR};
@@ -21,9 +23,15 @@ use windows::Win32::NetworkManagement::IpHelper::{
 use windows::Win32::NetworkManagement::Ndis::{
     MediaConnectStateConnected, MediaConnectStateUnknown,
 };
-use windows::Win32::System::Threading::Sleep;
+use windows::Win32::System::Threading::{
+    GetCurrentProcess, PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+    PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION, PROCESS_POWER_THROTTLING_STATE,
+    ProcessPowerThrottling, SetProcessInformation, Sleep,
+};
 use windows::core::{GUID, HSTRING};
 use windows_registry::{Key, LOCAL_MACHINE};
+
+use crate::error::{AppError, AppResult};
 
 const CLASS: &str = r"SYSTEM\CurrentControlSet\Control\Class";
 const ENUM: &str = r"SYSTEM\CurrentControlSet\Enum";
@@ -856,6 +864,130 @@ fn smart_screen_state(setting: Option<&str>, policy: Option<u32>) -> ProtectionS
 unsafe extern "system" {
     /// Not in the Windows SDK headers but exported by ntdll on every supported build. Read-only.
     fn NtQueryTimerResolution(coarsest: *mut u32, finest: *mut u32, current: *mut u32) -> i32;
+    /// The same kind of export. The request belongs to this process and dies with it.
+    fn NtSetTimerResolution(desired: u32, set: u8, current: *mut u32) -> i32;
+}
+
+/// Whether this process is holding the finest timer. Nothing stores it: a new run starts released.
+static TIMER_HELD: AtomicBool = AtomicBool::new(false);
+
+pub fn timer_held() -> bool {
+    TIMER_HELD.load(Ordering::Acquire)
+}
+
+/// Windows 11 stops honouring a process's timer request while its window is hidden, unless the
+/// process says it still needs it.
+fn keep_timer_while_hidden() {
+    let state = PROCESS_POWER_THROTTLING_STATE {
+        Version: PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+        ControlMask: PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION,
+        StateMask: 0,
+    };
+    // SAFETY: `state` is valid for reads of its own size for the length of the call. It only fails
+    // on Windows 10, where the request wasn't dropped in the first place.
+    let _ = unsafe {
+        SetProcessInformation(
+            GetCurrentProcess(),
+            ProcessPowerThrottling,
+            (&raw const state).cast(),
+            size_of::<PROCESS_POWER_THROTTLING_STATE>() as u32,
+        )
+    };
+}
+
+/// Holds or releases the finest timer the PC offers, for as long as this process lives.
+pub fn hold_timer(enabled: bool) -> AppResult<bool> {
+    let (mut coarsest, mut finest, mut current) = (0u32, 0u32, 0u32);
+    // SAFETY: all three pointers are valid for writes for the length of the call.
+    let status = unsafe { NtQueryTimerResolution(&mut coarsest, &mut finest, &mut current) };
+    if status != 0 {
+        return Err(AppError::System("couldn't read the system timer".into()));
+    }
+    if enabled {
+        keep_timer_while_hidden();
+    }
+    // SAFETY: `current` is valid for writes for the length of the call.
+    let status = unsafe { NtSetTimerResolution(finest, u8::from(enabled), &mut current) };
+    if status != 0 {
+        return Err(AppError::System("Windows refused the timer request".into()));
+    }
+    TIMER_HELD.store(enabled, Ordering::Release);
+    Ok(enabled)
+}
+
+/// The largest memory window any present display adapter has, in bytes. `None` when none could be
+/// read. It comes from the resources Windows allocated to the device, which any user can read.
+pub fn largest_display_window() -> Option<u64> {
+    enumerator_devices("PCI")
+        .into_iter()
+        .filter(|(_, key)| {
+            key.get_string("ClassGUID")
+                .is_ok_and(|g| g.eq_ignore_ascii_case(DISPLAY_CLASS))
+        })
+        .filter_map(|(instance, _)| devnode(&instance))
+        .filter_map(largest_window)
+        .max()
+}
+
+fn largest_window(node: u32) -> Option<u64> {
+    let mut config = 0usize;
+    // SAFETY: the out pointer is valid for the call, and `node` came from the PnP manager.
+    let found = unsafe { CM_Get_First_Log_Conf(Some(&mut config), node, ALLOC_LOG_CONF) };
+    if found != CR_SUCCESS {
+        return None;
+    }
+    let largest = [ResType_Mem, ResType_MemLarge]
+        .into_iter()
+        .flat_map(|kind| window_sizes(config, kind))
+        .max();
+    // SAFETY: `config` was returned above and isn't used again.
+    let _ = unsafe { CM_Free_Log_Conf_Handle(config) };
+    largest
+}
+
+/// Every window of one resource type under a configuration.
+fn window_sizes(config: usize, kind: CM_RESTYPE) -> Vec<u64> {
+    let mut sizes = Vec::new();
+    let mut current = config;
+    loop {
+        let mut next = 0usize;
+        // SAFETY: the out pointer is valid, and `current` is the configuration or a live descriptor.
+        let status = unsafe { CM_Get_Next_Res_Des(&mut next, current, kind, None, 0) };
+        if current != config {
+            // SAFETY: `current` was returned by the call before this one and isn't used again.
+            let _ = unsafe { CM_Free_Res_Des_Handle(current) };
+        }
+        if status != CR_SUCCESS {
+            return sizes;
+        }
+        sizes.extend(window_size(next));
+        current = next;
+    }
+}
+
+fn window_size(descriptor: usize) -> Option<u64> {
+    // `MEM_DES` and `MEM_LARGE_DES` start the same way, so one read covers both. An 8-byte-aligned
+    // buffer, because the descriptor holds 64-bit addresses.
+    let mut data = [0u64; 64];
+    // SAFETY: `data` is writable for the length passed.
+    let status = unsafe {
+        CM_Get_Res_Des_Data(
+            descriptor,
+            data.as_mut_ptr().cast(),
+            size_of_val(&data) as u32,
+            0,
+        )
+    };
+    if status != CR_SUCCESS {
+        return None;
+    }
+    // SAFETY: the buffer is aligned for `MEM_DES`, large enough, and was filled by the call above.
+    let header = unsafe { &*data.as_ptr().cast::<MEM_DES>() };
+    window_bytes(header.MD_Alloc_Base, header.MD_Alloc_End)
+}
+
+fn window_bytes(base: u64, end: u64) -> Option<u64> {
+    (end > base).then(|| end - base + 1)
 }
 
 fn timer_resolution() -> Option<TimerResolution> {
@@ -892,6 +1024,26 @@ mod tests {
         );
         // Brackets alone aren't arguments.
         assert_eq!(display_name("@oem1.inf,%desc%;(Generic)"), "(Generic)");
+    }
+
+    #[test]
+    fn a_window_runs_from_its_base_to_its_last_byte() {
+        assert_eq!(window_bytes(0, 0xFFF), Some(4096));
+        assert_eq!(window_bytes(0x10, 0x10), None);
+    }
+
+    /// A process-wide request, so it's taken and given back in one test. It ends with the process
+    /// whatever happens, and writes nothing to the PC.
+    #[test]
+    fn the_timer_is_held_and_released() {
+        let before = timer_resolution().expect("timer").current_ms;
+        assert!(!timer_held());
+        assert!(hold_timer(true).unwrap());
+        assert!(timer_held());
+        let now = timer_resolution().expect("timer").current_ms;
+        assert!(now <= before, "{now} against {before}");
+        assert!(!hold_timer(false).unwrap());
+        assert!(!timer_held());
     }
 
     #[test]

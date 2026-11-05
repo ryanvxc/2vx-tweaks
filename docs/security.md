@@ -31,8 +31,9 @@ against.
   - The app accepts exactly one client and checks its PID is the process it launched. The broker checks the pipe
     server's PID is the parent it was told about.
   - The broker opens the pipe at `SECURITY_IDENTIFICATION`, so the unelevated app can't impersonate the admin token.
-  - The broker's vocabulary is `Write { target, value }`, `Clean { id }`, `MoveStartup { key, name, enabled }` and
-    `Done` (guard: `broker_vocabulary_is_fixed`). It writes a target only if it passes the policy denylist **and** is
+  - The broker's vocabulary is `Write { target, value }`, `Clean { id }`, `MoveStartup { key, name, enabled }`,
+    `CreateRestorePoint`, `EnableSystemRestore`, `OptimizeDrives`, `Repair { tool }` and `Done`
+    (guard: `broker_vocabulary_is_fixed`). It writes a target only if it passes the policy denylist **and** is
     declared by a built-in tweak, or by a retired one so what it changed can still be undone (`engine/tweaks/library/retired.rs`;
     retired tweaks can't be planned, so this adds no write the released app couldn't already make). `Clean` takes an ID from the table in `engine/cleanup.rs` and refuses any location
     that doesn't need admin. `MoveStartup` takes a fixed Run key and a value name, and reads the value itself, so a
@@ -77,8 +78,8 @@ against.
 | No hardware fingerprinting or device IDs | No machine-ID crates; nothing leaves the machine. Hardware details never read a serial number, asset tag or device ID (`hardware_reads_stay_clear_of_identifiers`) |
 | No remote kill switch or remote content | Tweaks are compiled in, never downloaded. The only network client is the signed updater (decision P0-8b, superseded): it fetches the release feed and, on request, a signed installer. The only other traffic is ping, which the user starts: ICMP echoes with ping's default filler, to the default gateway or 1.1.1.1, from one file, with no HTTP. One call sends one echo, and a bufferbloat test makes one call a second to each target for its 40 seconds (`ping_is_the_only_traffic_besides_the_updater`). Listing startup entries opens nothing remote: a program's version details are read only from a drive in this PC, because opening a file on a share is traffic too, and would hand that host this account's credentials (`version_reads_stay_on_local_drives`) |
 | No background persistence | No service or scheduled task is created; nothing runs when the app is closed. If the user turns on "open at sign-in", which is off by default, one `HKCU` Run value opens the normal, visible window at sign-in (`auto_launch_is_one_run_value`). If the user turned that off in Task Manager, Settings says so and 2VX leaves it: `StartupApproved` is only ever read (`startup_approved_is_only_read`) |
-| No kernel drivers | None bundled; not in scope |
-| No unrestricted command execution | The backend source may not spawn processes or shells (`Command::new`, `ShellExecuteA`, PowerShell, cmd, reg, sc, schtasks, bcdedit, wmic, mshta, wscript, cscript, rundll32, regsvr32…). The only elevated launch is the broker's self-relaunch. `links.rs` is the only file that may call `ShellExecuteW`, on its fixed list of pages, on a fixed list of ten Windows tools resolved under the real System32 directory with constant arguments, and on the app's own log folder, so Hardware, Network and Advanced can point to driver downloads, Windows Settings and Windows' own tools for what 2VX won't do itself. It never takes an address or a command from the frontend, and never uses an elevating verb (`windows_tools_are_a_fixed_list_of_bare_names`) |
+| No kernel drivers, no firmware writes | None bundled; not in scope. The BIOS page reads and explains, and sends people to their own BIOS screen to change anything (`firmware_is_never_written`) |
+| No unrestricted command execution | The backend source may not spawn processes or shells (`Command::new`, `ShellExecuteA`, PowerShell, cmd, reg, sc, schtasks, bcdedit, wmic, mshta, wscript, cscript, rundll32, regsvr32…). The only elevated launch is the broker's self-relaunch. `links.rs` is the only file that may call `ShellExecuteW`, on its fixed list of pages, on a fixed list of thirteen Windows tools resolved under the real System32 directory with constant arguments, and on the app's own log folder, so Hardware, Network and Advanced can point to driver downloads, Windows Settings and Windows' own tools for what 2VX won't do itself. It never takes an address or a command from the frontend, and never uses an elevating verb (`windows_tools_are_a_fixed_list_of_bare_names`). `engine/repair.rs` is the one other file that starts a program: `sfc.exe /scannow` and `dism.exe /Online /Cleanup-Image /RestoreHealth`, from the real System32, as constants, inside the broker, with the output returned to the page (`repairs_are_two_constants`, decision P0-8c) |
 | No unnecessary privilege | `asInvoker`, per-batch broker, never SYSTEM or TrustedInstaller |
 | No protected changes, and evidence on everything else | Metadata gate (https references, stated evidence tier) and the policy denylist |
 | Every IPC command is deliberate | `build.rs` manifest, capability grants and `generate_handler!` must list the same commands, and every parameter of every command is on a reviewed list by name and type (`commands_never_take_a_path`); plugin permissions limited to window chrome, `updater:default` and `process:allow-restart` |
@@ -132,6 +133,32 @@ Revised 2026-11-05 at the owner's request, each with its guard tightened in the 
   index differs per PC, so scripts that hardcode one write to the wrong device. Only NDIS standardized keywords from
   Microsoft's documentation are reachable, checked in `policy::check_target` so the broker enforces the same list.
   `commands_never_take_a_path` is new, and holds for `export_report` too.
+
+Revised 2026-11-05 for 0.6, which adds what EXM's installed files showed was worth having. Each needed a line here:
+
+- **Four broker requests.** `CreateRestorePoint`, `EnableSystemRestore`, `OptimizeDrives` and `Repair { tool }` need admin
+  and take no path, name or text: three carry nothing, and `tool` is one of two enum values. The broker never receives a
+  drive letter or a restore point's description, which are constants or chosen by the elevated side.
+- **Repairs (P0-8c, built as decided).** See the row above. One UAC prompt per run, and only when the user clicks. The tool
+  runs with no window and its output, capped at 16,000 characters, goes back to the page, so nothing happens out of sight.
+- **System Protection.** `EnableSystemRestore` only ever turns it on, for the system drive. If a policy turned it off,
+  2VX says so and leaves it, because that decision belongs to whoever runs the PC.
+- **Restore points are made, never used or deleted.** 2VX lists them and can make one. Restoring and deleting stay in
+  Microsoft's wizard and System Protection dialog (`WindowsTool::SystemRestore` and `SystemProtection`), since undoing a
+  whole PC deserves its warnings. "Undo everything" uses the normal journal, not a restore point.
+- **Three more Windows tools.** `rstrui.exe`, `SystemPropertiesProtection.exe` and `dfrgui.exe`, pinned in the guard, for
+  the same reason as the other ten. `SystemPropertiesProtection.exe` and `dfrgui.exe` may show Windows' own prompt.
+- **Restart.** `restart_pc` takes nothing, always follows a `ConfirmDialog`, and isn't forced: open apps get the usual
+  chance to save. It enables the shutdown privilege for this process only.
+- **Timer hold.** `set_timer_hold` takes a bool. It calls `NtSetTimerResolution`, the call behind `timeBeginPeriod`, because
+  that's the only way to ask for the finest value. The request belongs to this process, so Windows drops it when the app
+  closes, and it's off by default. Rows show the value Windows really granted, never a promise of a gain.
+- **Firmware facts.** `get_firmware_report` reads the boot mode, the BIOS vendor, version and date, the board name, TPM
+  version, virtualisation and the largest display window. All of that any user can read, and none of it identifies this
+  PC: serial numbers stay banned (`hardware_reads_stay_clear_of_identifiers`).
+- **No BIOS writes.** EXM writes firmware settings with SCEWIN and a kernel driver, and its own help tells people to turn
+  off Secure Boot, Memory Integrity and antivirus first. That breaks rule 1 and "No kernel drivers", so 2VX explains each
+  setting and shows what it can read instead.
 
 None of these touch rule 1 or the denylist in `engine/policy.rs`.
 
@@ -208,11 +235,11 @@ brief asked for an in-app Tauri updater). The updater is allowed under these con
 - checking is the only automatic step and can be turned off; download and install each need a click;
 - release notes are shown before installing and rendered as text.
 
-**(c) Windows repair tools** (P2-8): a fixed-argv exception will be allowed. When P2-8 is built, exactly one module
+**(c) Windows repair tools** (P2-8): a fixed-argv exception, **built in 0.6**. Exactly one module (`engine/repair.rs`)
 may launch `sfc.exe` and `dism.exe` from `%SystemRoot%\System32`, with argument lists that are compile-time
 constants (no user input, no paths), elevated through the broker, with output shown to the user. The guard test in
-`tests/policy.rs` and the "No unrestricted command execution" row above change in that same change to allow exactly
-those constants in that one file. Until then, the guard forbids all process launches except the broker relaunch and the fixed list in `links.rs`.
+`tests/policy.rs` and the "No unrestricted command execution" row above allow exactly those constants in that one file,
+and forbid every other process launch except the broker relaunch and the fixed list in `links.rs`.
 
 ## Logging and privacy
 
@@ -226,6 +253,8 @@ those constants in that one file. Until then, the guard forbids all process laun
 - Hardware details, the device list, service states and the Autoruns list are read on request and kept in memory for
   the page showing them. A shortcut is read for its stored target and never resolved, because resolving can search the
   disk and rewrite the file.
+- Firmware facts and the restore point list are read on request and kept in memory for the page showing them. The
+  first-run dialog and the last Optimize time are local UI preferences.
 - The system report is written only to the file the user picks, capped at 2 MB, and its text is never logged. It leaves
   the machine only if the user sends that file themselves.
 - The local account is one email address in `account.json` in the same folder, used only to label the account card.

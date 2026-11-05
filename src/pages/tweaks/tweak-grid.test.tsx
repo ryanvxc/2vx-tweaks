@@ -225,7 +225,9 @@ describe("TweakGrid", () => {
     await user.click(screen.getByRole("button", { name: "Review 1 change" }));
     const dialog = await screen.findByRole("dialog");
     await user.click(await within(dialog).findByRole("button", { name: "Apply 1 change" }));
-    await waitFor(() => expect(toast.info).toHaveBeenCalledWith("Restart Windows to finish."));
+    await waitFor(() =>
+      expect(toast.info).toHaveBeenCalledWith("Restart Windows to finish.", expect.anything()),
+    );
   });
 
   it("keeps the review open when the apply didn't finish cleanly", async () => {

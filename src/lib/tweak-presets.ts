@@ -10,6 +10,8 @@ export interface TweakPreset {
   name: string;
   summary: string;
   includes: (meta: TweakMeta) => boolean;
+  /** Offered only on this kind of PC. */
+  only?: TweakMeta["device"];
 }
 
 // A preset changes many settings in one go, so it holds only what's unlikely to surprise anyone:
@@ -81,6 +83,19 @@ export const PRESET_TWEAKS = {
     "windows.sync-ads",
   ],
   hardware: ["gpu.nv-cpl-optin", "gpu.nv-tray", "tasks.amd-uep"],
+  desktop: [
+    "power.ahci-link",
+    "power.nvme-primary",
+    "power.nvme-secondary",
+    "power.pcie-aspm",
+    "power.usb3-link",
+  ],
+  laptop: [
+    "power.adaptive-brightness",
+    "power.disk-idle",
+    "power.intel-graphics",
+    "power.wifi-power",
+  ],
   apps: [
     "apps.brave-background",
     "apps.chrome-background",
@@ -165,6 +180,24 @@ export const GPU_PROFILES: TweakPreset[] = [
   },
 ];
 
+/** On the Power tab, not with the presets: each one only makes sense for one kind of PC. */
+export const POWER_PROFILES: TweakPreset[] = [
+  {
+    id: "power-desktop",
+    name: "Desktop power",
+    summary: "Link and drive power saving off, on mains power",
+    includes: listed("desktop"),
+    only: "desktopOnly",
+  },
+  {
+    id: "power-laptop",
+    name: "Laptop power",
+    summary: "Steady brightness, Wi-Fi and graphics without power saving",
+    includes: listed("laptop"),
+    only: "laptopOnly",
+  },
+];
+
 export interface PresetProgress {
   /** The preset's tweaks this PC can use. */
   tweaks: TweakStatus[];
@@ -172,6 +205,12 @@ export interface PresetProgress {
   open: TweakStatus[];
   /** Those 2VX recorded, so it can restore them. */
   undoable: TweakStatus[];
+}
+
+/** A profile for one kind of PC shows only when a tweak for that kind can run here. */
+export function presetFits(preset: TweakPreset, statuses: TweakStatus[]) {
+  const { tweaks } = presetProgress(preset, statuses);
+  return tweaks.length > 0 && (!preset.only || tweaks.some((t) => t.meta.device === preset.only));
 }
 
 export function presetProgress(preset: TweakPreset, statuses: TweakStatus[]): PresetProgress {

@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { ErrorBoundary } from "@/components/common/error-boundary";
+import { RestartDialog } from "@/components/common/restart-prompt";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "./command-palette";
 import { Sidebar } from "./sidebar";
 import { TitleBar } from "./title-bar";
 
 /** Tab pages that reserve the scrollbar's width, or their cards shift between short and long tabs. */
-const STEADY = ["/tweaks", "/visuals", "/cleaner", "/hardware", "/network", "/advanced"];
+const STEADY = ["/tweaks", "/visuals", "/cleaner", "/hardware", "/network", "/advanced", "/bios"];
 
 export function AppShell() {
   const { pathname, search } = useLocation();
@@ -42,6 +43,7 @@ export function AppShell() {
         </main>
       </div>
       <CommandPalette open={searching} onOpenChange={setSearching} />
+      <RestartDialog />
     </div>
   );
 }

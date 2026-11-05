@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
+import { announceRestart } from "@/stores/restart-store";
 import { MessageNotice, Notice, StatusLabel } from "@/components/common/notice";
 import { RiskBadge } from "@/components/common/risk-badge";
 import { LoadingRows } from "@/components/common/states";
@@ -102,8 +102,7 @@ export function ChangeInspector({
         const { snapshotId } = outcome;
         if (outcome.status === "completed" && snapshotId != null) {
           onApplied?.(snapshotId);
-          const restart = restartNote(outcome.restart);
-          if (restart) toast.info(restart);
+          announceRestart(outcome.restart);
           // The switch already shows a clean apply. It can't show what was left out.
           if (!outcome.skipped?.length) {
             close();

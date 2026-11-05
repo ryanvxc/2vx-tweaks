@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { ListChecks } from "lucide-react";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
-import { useSnapshots, useTweakStatuses } from "@/hooks/use-system";
+import { useRestorePoints, useSnapshots, useTweakStatuses } from "@/hooks/use-system";
 import { openRecommended, QUICKSTART_STEPS, savedBackups } from "@/lib/quickstart";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -9,6 +9,7 @@ import { useUiStore } from "@/stores/ui-store";
 export function Quickstart() {
   const statuses = useTweakStatuses();
   const snapshots = useSnapshots();
+  const restore = useRestorePoints();
   const games = useUiStore((s) => s.games);
   const gameModeTweaks = useUiStore((s) => s.gameModeTweaks);
   const gameModeSnapshot = useUiStore((s) => s.gameModeSnapshot);
@@ -17,6 +18,7 @@ export function Quickstart() {
 
   const facts = {
     applied: savedBackups(snapshots.data ?? []).length > 0,
+    restorePoint: (restore.data?.points?.length ?? 0) > 0,
     recommendedLeft: statuses.data ? openRecommended(statuses.data).length : null,
     gameModeSet: games.length > 0 || gameModeTweaks !== null || gameModeSnapshot !== null,
     opened,

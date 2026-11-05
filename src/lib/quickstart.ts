@@ -6,6 +6,8 @@ export interface QuickstartFacts {
   applied: boolean;
   /** Recommended tweaks still to apply. `null` until they're known. */
   recommendedLeft: number | null;
+  /** Windows has a restore point. */
+  restorePoint: boolean;
   /** The user added a game, chose a list or turned Game Mode on. */
   gameModeSet: boolean;
   /** Steps with nothing to read from the PC, ticked once they've been opened. */
@@ -23,6 +25,13 @@ export interface QuickstartStep {
 const visited = (id: string) => (facts: QuickstartFacts) => facts.opened.includes(id);
 
 export const QUICKSTART_STEPS: QuickstartStep[] = [
+  {
+    id: "restore-point",
+    title: "Make a restore point",
+    text: "A way back for the whole PC.",
+    to: "/restore?tab=points",
+    done: (f) => f.restorePoint,
+  },
   {
     id: "tweak",
     title: "Apply a tweak",

@@ -6,6 +6,10 @@ export const useSystemSnapshot = () =>
 export const useDeviceReport = () => useBackendQuery("device-report", backend.getDeviceReport);
 export const useHardwareDetails = () =>
   useBackendQuery("hardware-details", backend.getHardwareDetails);
+export const useFirmwareReport = () =>
+  useBackendQuery("firmware-report", backend.getFirmwareReport);
+export const useRestorePoints = () => useBackendQuery("restore-points", backend.getRestorePoints);
+export const useTimerHold = () => useBackendQuery("timer-hold", backend.getTimerHold);
 export const useAppInfo = () => useBackendQuery("app-info", backend.getAppInfo);
 export const useAccount = () => useBackendQuery("account", backend.getAccount);
 export const useTweaks = () => useBackendQuery("tweaks", backend.listTweaks);
@@ -19,6 +23,8 @@ export const useRemovableApps = () => useBackendQuery("removable-apps", backend.
 export const useSnapshots = () => useBackendQuery("snapshots", () => backend.listSnapshots(5_000));
 
 export const refreshAccount = () => invalidateQueries(["account"]);
+export const refreshRestorePoints = () => invalidateQueries(["restore-points"]);
+export const refreshTimer = () => invalidateQueries(["timer-hold", "device-report"]);
 
 /** Call after anything that may have changed the system or the journal. */
 export const refreshEngineState = () =>

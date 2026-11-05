@@ -3,6 +3,30 @@
 Main-channel builds are released automatically from `main` (see `docs/GITHUB_RELEASE_PIPELINE.md`); their
 notes come from commit subjects. This file records the larger milestones.
 
+## 0.6.0
+
+### Restore Centre
+- Restore Centre now has three tabs: Changes, Restore Points and Fixes.
+- See your Windows restore points, make a new one, or turn on System Protection. Restoring one still happens in Microsoft's own wizard, with its warnings.
+- Fixes runs Windows' own file and image repairs and shows you exactly what they printed. Windows' troubleshooters are one click away too.
+- Undo everything puts back every change 2VX has made, in one step.
+
+### BIOS
+- A new BIOS page explains the settings worth knowing about and shows what Windows can read about yours: boot mode, TPM, Resizable BAR and memory speed.
+- It never changes your BIOS. If something's worth changing, it tells you what to look for on the BIOS screen.
+
+### Maintenance
+- Optimize Drives on Hardware, under Storage, runs Windows' TRIM for SSDs and defragmenting for hard drives.
+- When a change needs a restart, you can restart from the message that says so.
+- Timer hold on Advanced keeps the finest system timer while 2VX is open, and lets go when it closes.
+- Reinstall all on Uninstall brings back every app in its list that's missing.
+
+### Also new
+- Resources has a Downloads tab, with links to well-known tools on their own sites.
+- Game Mode now recognises well-known games even when no launcher lists them.
+- The Power tab has Desktop and Laptop profiles, and shows the one that fits your PC.
+- The first time you open 2VX, it says what it does and doesn't do and offers to make a restore point.
+
 ## 0.5.1
 
 ### Downloads

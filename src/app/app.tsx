@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router";
 import { AppShell } from "@/components/layout/app-shell";
+import { FirstRunDialog } from "@/components/layout/first-run-dialog";
 import { SplashScreen } from "@/components/layout/splash-screen";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +11,7 @@ import { GamingPage } from "@/pages/gaming/gaming-page";
 import { HardwarePage } from "@/pages/hardware/hardware-page";
 import { NetworkPage } from "@/pages/network/network-page";
 import { AdvancedPage } from "@/pages/advanced/advanced-page";
+import { BiosPage } from "@/pages/bios/bios-page";
 import { RestorePage } from "@/pages/restore/restore-page";
 import { SettingsPage } from "@/pages/settings/settings-page";
 import { ToolsPage } from "@/pages/tools/tools-page";
@@ -47,6 +49,7 @@ export function App() {
               <Route path="hardware" element={<HardwarePage />} />
               <Route path="network" element={<NetworkPage />} />
               <Route path="advanced" element={<AdvancedPage />} />
+              <Route path="bios" element={<BiosPage />} />
               <Route path="tweaks" element={<TweaksPage />} />
               <Route path="library" element={<Moved to="/tweaks" />} />
               <Route path="system" element={<Moved to="/tweaks" />} />
@@ -62,7 +65,7 @@ export function App() {
           </Routes>
         </HashRouter>
       </div>
-      {splash && <SplashScreen onDone={endSplash} />}
+      {splash ? <SplashScreen onDone={endSplash} /> : <FirstRunDialog />}
       <Toaster position="bottom-right" />
     </TooltipProvider>
   );

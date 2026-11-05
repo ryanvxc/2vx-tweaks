@@ -15,6 +15,8 @@
 //! - Clearing a location takes its allowlist ID. Moving a Run entry takes a key from a fixed
 //!   list and a value name; the value itself never crosses the pipe, so the elevated side
 //!   can only put back what it took out.
+//! - Restore points, drive optimisation and the two repair tools take no argument the app can
+//!   shape: each request names fixed work, and a repair is one of two constants.
 //! - The journal stays in the unelevated app; the broker holds no state and exits when done.
 
 use std::fs::File;
@@ -43,8 +45,11 @@ use windows::core::{HSTRING, PCWSTR, w};
 
 use crate::engine::TweakRegistry;
 use crate::engine::cleanup::{self, CleanupResult};
+use crate::engine::drives::{self, DriveOutcome};
 use crate::engine::plan::new_plan_id;
 use crate::engine::policy;
+use crate::engine::repair::{self, RepairOutcome, RepairTool};
+use crate::engine::restore_points::{self, CreatedPoint};
 use crate::engine::setting::{Hive, RegTarget, RegValue};
 use crate::engine::startup::{self, RunKey};
 use crate::engine::store::{LocalWriter, SettingStore, SettingWriter, WindowsRegistry};
@@ -76,6 +81,12 @@ pub enum Request {
         name: String,
         enabled: bool,
     },
+    CreateRestorePoint,
+    EnableSystemRestore,
+    OptimizeDrives,
+    Repair {
+        tool: RepairTool,
+    },
     Done,
 }
 
@@ -85,6 +96,10 @@ pub enum Response {
     Written { read_back: Option<RegValue> },
     Cleaned { outcome: CleanupResult },
     Moved,
+    RestorePoint { outcome: CreatedPoint },
+    RestoreEnabled,
+    DrivesOptimized { outcomes: Vec<DriveOutcome> },
+    Repaired { outcome: RepairOutcome },
     Error { code: String, message: String },
 }
 
@@ -152,6 +167,18 @@ pub fn serve<S: Read + Write>(
             Request::MoveStartup { key, name, enabled } => {
                 startup::move_value(Hive::LocalMachine, key, &name, enabled)
                     .map(|()| Response::Moved)
+            }
+            Request::CreateRestorePoint => {
+                restore_points::create_here().map(|outcome| Response::RestorePoint { outcome })
+            }
+            Request::EnableSystemRestore => {
+                restore_points::enable_here().map(|()| Response::RestoreEnabled)
+            }
+            Request::OptimizeDrives => {
+                drives::optimize_here().map(|outcomes| Response::DrivesOptimized { outcomes })
+            }
+            Request::Repair { tool } => {
+                repair::run_here(tool).map(|outcome| Response::Repaired { outcome })
             }
         };
         let response = response.unwrap_or_else(|e| Response::Error {
@@ -394,6 +421,34 @@ impl BrokerSession {
         };
         match self.exchange(&request)? {
             Response::Moved => Ok(()),
+            _ => Err(unexpected_reply()),
+        }
+    }
+
+    pub fn create_restore_point(&mut self) -> AppResult<CreatedPoint> {
+        match self.exchange(&Request::CreateRestorePoint)? {
+            Response::RestorePoint { outcome } => Ok(outcome),
+            _ => Err(unexpected_reply()),
+        }
+    }
+
+    pub fn enable_system_restore(&mut self) -> AppResult<()> {
+        match self.exchange(&Request::EnableSystemRestore)? {
+            Response::RestoreEnabled => Ok(()),
+            _ => Err(unexpected_reply()),
+        }
+    }
+
+    pub fn optimize_drives(&mut self) -> AppResult<Vec<DriveOutcome>> {
+        match self.exchange(&Request::OptimizeDrives)? {
+            Response::DrivesOptimized { outcomes } => Ok(outcomes),
+            _ => Err(unexpected_reply()),
+        }
+    }
+
+    pub fn repair(&mut self, tool: RepairTool) -> AppResult<RepairOutcome> {
+        match self.exchange(&Request::Repair { tool })? {
+            Response::Repaired { outcome } => Ok(outcome),
             _ => Err(unexpected_reply()),
         }
     }

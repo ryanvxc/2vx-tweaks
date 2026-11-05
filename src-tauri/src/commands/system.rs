@@ -10,6 +10,7 @@ use crate::links::{self, Link, WindowsTool};
 use crate::logging::LogState;
 use crate::report;
 use crate::system::devices::{self, DeviceReport, SleepSample};
+use crate::system::firmware::{self, FirmwareReport};
 use crate::system::hardware::{self, SystemSnapshot};
 use crate::system::hardware_details::{self, HardwareDetails};
 use crate::system::metrics::{MetricsSample, MetricsSampler};
@@ -76,6 +77,28 @@ pub async fn measure_sleep() -> AppResult<Vec<SleepSample>> {
     tauri::async_runtime::spawn_blocking(devices::measure_sleep)
         .await
         .map_err(|e| AppError::Internal(format!("sleep test failed: {e}")))
+}
+
+/// Boot mode, BIOS version and what Windows can see of the firmware's settings. Read-only.
+#[tauri::command]
+pub async fn get_firmware_report() -> AppResult<FirmwareReport> {
+    tauri::async_runtime::spawn_blocking(firmware::collect)
+        .await
+        .map_err(|e| AppError::Internal(format!("firmware report task failed: {e}")))
+}
+
+/// Whether 2VX is holding the finest timer. It never outlives the app.
+#[tauri::command]
+pub async fn get_timer_hold() -> AppResult<bool> {
+    Ok(devices::timer_held())
+}
+
+/// Holds or releases the finest timer, for as long as 2VX stays open.
+#[tauri::command]
+pub async fn set_timer_hold(enabled: bool) -> AppResult<bool> {
+    tauri::async_runtime::spawn_blocking(move || devices::hold_timer(enabled))
+        .await
+        .map_err(|e| AppError::Internal(format!("timer task failed: {e}")))?
 }
 
 /// Off the main thread, because a tool can bring up a UAC prompt and the call waits for it, which

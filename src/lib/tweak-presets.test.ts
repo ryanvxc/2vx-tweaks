@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { TweakMeta, TweakStatus } from "@/types/engine";
 import { OFFERED_SOURCE, VISUALS_SOURCE } from "@/test/catalogue";
-import { GPU_PROFILES, PRESET_TWEAKS, TWEAK_PRESETS, presetProgress } from "./tweak-presets";
+import {
+  GPU_PROFILES,
+  POWER_PROFILES,
+  PRESET_TWEAKS,
+  TWEAK_PRESETS,
+  presetFits,
+  presetProgress,
+} from "./tweak-presets";
 
 const preset = (id: string) => TWEAK_PRESETS.find((p) => p.id === id)!;
 
@@ -24,6 +31,28 @@ function status(meta: Partial<TweakMeta>, rest: Partial<TweakStatus> = {}): Twea
     ...rest,
   };
 }
+
+describe("power profiles", () => {
+  const [desktop, laptop] = POWER_PROFILES as [
+    (typeof POWER_PROFILES)[number],
+    (typeof POWER_PROFILES)[number],
+  ];
+  const base = { category: "power", section: "Disk" } as const;
+  const desktopTweak = status({ ...base, id: "power.ahci-link", device: "desktopOnly" });
+  const anyPc = status({ ...base, id: "power.wifi-power", device: "any" });
+  const laptopTweak = (compatibility: TweakStatus["compatibility"]) =>
+    status({ ...base, id: "power.adaptive-brightness", device: "laptopOnly" }, { compatibility });
+
+  it("offers each one only on its kind of PC", () => {
+    const onDesktop = [desktopTweak, anyPc, laptopTweak("wrongDevice")];
+    expect(presetFits(desktop, onDesktop)).toBe(true);
+    expect(presetFits(laptop, onDesktop)).toBe(false);
+
+    const onLaptop = [{ ...desktopTweak, compatibility: "wrongDevice" as const }, anyPc];
+    expect(presetFits(laptop, [...onLaptop, laptopTweak("compatible")])).toBe(true);
+    expect(presetFits(desktop, onLaptop)).toBe(false);
+  });
+});
 
 describe("library presets", () => {
   const listedId = PRESET_TWEAKS.privacy[0];

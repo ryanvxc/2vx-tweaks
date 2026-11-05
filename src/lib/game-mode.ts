@@ -1,3 +1,4 @@
+import { knownGame } from "@/lib/known-games";
 import type { RunningProgram } from "@/types/system";
 
 /**
@@ -23,7 +24,7 @@ const longestRunning = (games: DetectedGame[]) =>
     null,
   );
 
-/** Games the user added come first, because they chose those names. */
+/** Games the user added come first, because they chose those names. Then what a library lists. */
 export function detectGame(programs: RunningProgram[], games: SavedGame[]): DetectedGame | null {
   const running = new Map(programs.map((p) => [p.fileName.toLowerCase(), p]));
   const added = games.flatMap((game) => {
@@ -33,7 +34,11 @@ export function detectGame(programs: RunningProgram[], games: SavedGame[]): Dete
   const library = programs.flatMap((p) =>
     p.libraryGame ? [{ name: p.libraryGame, runningSeconds: p.runningSeconds }] : [],
   );
-  return longestRunning(added) ?? longestRunning(library);
+  const known = programs.flatMap((p) => {
+    const name = knownGame(p.fileName);
+    return name ? [{ name, runningSeconds: p.runningSeconds }] : [];
+  });
+  return longestRunning(added) ?? longestRunning(library) ?? longestRunning(known);
 }
 
 /** What's wrong with a new game, or `null` when it can be added. */

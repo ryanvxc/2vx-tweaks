@@ -1,25 +1,40 @@
 import { useState } from "react";
-import { ArrowRight, Gpu, MonitorCog, type LucideIcon } from "lucide-react";
+import { ArrowRight, Gpu, Laptop, Monitor, MonitorCog, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { PresetCard } from "@/components/common/preset-card";
 import { Button } from "@/components/ui/button";
 import { refreshEngineState, useEngineStatus, useTweakStatuses } from "@/hooks/use-system";
 import { restartNote } from "@/lib/engine-text";
-import { GPU_PROFILES, presetProgress, presetStatus, type TweakPreset } from "@/lib/tweak-presets";
+import {
+  GPU_PROFILES,
+  POWER_PROFILES,
+  presetFits,
+  presetProgress,
+  presetStatus,
+  type TweakPreset,
+} from "@/lib/tweak-presets";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
 import type { TweakStatus } from "@/types/engine";
 import { ChangeInspector } from "../tweaks/change-inspector";
 
-const ICONS: Record<string, LucideIcon> = { "gpu-nvidia": Gpu, "gpu-windows": MonitorCog };
+const ICONS: Record<string, LucideIcon> = {
+  "gpu-nvidia": Gpu,
+  "gpu-windows": MonitorCog,
+  "power-desktop": Monitor,
+  "power-laptop": Laptop,
+};
 
-/** Named lists of existing GPU tweaks, applied through the normal review. */
-export function GpuProfiles() {
+export const GpuProfiles = () => <ProfileCards presets={GPU_PROFILES} />;
+export const PowerProfiles = () => <ProfileCards presets={POWER_PROFILES} />;
+
+/** Named lists of existing tweaks, applied through the normal review. */
+function ProfileCards({ presets }: { presets: TweakPreset[] }) {
   const { data } = useTweakStatuses();
   const engine = useEngineStatus();
   if (!data) return null;
   const disabled = isDesktop && engine.data?.journalAvailable === false;
-  const cards = GPU_PROFILES.filter((p) => presetProgress(p, data).tweaks.length > 0);
+  const cards = presets.filter((p) => presetFits(p, data));
   if (cards.length === 0) return null;
   return (
     <div className="grid grid-cols-2 gap-3">

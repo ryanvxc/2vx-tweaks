@@ -45,9 +45,23 @@ Library tweaks can target more than the registry, without starting another progr
   The primary adapter can change between two reads, so a change records which instance it reached (`security.md`,
   rule 10). The same goes for a display adapter.
 
-## Planned integrations (not implemented)
+## Restore points, drives and firmware (0.6)
 
-- Restore points: `SRSetRestorePointW` (srclient), which needs elevation and System Protection enabled.
+- `system/wmi.rs` is the one WMI client, on its own COM thread. `__PATH` only comes back with `SELECT *`, so a class whose
+  methods are called is read that way. It was named `Wmi::open` rather than `connect` because the network guard bans that name.
+- Restore points (`engine/restore_points.rs`): `root\default:SystemRestore`. `Enumerate` lists them and `CreateRestorePoint`
+  makes one. Windows skips a new point inside its frequency window and still reports success, so `created` compares the
+  newest sequence number before and after. The on and off state comes from `Windows NT\CurrentVersion\SystemRestore`, and
+  the policy key under `SOFTWARE\Policies` shows when an administrator blocked it.
+- Drives (`engine/drives.rs`): `root\Microsoft\Windows\Storage:MSFT_Volume`, `DriveType = 3`, `Optimize` with no switches
+  so Windows picks by media. Listing works unelevated, and running needs the broker.
+- Repairs (`engine/repair.rs`): `sfc.exe` and `dism.exe` with constant arguments. `sfc` writes UTF-16 when its output isn't
+  a console, and `dism` writes the console code page.
+- Firmware (`system/firmware.rs`): `GetFirmwareType`, `HARDWARE\DESCRIPTION\System\BIOS`, `Tbsi_GetDeviceInfo` for TPM,
+  `IsProcessorFeaturePresent(PF_VIRT_FIRMWARE_ENABLED)`. Resizable BAR has no API, so it's read from the resources Windows
+  allocated to the display adapter: a window of 1 GB or more means it's working, and without it the window is 256 MB.
+- Timer hold (`system/devices.rs`): `NtSetTimerResolution`, per process, gone when the app closes.
+- Restart (`system/power.rs`): `SE_SHUTDOWN_NAME` enabled for this process, then an unforced `ExitWindowsEx`.
 
 ## Windows 10 vs 11
 

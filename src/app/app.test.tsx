@@ -10,7 +10,7 @@ describe("App shell", () => {
   beforeEach(() => {
     window.location.hash = "#/";
     clearQueryCache();
-    useUiStore.setState({ showSplash: false });
+    useUiStore.setState({ showSplash: false, firstRunSeen: true });
   });
 
   it("opens behind the loading screen, unless it's turned off", async () => {
@@ -22,6 +22,44 @@ describe("App shell", () => {
     fireEvent.keyDown(window, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("progressbar")).not.toBeInTheDocument());
     expect(screen.getByRole("heading", { name: /Welcome back/ })).toBeInTheDocument();
+  });
+
+  it("greets someone new once, and never promises what it can't do", async () => {
+    const user = userEvent.setup();
+    useUiStore.setState({ firstRunSeen: false });
+    render(<App />);
+    const dialog = await screen.findByRole("dialog", { name: "Before you start" });
+    expect(within(dialog).getByText(/never changes your BIOS/)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Not now" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(useUiStore.getState().firstRunSeen).toBe(true);
+  });
+
+  it("opens the BIOS guide, with no way to change anything", async () => {
+    window.location.hash = "#/bios?tab=graphics";
+    render(<App />);
+    expect(await screen.findByRole("heading", { name: "BIOS" })).toBeInTheDocument();
+    expect(await screen.findByText("Resizable BAR")).toBeInTheDocument();
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+  });
+
+  it("splits the Restore Centre into changes, restore points and fixes", async () => {
+    const user = userEvent.setup();
+    window.location.hash = "#/restore";
+    render(<App />);
+    await user.click(await screen.findByRole("tab", { name: /Restore Points/ }));
+    expect(await screen.findByText("Preview restore point")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open System Restore" })).toBeInTheDocument();
+    await user.click(screen.getByRole("tab", { name: /Fixes/ }));
+    expect(await screen.findByText("Check Windows files")).toBeInTheDocument();
+    expect(screen.getByText("Repair the Windows image")).toBeInTheDocument();
+  });
+
+  it("lists downloads on Resources", async () => {
+    window.location.hash = "#/tools?tab=downloads";
+    render(<App />);
+    expect(await screen.findByText("Display Driver Uninstaller")).toBeInTheDocument();
+    expect(screen.getByText("From Microsoft")).toBeInTheDocument();
   });
 
   it("renders Home with preview data clearly labelled", async () => {

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-restart-pc"
+description = "Enables the restart_pc command without any pre-configured scope."
+commands.allow = ["restart_pc"]
+
+[[permission]]
+identifier = "deny-restart-pc"
+description = "Denies the restart_pc command without any pre-configured scope."
+commands.deny = ["restart_pc"]

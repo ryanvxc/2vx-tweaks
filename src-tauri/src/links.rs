@@ -30,6 +30,25 @@ pub enum Link {
     TimerDocs,
     ReportIssue,
     ProjectPage,
+    Troubleshoot,
+    SecureBootDocs,
+    TpmDocs,
+    MemoryIntegrityDocs,
+    ResizableBarNvidia,
+    ResizableBarAmd,
+    ExpoDocs,
+    XmpDocs,
+    IntelInstabilityDocs,
+    Autoruns,
+    ProcessExplorer,
+    Hwinfo,
+    LatencyMon,
+    CapFrameX,
+    CrystalDiskInfo,
+    Occt,
+    DisplayDriverUninstaller,
+    NvCleanstall,
+    NvidiaProfileInspector,
 }
 
 impl Link {
@@ -49,6 +68,43 @@ impl Link {
             }
             Self::ReportIssue => "https://github.com/ryanvxc/2vx-tweaks/issues/new",
             Self::ProjectPage => "https://github.com/ryanvxc/2vx-tweaks",
+            Self::Troubleshoot => "ms-settings:troubleshoot",
+            Self::SecureBootDocs => {
+                "https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/oem-secure-boot"
+            }
+            Self::TpmDocs => {
+                "https://learn.microsoft.com/en-us/windows/security/hardware-security/tpm/trusted-platform-module-overview"
+            }
+            Self::MemoryIntegrityDocs => {
+                "https://learn.microsoft.com/en-us/windows/security/hardware-security/enable-virtualization-based-protection-of-code-integrity"
+            }
+            Self::ResizableBarNvidia => {
+                "https://www.nvidia.com/en-us/geforce/news/geforce-rtx-30-series-resizable-bar-support/"
+            }
+            Self::ResizableBarAmd => {
+                "https://www.amd.com/en/gaming/technologies/smart-technologies.html"
+            }
+            Self::ExpoDocs => "https://www.amd.com/en/products/processors/technologies/expo.html",
+            Self::XmpDocs => {
+                "https://www.intel.com/content/www/us/en/gaming/extreme-memory-profile-xmp.html"
+            }
+            Self::IntelInstabilityDocs => {
+                "https://community.intel.com/t5/Processors/Intel-Core-13th-and-14th-Gen-Desktop-Instability-Root-Cause/td-p/1633442"
+            }
+            Self::Autoruns => "https://learn.microsoft.com/en-us/sysinternals/downloads/autoruns",
+            Self::ProcessExplorer => {
+                "https://learn.microsoft.com/en-us/sysinternals/downloads/process-explorer"
+            }
+            Self::Hwinfo => "https://www.hwinfo.com/download/",
+            Self::LatencyMon => "https://www.resplendence.com/latencymon",
+            Self::CapFrameX => "https://www.capframex.com/download",
+            Self::CrystalDiskInfo => "https://crystalmark.info/en/software/crystaldiskinfo/",
+            Self::Occt => "https://www.ocbase.com/",
+            Self::DisplayDriverUninstaller => {
+                "https://www.wagnardsoft.com/display-driver-uninstaller-ddu"
+            }
+            Self::NvCleanstall => "https://www.techpowerup.com/nvcleanstall/",
+            Self::NvidiaProfileInspector => "https://github.com/Orbmu2k/nvidiaProfileInspector",
         }
     }
 }
@@ -66,6 +122,9 @@ pub enum WindowsTool {
     DeviceManager,
     ServicesConsole,
     NetworkConnections,
+    SystemRestore,
+    SystemProtection,
+    OptimizeDrives,
 }
 
 /// How Windows is asked to open a tool. Every part is a constant, reviewed in `tests/policy.rs`.
@@ -88,7 +147,7 @@ const fn opens(file: &'static str) -> ToolCommand {
 }
 
 impl WindowsTool {
-    pub const ALL: [WindowsTool; 10] = [
+    pub const ALL: [WindowsTool; 13] = [
         Self::ResourceMonitor,
         Self::ReliabilityMonitor,
         Self::SystemInformation,
@@ -99,6 +158,9 @@ impl WindowsTool {
         Self::DeviceManager,
         Self::ServicesConsole,
         Self::NetworkConnections,
+        Self::SystemRestore,
+        Self::SystemProtection,
+        Self::OptimizeDrives,
     ];
 
     pub const fn command(self) -> ToolCommand {
@@ -120,6 +182,9 @@ impl WindowsTool {
                 verb: "cplopen",
                 ..opens("ncpa.cpl")
             },
+            Self::SystemRestore => opens("rstrui.exe"),
+            Self::SystemProtection => opens("SystemPropertiesProtection.exe"),
+            Self::OptimizeDrives => opens("dfrgui.exe"),
         }
     }
 }
@@ -177,7 +242,7 @@ pub fn open(link: Link) -> AppResult<()> {
 }
 
 /// The real System32, from Windows: PATH or the working directory could put another file first.
-fn system_directory() -> AppResult<PathBuf> {
+pub(crate) fn system_directory() -> AppResult<PathBuf> {
     let mut buffer = [0u16; 512];
     // SAFETY: the buffer is writable for its whole length, which the call receives.
     let length = unsafe { GetSystemDirectoryW(Some(&mut buffer)) } as usize;
@@ -222,6 +287,25 @@ mod tests {
             Link::TimerDocs,
             Link::ReportIssue,
             Link::ProjectPage,
+            Link::Troubleshoot,
+            Link::SecureBootDocs,
+            Link::TpmDocs,
+            Link::MemoryIntegrityDocs,
+            Link::ResizableBarNvidia,
+            Link::ResizableBarAmd,
+            Link::ExpoDocs,
+            Link::XmpDocs,
+            Link::IntelInstabilityDocs,
+            Link::Autoruns,
+            Link::ProcessExplorer,
+            Link::Hwinfo,
+            Link::LatencyMon,
+            Link::CapFrameX,
+            Link::CrystalDiskInfo,
+            Link::Occt,
+            Link::DisplayDriverUninstaller,
+            Link::NvCleanstall,
+            Link::NvidiaProfileInspector,
         ] {
             let target = link.target();
             assert!(

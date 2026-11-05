@@ -3,9 +3,12 @@ import {
   ArchiveRestore,
   Bolt,
   Brush,
+  CircuitBoard,
   Cpu,
+  Download,
   EthernetPort,
   Eye,
+  FileClock,
   FolderOpen,
   Gamepad2,
   Gauge,
@@ -15,11 +18,13 @@ import {
   House,
   Keyboard,
   Layers,
+  LifeBuoy,
   ListOrdered,
   LogIn,
   MemoryStick,
   MessageSquareCode,
   Monitor,
+  MonitorCog,
   Package,
   PackageX,
   Palette,
@@ -32,6 +37,7 @@ import {
   SlidersHorizontal,
   Timer,
   Trash2,
+  Undo2,
   Waves,
   Zap,
   type LucideIcon,
@@ -66,6 +72,9 @@ export type HardwareTab = "gpu" | "cpu" | "ram" | "peripherals" | "storage";
 export type NetworkTab = "tweaks" | "priority" | "adapters" | "bufferbloat";
 export type VisualsTab = "appearance" | "taskbar" | "explorer" | "signin";
 export type AdvancedTab = "security" | "msi" | "devices" | "timer";
+export type RestoreTab = "changes" | "points" | "fixes";
+export type ResourcesTab = "tools" | "downloads";
+export type BiosTab = "general" | "cpu" | "memory" | "graphics" | "power";
 
 export const TWEAK_TABS: NavTab<TweakTab>[] = [
   { value: "core", label: "Core", icon: Bolt },
@@ -112,6 +121,25 @@ export const ADVANCED_TABS: NavTab<AdvancedTab>[] = [
   { value: "timer", label: "Timer Resolution", icon: Timer },
 ];
 
+export const RESTORE_TABS: NavTab<RestoreTab>[] = [
+  { value: "changes", label: "Changes", icon: Undo2 },
+  { value: "points", label: "Restore Points", icon: FileClock },
+  { value: "fixes", label: "Fixes", icon: LifeBuoy },
+];
+
+export const RESOURCES_TABS: NavTab<ResourcesTab>[] = [
+  { value: "tools", label: "Tools", icon: MonitorCog },
+  { value: "downloads", label: "Downloads", icon: Download },
+];
+
+export const BIOS_TABS: NavTab<BiosTab>[] = [
+  { value: "general", label: "General", icon: CircuitBoard },
+  { value: "cpu", label: "CPU", icon: Cpu },
+  { value: "memory", label: "Memory", icon: MemoryStick },
+  { value: "graphics", label: "Graphics", icon: Gpu },
+  { value: "power", label: "Power", icon: Zap },
+];
+
 export const NAV_GROUPS: NavGroup[] = [
   {
     label: "General",
@@ -121,13 +149,15 @@ export const NAV_GROUPS: NavGroup[] = [
         to: "/restore",
         label: "Restore Centre",
         icon: ArchiveRestore,
-        description: "Every change 2VX made, with undo",
+        description: "Every change 2VX made, restore points and Windows repairs",
+        tabs: RESTORE_TABS,
       },
       {
         to: "/tools",
         label: "Resources",
         icon: Package,
-        description: "System report and Windows tools",
+        description: "System report, Windows tools and downloads",
+        tabs: RESOURCES_TABS,
       },
       {
         to: "/settings",
@@ -193,6 +223,13 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Rocket,
         description: "Security status, interrupts, devices and the system timer",
         tabs: ADVANCED_TABS,
+      },
+      {
+        to: "/bios",
+        label: "BIOS",
+        icon: CircuitBoard,
+        description: "What to check in your BIOS. 2VX never changes it",
+        tabs: BIOS_TABS,
       },
     ],
   },

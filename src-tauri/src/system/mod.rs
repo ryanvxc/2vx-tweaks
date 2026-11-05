@@ -2,6 +2,7 @@
 
 pub mod devices;
 pub mod file_info;
+pub mod firmware;
 pub mod folders;
 pub mod hardware;
 pub mod hardware_details;
@@ -12,3 +13,4 @@ pub mod power;
 pub mod privilege;
 pub mod processes;
 pub mod services;
+pub mod wmi;

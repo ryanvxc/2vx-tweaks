@@ -1,16 +1,26 @@
 import { useEffect, useState } from "react";
 import { Archive, ChevronDown, History, SlidersHorizontal, Undo2 } from "lucide-react";
 import { toast } from "sonner";
+import { RESTORE_TABS } from "@/app/navigation";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { EngineBanner } from "@/components/common/engine-banner";
 import { MessageNotice, StatusLabel } from "@/components/common/notice";
 import { CardGrid, OptimisationCard } from "@/components/common/optimisation-card";
+import { PageTabs } from "@/components/common/page-tabs";
+import { announceRestart } from "@/stores/restart-store";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
 import { RecommendedAction } from "@/components/common/recommended-action";
 import { PageHero } from "@/components/layout/page-hero";
 import { Button } from "@/components/ui/button";
-import { refreshEngineState, useRetiredTweaks, useSnapshots, useTweaks } from "@/hooks/use-system";
+import {
+  refreshEngineState,
+  useRetiredTweaks,
+  useSnapshots,
+  useTweakStatuses,
+  useTweaks,
+} from "@/hooks/use-system";
+import { useTabParam } from "@/hooks/use-tab-param";
 import {
   CHANGE_STATUS,
   SNAPSHOT_STATUS,
@@ -23,11 +33,100 @@ import { cn } from "@/lib/utils";
 import { backend, toBackendError } from "@/services/backend";
 import type { ChangeRecord, RetiredTweak, RiskLevel, SnapshotRecord } from "@/types/engine";
 import type { BackendError } from "@/types/system";
+import { FixesTab } from "./fixes-tab";
+import { RestorePointsTab } from "./restore-points-tab";
 
 // Shared by the header and every row, so the columns line up.
 const COLUMNS = "grid grid-cols-[minmax(0,1fr)_9.5rem_3.25rem_4.5rem_1.5rem] items-center gap-3";
 
 export function RestorePage() {
+  const [tab, setTab] = useTabParam(RESTORE_TABS, "changes");
+  const { data } = useSnapshots();
+
+  return (
+    <div className="flex flex-1 flex-col gap-3 font-nav [--font-heading:var(--font-nav)]">
+      <PageHero
+        title="Restore Centre"
+        subtitle={summary(data) ?? "Every change 2VX has made"}
+        action={<RecommendedAction />}
+      />
+      <PageTabs
+        label="Restore Centre"
+        tabs={RESTORE_TABS}
+        value={tab}
+        onChange={setTab}
+        end={tab === "changes" ? <UndoEverything /> : undefined}
+        filled
+      />
+      {tab === "changes" ? <ChangesTab /> : tab === "points" ? <RestorePointsTab /> : <FixesTab />}
+    </div>
+  );
+}
+
+/** One batch, so one prompt covers it. Only tweaks 2VX can really restore are in it. */
+function UndoEverything() {
+  const { data: statuses } = useTweakStatuses();
+  const { data: retired } = useRetiredTweaks();
+  const [confirming, setConfirming] = useState(false);
+  const [undoing, setUndoing] = useState(false);
+  const current = (statuses ?? []).filter((t) => t.undoable).map((t) => t.meta);
+  const old = (retired ?? []).filter((t) => t.undoable);
+  const all = [...current, ...old];
+  if (all.length === 0) return null;
+
+  const undo = () => {
+    setConfirming(false);
+    setUndoing(true);
+    backend
+      .revertTweaks(all.map((t) => t.id))
+      .then(
+        (outcome) => {
+          const m = describeOutcome(outcome, "revert");
+          (m.tone === "success" ? toast.success : toast.warning)(m.title, {
+            description: m.description,
+          });
+          announceRestart(outcome.restart);
+        },
+        (err: unknown) => {
+          const m = describeError(toBackendError(err));
+          toast.error(m.title, { description: m.description });
+        },
+      )
+      .finally(() => {
+        setUndoing(false);
+        refreshEngineState();
+      });
+  };
+
+  return (
+    <>
+      <Button
+        size="xs"
+        variant="ghost"
+        disabled={undoing}
+        aria-label="Undo everything"
+        onClick={() => setConfirming(true)}
+      >
+        <Undo2 /> {undoing ? "Undoing…" : "Undo everything"}
+      </Button>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title="Undo everything?"
+        description={`Restores the recorded values of ${all.length} tweak${all.length === 1 ? "" : "s"}.`}
+        consequences={[
+          "Windows may ask for permission once",
+          "Anything changed since is left as is",
+        ]}
+        risk={all.some((t) => t.risk === "high") ? "high" : "moderate"}
+        confirmLabel="Undo everything"
+        onConfirm={undo}
+      />
+    </>
+  );
+}
+
+function ChangesTab() {
   const { data, error, loading, refetch } = useSnapshots();
   const { data: tweaks } = useTweaks();
   const { data: retired } = useRetiredTweaks();
@@ -42,63 +141,56 @@ export function RestorePage() {
         : "low";
 
   return (
-    <div className="flex flex-1 flex-col gap-3 font-nav [--font-heading:var(--font-nav)]">
-      <PageHero
-        title="Restore Centre"
-        subtitle={summary(data) ?? "Every change 2VX has made"}
-        action={<RecommendedAction />}
-      />
-      <div className="flex flex-1 flex-col gap-3">
-        <EngineBanner showHistoryLink={false} />
-        {stillApplied.length > 0 && (
-          <section aria-label="Removed from 2VX" className="flex flex-col gap-2">
-            <h2 className="text-[13px] font-semibold">Removed from 2VX, still on this PC</h2>
-            <CardGrid>
-              {stillApplied.map((t) => (
-                <RetiredCard key={t.id} tweak={t} />
+    <div className="flex flex-1 flex-col gap-3">
+      <EngineBanner showHistoryLink={false} />
+      {stillApplied.length > 0 && (
+        <section aria-label="Removed from 2VX" className="flex flex-col gap-2">
+          <h2 className="text-[13px] font-semibold">Removed from 2VX, still on this PC</h2>
+          <CardGrid>
+            {stillApplied.map((t) => (
+              <RetiredCard key={t.id} tweak={t} />
+            ))}
+          </CardGrid>
+        </section>
+      )}
+      <div className="flex flex-1 flex-col overflow-hidden panel">
+        {error ? (
+          <div className="p-4">
+            <ErrorState message={error.message} onRetry={refetch} />
+          </div>
+        ) : loading && !data ? (
+          <div className="p-4">
+            <LoadingRows />
+          </div>
+        ) : !data || data.length === 0 ? (
+          <EmptyState icon={History} title="No changes yet" className="flex-1" />
+        ) : (
+          <>
+            <div
+              className={cn(
+                COLUMNS,
+                "h-9 shrink-0 border-b px-4 text-[12px] text-muted-foreground",
+              )}
+            >
+              <span>Change</span>
+              <span>Date</span>
+              <span className="text-right">Values</span>
+              <span />
+              <DataSourceBadge source="live" />
+            </div>
+            <ul className="divide-y">
+              {data.map((s) => (
+                <SnapshotRow
+                  key={s.id}
+                  snapshot={s}
+                  title={names(s.tweakIds)}
+                  risk={riskOf(s.tweakIds)}
+                  tweakName={(id) => meta[id]?.name ?? id}
+                />
               ))}
-            </CardGrid>
-          </section>
+            </ul>
+          </>
         )}
-        <div className="flex flex-1 flex-col overflow-hidden panel">
-          {error ? (
-            <div className="p-4">
-              <ErrorState message={error.message} onRetry={refetch} />
-            </div>
-          ) : loading && !data ? (
-            <div className="p-4">
-              <LoadingRows />
-            </div>
-          ) : !data || data.length === 0 ? (
-            <EmptyState icon={History} title="No changes yet" className="flex-1" />
-          ) : (
-            <>
-              <div
-                className={cn(
-                  COLUMNS,
-                  "h-9 shrink-0 border-b px-4 text-[12px] text-muted-foreground",
-                )}
-              >
-                <span>Change</span>
-                <span>Date</span>
-                <span className="text-right">Values</span>
-                <span />
-                <DataSourceBadge source="live" />
-              </div>
-              <ul className="divide-y">
-                {data.map((s) => (
-                  <SnapshotRow
-                    key={s.id}
-                    snapshot={s}
-                    title={names(s.tweakIds)}
-                    risk={riskOf(s.tweakIds)}
-                    tweakName={(id) => meta[id]?.name ?? id}
-                  />
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
       </div>
     </div>
   );

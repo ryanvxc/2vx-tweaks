@@ -157,11 +157,16 @@ fn backend_never_spawns_shells_or_processes() {
     rust_sources(&root().join("src"), &mut files);
     for file in files {
         let text = fs::read_to_string(&file).unwrap().to_ascii_lowercase();
+        // Decision P0-8c: the repair tools, held to two constants by `repairs_are_two_constants`.
+        let repair = file.ends_with("repair.rs");
         let table =
             file.parent().is_some_and(|dir| dir.ends_with("library")) && !file.ends_with("mod.rs");
         let data = table || file.ends_with("startup.rs");
         let text = if data { without_strings(&text) } else { text };
         for needle in forbidden {
+            if repair && matches!(needle, "std::process::Command" | "Command::new") {
+                continue;
+            }
             assert!(
                 !text.contains(&needle.to_ascii_lowercase()),
                 "{} contains forbidden `{needle}`",
@@ -191,6 +196,41 @@ fn backend_never_spawns_shells_or_processes() {
     }
 }
 
+/// The one file that starts a program for its output. It reaches two fixed commands, from the real
+/// System32, with nothing from the app in them.
+#[test]
+fn repairs_are_two_constants() {
+    use twovx_tweaks_lib::engine::repair::RepairTool;
+
+    assert_eq!(
+        RepairTool::SystemFiles.command(),
+        ("sfc.exe", &["/scannow"][..])
+    );
+    assert_eq!(
+        RepairTool::WindowsImage.command(),
+        (
+            "dism.exe",
+            &["/Online", "/Cleanup-Image", "/RestoreHealth"][..]
+        )
+    );
+    let repair = code("src/engine/repair.rs");
+    assert_eq!(
+        enum_variants(&repair, "pub enum RepairTool {"),
+        ["SystemFiles", "WindowsImage"]
+    );
+    assert_eq!(repair.matches("Command::new(").count(), 1);
+    assert!(repair.contains("Command::new(links::system_directory()?.join(file))"));
+    assert!(repair.contains(".args(arguments)"));
+    assert!(
+        !repair.contains(".arg("),
+        "only the constant list is passed"
+    );
+    assert!(
+        !repair.contains(".env("),
+        "the tools get the normal environment"
+    );
+}
+
 /// `open_tool` starts programs, so its whole reach is this list. A tool is a bare name looked up in
 /// System32 and never a path, with no way to choose an argument and no elevating verb.
 #[test]
@@ -209,6 +249,9 @@ fn windows_tools_are_a_fixed_list_of_bare_names() {
         "DeviceManager",
         "ServicesConsole",
         "NetworkConnections",
+        "SystemRestore",
+        "SystemProtection",
+        "OptimizeDrives",
     ];
     let links = code("src/links.rs");
     assert_eq!(
@@ -239,6 +282,9 @@ fn windows_tools_are_a_fixed_list_of_bare_names() {
             "devmgmt.msc",
             "services.msc",
             "ncpa.cpl",
+            "rstrui.exe",
+            "SystemPropertiesProtection.exe",
+            "dfrgui.exe",
         ],
         "a new tool needs a review here and in docs/security.md"
     );
@@ -366,6 +412,7 @@ const COMMAND_PARAMETERS: &[(&str, &str)] = &[
     ("snapshot_id", "i64"),
     ("link", "Link"),
     ("tool", "WindowsTool"),
+    ("tool", "RepairTool"),
     ("target", "PingTarget"),
     ("level", "FrontendLogLevel"),
     ("id", "String"),
@@ -777,6 +824,27 @@ fn hardware_reads_stay_clear_of_identifiers() {
     );
 }
 
+/// The BIOS page reads and explains. Writing firmware settings takes a kernel driver, and 2VX ships
+/// none (docs/security.md).
+#[test]
+fn firmware_is_never_written() {
+    let mut files = vec![];
+    rust_sources(&root().join("src"), &mut files);
+    for file in files {
+        let text = without_strings(&fs::read_to_string(&file).unwrap());
+        for banned in [
+            "SetFirmwareEnvironmentVariable",
+            "NtSetSystemEnvironmentValue",
+            "NtLoadDriver",
+            "ZwLoadDriver",
+            "CreateServiceW",
+            "CreateServiceA",
+        ] {
+            assert!(!text.contains(banned), "{} calls {banned}", file.display());
+        }
+    }
+}
+
 /// The elevated side stays a short, typed list. A new request needs its own review here and in
 /// docs/security.md, and none of them may carry a path, a command or a value to restore.
 #[test]
@@ -784,7 +852,16 @@ fn broker_vocabulary_is_fixed() {
     let source = read("src/engine/broker.rs");
     assert_eq!(
         enum_variants(&source, "pub enum Request {"),
-        ["Write", "Clean", "MoveStartup", "Done"]
+        [
+            "Write",
+            "Clean",
+            "MoveStartup",
+            "CreateRestorePoint",
+            "EnableSystemRestore",
+            "OptimizeDrives",
+            "Repair",
+            "Done"
+        ]
     );
 }
 

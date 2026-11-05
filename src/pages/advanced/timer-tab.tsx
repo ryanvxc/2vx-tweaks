@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { ChevronsDown, ChevronsUp, Clock, RotateCw, type LucideIcon } from "lucide-react";
+import { ChevronsDown, ChevronsUp, Clock, RotateCw, Timer, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
+import { StatusLabel } from "@/components/common/notice";
+import { CardGrid, OptimisationCard } from "@/components/common/optimisation-card";
 import { ErrorState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
-import { useDeviceReport } from "@/hooks/use-system";
+import { Switch } from "@/components/ui/switch";
+import { refreshTimer, useDeviceReport, useTimerHold } from "@/hooks/use-system";
 import { backend, toBackendError } from "@/services/backend";
 import type { SleepSample } from "@/types/system";
 import { HintLine } from "@/components/common/hint-line";
@@ -26,6 +29,43 @@ function Reading({
       <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold tabular">{ms(value)}</span>
     </div>
+  );
+}
+
+/** Lives and dies with this process, so there's nothing to back up or undo. */
+function TimerHold() {
+  const { data: held } = useTimerHold();
+  const [busy, setBusy] = useState(false);
+
+  const toggle = async (enabled: boolean) => {
+    setBusy(true);
+    try {
+      await backend.setTimerHold(enabled);
+    } catch (err) {
+      toast.error(toBackendError(err).message);
+    } finally {
+      refreshTimer();
+      setBusy(false);
+    }
+  };
+
+  return (
+    <CardGrid>
+      <OptimisationCard
+        icon={Timer}
+        title="Hold the finest timer"
+        description="Asks Windows for its finest timer while 2VX is open. It uses more power."
+        indicators={<StatusLabel tone="neutral">This session only</StatusLabel>}
+        control={
+          <Switch
+            aria-label="Hold the finest timer"
+            checked={held === true}
+            disabled={busy || held === undefined}
+            onCheckedChange={(enabled) => void toggle(enabled)}
+          />
+        }
+      />
+    </CardGrid>
   );
 }
 
@@ -68,6 +108,8 @@ export function TimerTab() {
           <DataSourceBadge source="live" spelled />
         </span>
       </div>
+
+      <TimerHold />
 
       <section data-stagger className="flex min-h-0 flex-1 flex-col overflow-hidden panel">
         <header className="flex h-14 shrink-0 items-center justify-between border-b px-5">

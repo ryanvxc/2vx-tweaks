@@ -1,5 +1,5 @@
 import { createElement, useState } from "react";
-import { Download, SearchX, Trash2 } from "lucide-react";
+import { Download, PackagePlus, SearchX, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
@@ -37,6 +37,7 @@ export function UninstallTab() {
   const [sort, setSort] = useState("installed");
   const [busy, setBusy] = useState<string | null>(null);
   const [removing, setRemoving] = useState<RemovableApp | null>(null);
+  const [restoringAll, setRestoringAll] = useState(false);
   const list = useStaggerIn<HTMLDivElement>(data ? "apps" : null);
 
   const q = search.trim().toLowerCase();
@@ -55,6 +56,26 @@ export function UninstallTab() {
       toast.error(toBackendError(err).message);
     } finally {
       setBusy(null);
+    }
+  };
+
+  const missing = (data ?? []).filter((a) => !a.installed);
+
+  // One at a time, because Windows' package manager queues these anyway.
+  const reinstallAll = async () => {
+    let failed = 0;
+    for (const app of missing) {
+      setBusy(app.id);
+      await backend.reinstallApp(app.id).catch(() => (failed += 1));
+    }
+    setBusy(null);
+    refetch();
+    const back = missing.length - failed;
+    if (failed === 0) toast.success(`${back} app${back === 1 ? " is" : "s are"} back`);
+    else {
+      toast.warning(`${back} of ${missing.length} apps are back`, {
+        description: "Windows has no copy of the rest. Use Microsoft Store for those.",
+      });
     }
   };
 
@@ -87,10 +108,22 @@ export function UninstallTab() {
         }}
         end={
           data && (
-            <DataSourceBadge
-              source="live"
-              label={`${data.filter((a) => a.installed).length} of ${data.length} installed`}
-            />
+            <>
+              {missing.length > 0 && (
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  disabled={busy !== null}
+                  onClick={() => setRestoringAll(true)}
+                >
+                  <PackagePlus /> Reinstall all
+                </Button>
+              )}
+              <DataSourceBadge
+                source="live"
+                label={`${data.filter((a) => a.installed).length} of ${data.length} installed`}
+              />
+            </>
           )
         }
       />
@@ -135,6 +168,23 @@ export function UninstallTab() {
           </CardGrid>
         </div>
       )}
+
+      <ConfirmDialog
+        open={restoringAll}
+        onOpenChange={setRestoringAll}
+        title={`Reinstall ${missing.length} app${missing.length === 1 ? "" : "s"}?`}
+        description="Brings back everything on this list that's missing."
+        consequences={[
+          "It only works while Windows keeps a copy of the app",
+          "The rest stay missing, and Microsoft Store can bring them back",
+        ]}
+        risk="low"
+        confirmLabel="Reinstall"
+        onConfirm={() => {
+          setRestoringAll(false);
+          void reinstallAll();
+        }}
+      />
 
       <ConfirmDialog
         open={removing !== null}

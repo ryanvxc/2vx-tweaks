@@ -26,6 +26,13 @@ checked at 1280×720, 1024×600 and maximised. The window has since been fixed a
 
 ## Summary
 
+Version 0.6 adds what a full read of EXM 2.2.1's installed files showed was worth having, in 2VX's own code: Restore Points
+and Fixes tabs in the Restore Centre, Undo everything, Optimize Drives, Restart now, Timer hold, a read-only BIOS page,
+Downloads on Resources, Reinstall all, a built-in list of well-known games for Game Mode, desktop and laptop Power
+profiles, a first-run dialog and a Quickstart restore point step. Reads were run on the dev PC. Everything that changes the
+PC (restore points, Optimize, sfc and DISM, restart, Reinstall all) was never run on it and needs a VM. What was left out,
+and why, is in `security.md`.
+
 Version 0.5 adds Visuals and cuts the library from 1,300 tweaks to 320 (79 in Visuals, 20 of them new). 1000 tweaks were
 retired: hidden and impossible to plan, but still undoable, and the Restore Centre lists any still on the PC. Five switches that
 wrote Windows' own default were fixed. Tested on the simulated store and read-only in the real app; nothing was applied to the
@@ -72,7 +79,8 @@ test on.
 | Game Mode page | **Implemented** (detection, ring, Configure, Add a Game) | Turning on reviews and applies the chosen tweaks; turning off reverts that batch. Stays on until turned off: session-scoped automatic undo is P2-2 | Automatic undo on game exit | P2-2 |
 | Tweaks page | **Implemented** (topic tabs, card sections, presets, filters, sort, switch-off undo, break warnings) | Desktop flow not yet run on a VM | VM checklist | P0-7 |
 | PC Cleaner page | **Implemented, not exercised on the dev PC** | Four tabs. Checked read-only in the real app, with every dialog opened and cancelled; cleaning, uninstalling, reinstalling, switching entries and the UAC path have only unit tests | Run them on a VM | P0-7, P1-5, P1-6 |
-| Resources page | **Partial** | Copyable system report and Windows tool commands to copy; nothing is launched (no process spawning). | SFC/DISM per P0-8c | P2-8 |
+| Resources page | **Implemented** | Tools, Downloads (fixed list in `links.rs`) and the system report | – | – |
+| BIOS page | **Implemented, read-only** | Reads boot mode, TPM, virtualisation, Resizable BAR and memory speed, and explains each setting. Never writes firmware | – | – |
 | Settings page | **Implemented** (row-based sections, Update Centre) | No journal export or log viewer yet | Journal export, log viewer | P1-10 |
 | Hardware detection (`system/hardware.rs`, `os.rs`, `power.rs`, `privilege.rs`)                                    | **Implemented** (snapshot once per session)                          | No hybrid-core topology, chassis type, HVCI or Secure Boot state. `TweakContext` has build, elevation and battery only.                                                             | Extend detection                                            | P1-2        |
 | Live metrics sampler (`system/metrics.rs`)                                                                        | **Implemented** (1 s, 300 samples in memory)                         | No per-core, per-engine GPU, disk throughput or persisted history                                                                                                                   | Extend                                                      | P1-3        |
@@ -88,9 +96,10 @@ test on.
 | Elevation broker (`engine/broker.rs`)                                                                             | **Wired, not verified** (pipe protocol tested over real pipes)       | **The real UAC launch and an elevated write have never run.** No SID-restricted DACL or replay protection (documented residual risk).                                               | Run the VM checklist in `docs/testing.md`                   | P0-7        |
 | Engine IPC commands and TS wrappers                                                                               | **Implemented**, all used by the UI                                  | –                                                                                                                                                                                   | Keep                                                        | –           |
 | Browser preview backend (`services/preview.ts`) | **Implemented** | Six "Preview sample" tweaks, startup and cleaner samples, mock update feeds (`?update=`); plan/apply/revert are refused, never simulated | Keep | – |
-| Restore points                                                                                                    | **Not started**                                                      | –                                                                                                                                                                                   | `SRSetRestorePointW` before Medium+ batches                 | P1-7        |
-| Restart handling                                                                                                  | **Partial** (`RestartRequirement` in metadata and plans)             | No pending-restart UI                                                                                                                                                               | Tray and countdown                                          | P1-7        |
-| Onboarding / first run                                                                                            | **Not started**                                                      | –                                                                                                                                                                                   | First-run flow                                              | P1-8        |
+| Restore points | **Implemented, reads tested on the dev PC** | List, make one, turn on System Protection; restoring and deleting stay in Windows' tools. Making one has not run on a real PC | VM test | P1-7 |
+| Restart handling | **Implemented, not exercised** | Restart now after a change that needs it, behind a confirmation. No pending list or countdown | VM test | P1-7 |
+| Onboarding / first run | **Implemented** | One dialog, once, plus a Quickstart step for a restore point | – | P1-8 |
+| Repairs and drives | **Implemented, not exercised** | sfc, DISM and Optimize run through the broker; only listing volumes has run on the dev PC | VM test | P2-7, P2-8 |
 | Updates | **Implemented, tested end to end on the dev PC** (Tauri updater, Update Centre) | Superseded P0-8b. The `updater-main` feed is live. A local release build installed v0.2.2 over the old 0.1.0 Program Files copy through the in-app flow on 2026-11-04 | Keep | P1-11 |
 | Code signing, installer                                                                                           | **Partial** (NSIS/MSI bundles configured; unsigned)                  | SmartScreen warnings; no revert-all on uninstall                                                                                                                                    | Release readiness                                           | P1-11       |
 | Unit and component tests | **Implemented** | Counts in the verification line above | Grows with each feature | – |

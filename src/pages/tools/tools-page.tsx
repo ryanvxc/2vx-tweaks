@@ -15,16 +15,21 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { RESOURCES_TABS } from "@/app/navigation";
+import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { OptimisationRow } from "@/components/common/optimisation-card";
+import { PageTabs } from "@/components/common/page-tabs";
 import { SectionCard } from "@/components/common/section-card";
 import { LoadingRows } from "@/components/common/states";
 import { RecommendedAction } from "@/components/common/recommended-action";
 import { PageHero } from "@/components/layout/page-hero";
 import { Button } from "@/components/ui/button";
 import { useAppInfo, useSystemSnapshot, useTweakStatuses } from "@/hooks/use-system";
+import { useTabParam } from "@/hooks/use-tab-param";
 import { buildSystemReport } from "@/lib/system-report";
 import { backend, toBackendError } from "@/services/backend";
 import type { WindowsTool } from "@/types/system";
+import { DownloadsTab } from "./downloads-tab";
 
 // The backend opens these from its own fixed list: the frontend only names one.
 const WINDOWS_TOOLS: { id: WindowsTool; name: string; icon: LucideIcon }[] = [
@@ -41,6 +46,28 @@ const WINDOWS_TOOLS: { id: WindowsTool; name: string; icon: LucideIcon }[] = [
 ];
 
 export function ToolsPage() {
+  const [tab, setTab] = useTabParam(RESOURCES_TABS, "tools");
+  return (
+    <div className="flex flex-1 flex-col gap-3 font-nav [--font-heading:var(--font-nav)]">
+      <PageHero
+        title="Resources"
+        subtitle="System report, Windows tools and downloads"
+        action={<RecommendedAction />}
+      />
+      <PageTabs
+        label="Resources"
+        tabs={RESOURCES_TABS}
+        value={tab}
+        onChange={setTab}
+        end={tab === "downloads" ? <DataSourceBadge source="derived" /> : undefined}
+        filled
+      />
+      {tab === "tools" ? <ToolsTab /> : <DownloadsTab />}
+    </div>
+  );
+}
+
+function ToolsTab() {
   const app = useAppInfo();
   const snapshot = useSystemSnapshot();
   const tweaks = useTweakStatuses();
@@ -75,69 +102,62 @@ export function ToolsPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-3 font-nav [--font-heading:var(--font-nav)]">
-      <PageHero
-        title="Resources"
-        subtitle="System report and Windows tools"
-        action={<RecommendedAction />}
-      />
-      <div className="grid flex-1 grid-cols-12 gap-3">
-        <SectionCard
-          title="System report"
-          source="live"
-          className="col-span-7"
-          contentClassName="relative min-h-[280px]"
-          actions={
-            <>
-              <Button
-                size="xs"
-                variant="ghost"
-                disabled={!fullReport}
-                onClick={() => fullReport && copy(fullReport, "Full list")}
-              >
-                <Copy /> Copy full list
-              </Button>
-              <Button
-                size="xs"
-                variant="ghost"
-                disabled={!report}
-                onClick={() => report && copy(report, "Report")}
-              >
-                <ClipboardCopy /> Copy
-              </Button>
-              <Button size="xs" variant="ghost" disabled={!report} onClick={exportReport}>
-                <Download /> Export
-              </Button>
-            </>
-          }
-        >
-          {!report ? (
-            <LoadingRows rows={8} />
-          ) : (
-            <pre
-              data-selectable
-              className="absolute inset-x-4 inset-y-0 overflow-auto rounded-lg bg-background/50 p-3 font-mono text-[11.5px] leading-relaxed text-muted-foreground"
+    <div className="grid flex-1 grid-cols-12 gap-3">
+      <SectionCard
+        title="System report"
+        source="live"
+        className="col-span-7"
+        contentClassName="relative min-h-[280px]"
+        actions={
+          <>
+            <Button
+              size="xs"
+              variant="ghost"
+              disabled={!fullReport}
+              onClick={() => fullReport && copy(fullReport, "Full list")}
             >
-              {report}
-            </pre>
-          )}
-        </SectionCard>
+              <Copy /> Copy full list
+            </Button>
+            <Button
+              size="xs"
+              variant="ghost"
+              disabled={!report}
+              onClick={() => report && copy(report, "Report")}
+            >
+              <ClipboardCopy /> Copy
+            </Button>
+            <Button size="xs" variant="ghost" disabled={!report} onClick={exportReport}>
+              <Download /> Export
+            </Button>
+          </>
+        }
+      >
+        {!report ? (
+          <LoadingRows rows={8} />
+        ) : (
+          <pre
+            data-selectable
+            className="absolute inset-x-4 inset-y-0 overflow-auto rounded-lg bg-background/50 p-3 font-mono text-[11.5px] leading-relaxed text-muted-foreground"
+          >
+            {report}
+          </pre>
+        )}
+      </SectionCard>
 
-        <div className="col-span-5 flex flex-col divide-y overflow-hidden panel [&>*]:h-auto [&>*]:flex-1">
-          {WINDOWS_TOOLS.map((t) => (
-            <OptimisationRow
-              key={t.id}
-              flat
-              leading={<t.icon className="size-[18px] text-brand" strokeWidth={1.75} aria-hidden />}
-              title={t.name}
-              control={
-                <Button size="xs" variant="ghost" onClick={() => open(t.id)}>
-                  Open
-                </Button>
-              }
-            />
-          ))}
-        </div>
+      <div className="col-span-5 flex flex-col divide-y overflow-hidden panel [&>*]:h-auto [&>*]:flex-1">
+        {WINDOWS_TOOLS.map((t) => (
+          <OptimisationRow
+            key={t.id}
+            flat
+            leading={<t.icon className="size-[18px] text-brand" strokeWidth={1.75} aria-hidden />}
+            title={t.name}
+            control={
+              <Button size="xs" variant="ghost" onClick={() => open(t.id)}>
+                Open
+              </Button>
+            }
+          />
+        ))}
       </div>
     </div>
   );

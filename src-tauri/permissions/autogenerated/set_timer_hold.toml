@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-timer-hold"
+description = "Enables the set_timer_hold command without any pre-configured scope."
+commands.allow = ["set_timer_hold"]
+
+[[permission]]
+identifier = "deny-set-timer-hold"
+description = "Denies the set_timer_hold command without any pre-configured scope."
+commands.deny = ["set_timer_hold"]

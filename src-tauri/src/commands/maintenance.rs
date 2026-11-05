@@ -9,9 +9,13 @@ use tauri::ipc::Channel;
 
 use crate::engine::apps::{self, RemovableApp};
 use crate::engine::cleanup::{self, CleanupProgress, CleanupResult};
+use crate::engine::drives::{self, DriveOutcome};
+use crate::engine::repair::{self, RepairOutcome, RepairTool};
+use crate::engine::restore_points::{self, CreatedPoint, RestoreOverview};
 use crate::engine::service::Engine;
 use crate::engine::startup::{self, AutoLaunch};
 use crate::error::{AppError, AppResult};
+use crate::system::power;
 
 async fn worker<T, F>(f: F) -> AppResult<T>
 where
@@ -81,6 +85,57 @@ pub async fn uninstall_app(engine: State<'_, Arc<Engine>>, app_id: String) -> Ap
     let name = worker(move || apps::uninstall(&app_id)).await?;
     engine.audit("app_removed", json!({ "app": name }));
     Ok(())
+}
+
+/// Windows' restore points and whether System Protection is on. Read-only.
+#[tauri::command]
+pub async fn get_restore_points() -> AppResult<RestoreOverview> {
+    worker(|| Ok(restore_points::overview())).await
+}
+
+/// Asks Windows for a restore point. Shows one UAC prompt, and can take a minute.
+#[tauri::command]
+pub async fn create_restore_point(engine: State<'_, Arc<Engine>>) -> AppResult<CreatedPoint> {
+    let outcome = worker(restore_points::create).await?;
+    engine.audit("restore_point", json!({ "created": outcome.created }));
+    Ok(outcome)
+}
+
+/// Turns on System Protection for the system drive. Shows one UAC prompt.
+#[tauri::command]
+pub async fn enable_system_restore(engine: State<'_, Arc<Engine>>) -> AppResult<()> {
+    worker(restore_points::enable).await?;
+    engine.audit("system_protection_on", json!({}));
+    Ok(())
+}
+
+/// Windows' own TRIM or defragment on each fixed drive. Shows one UAC prompt.
+#[tauri::command]
+pub async fn optimize_drives(engine: State<'_, Arc<Engine>>) -> AppResult<Vec<DriveOutcome>> {
+    let outcomes = worker(drives::optimize).await?;
+    engine.audit("drives_optimized", json!({ "outcomes": outcomes }));
+    Ok(outcomes)
+}
+
+/// Runs one of Windows' two repair tools. Shows one UAC prompt, and can take many minutes.
+#[tauri::command]
+pub async fn run_repair(
+    engine: State<'_, Arc<Engine>>,
+    tool: RepairTool,
+) -> AppResult<RepairOutcome> {
+    let outcome = worker(move || repair::run(tool)).await?;
+    engine.audit(
+        "repair_finished",
+        json!({ "tool": tool, "succeeded": outcome.succeeded }),
+    );
+    Ok(outcome)
+}
+
+/// Restarts Windows. The page asks first, and only ever from a click.
+#[tauri::command]
+pub async fn restart_pc(engine: State<'_, Arc<Engine>>) -> AppResult<()> {
+    engine.audit("restart_requested", json!({}));
+    worker(power::restart).await
 }
 
 #[tauri::command]

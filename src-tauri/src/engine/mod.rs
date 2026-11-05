@@ -15,9 +15,12 @@
 pub mod apps;
 pub mod broker;
 pub mod cleanup;
+pub mod drives;
 pub mod journal;
 pub mod plan;
 pub mod policy;
+pub mod repair;
+pub mod restore_points;
 pub mod service;
 pub mod setting;
 pub mod startup;

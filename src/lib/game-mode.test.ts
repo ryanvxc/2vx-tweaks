@@ -22,6 +22,18 @@ describe("detectGame", () => {
     });
   });
 
+  it("puts a name on a well-known game no library lists", () => {
+    expect(detectGame([program("VALORANT-Win64-Shipping.exe", 45)], [])).toEqual({
+      name: "VALORANT",
+      runningSeconds: 45,
+    });
+  });
+
+  it("trusts a library's name over the built-in list", () => {
+    const programs = [program("cs2.exe", 30), program("elden.exe", 10, "Elden Ring")];
+    expect(detectGame(programs, [])?.name).toBe("Elden Ring");
+  });
+
   it("finds a game in a library without being told about it", () => {
     expect(detectGame([program("cs2.exe", 30, "Counter-Strike")], [])).toEqual({
       name: "Counter-Strike",

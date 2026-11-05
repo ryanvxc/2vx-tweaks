@@ -40,9 +40,10 @@ src/                         React frontend
 src-tauri/src/
   commands/                  Tauri command handlers: thin, validated
   system/                    read-only system info (os, hardware, hardware_details, services, ping, metrics sampler,
-                             privilege, file_info)
+                             privilege, file_info, firmware, wmi)
   engine/                    declarative tweaks, policy, journal, plan/apply/revert, elevation broker,
-                             and the PC Cleaner's fixed actions (cleanup, startup, apps)
+                             the PC Cleaner's fixed actions (cleanup, startup, apps) and maintenance (restore_points,
+                             drives, repair)
   links.rs                   fixed web links and the fixed list of Windows tools
   report.rs                  system report export (save dialog, 2 MB cap)
   account.rs                 the local account: one email in a file, no server or sign-in
@@ -88,6 +89,12 @@ Full rationale in `docs/security.md`. In short:
 Stages 1 (foundation) and 2 (safety engine) are done; **stage 3 (first real optimisations) is in progress**. The single source
 of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_BACKLOG.md` (P0–P3) and stages in
 `docs/DEVELOPMENT_ROADMAP.md`. Use those stage and task IDs, not the older "Phase N" labels.
+
+In short (0.6): a full read of EXM 2.2.1's files (`docs/research/EXM_2.2.1_DELTA.md`) gave the Restore Centre tabs (Changes, Restore Points, Fixes),
+Undo everything, Optimize Drives (Hardware > Storage), Restart now (`announceRestart`), Timer hold, a read-only BIOS page (`lib/bios-guide.ts`, `/bios`), Downloads on Resources (`lib/downloads.ts`,
+links only from `links.rs`), Reinstall all, `lib/known-games.ts` for Game Mode, Power profiles and the first-run dialog. The BIOS page never writes firmware (`firmware_is_never_written`): no kernel driver, ever.
+`engine/repair.rs` is the one module that starts a program for its output, two constant commands, P0-8c. Restoring and deleting restore points stay in Microsoft's tools. `Wmi::open` is named that because the network
+guard bans `connect(`. `__PATH` needs `SELECT *`. Long-running work lives in `stores/task-store.ts` so it outlives its page. None of the writes in 0.6 have run on a real PC yet: they need a VM.
 
 In short (0.5): 320 tweaks, 79 of them on the new Visuals page (tabs and sections in `VISUALS_SECTION_TAB`, `pages/visuals/`, one icon each in
 `lib/visual-icons.ts`). Tweaks is system optimisation; anything mainly about how Windows looks goes in Visuals, even if it saves a little, and a

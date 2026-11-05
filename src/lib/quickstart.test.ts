@@ -10,6 +10,7 @@ import {
 
 const FACTS: QuickstartFacts = {
   applied: false,
+  restorePoint: false,
   recommendedLeft: 2,
   gameModeSet: false,
   opened: [],

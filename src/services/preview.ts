@@ -1,5 +1,7 @@
 import type { EngineStatus, TweakMeta, TweakStatus } from "@/types/engine";
 import type {
+  FirmwareReport,
+  RestoreOverview,
   Account,
   AppInfo,
   BackendError,
@@ -616,6 +618,33 @@ function apps(): RemovableApp[] {
   ];
 }
 
+function firmwareReport(): FirmwareReport {
+  return {
+    bootMode: "uefi",
+    vendor: "Preview BIOS",
+    version: "1.00",
+    releaseDate: "01/01/2026",
+    board: "Preview Board",
+    virtualization: true,
+    tpmVersion: 2,
+    resizableBar: true,
+  };
+}
+
+function restorePoints(): RestoreOverview {
+  return {
+    protection: "on",
+    points: [
+      {
+        sequence: 2,
+        description: "Preview restore point",
+        createdMs: Date.UTC(2026, 0, 2, 9, 30),
+      },
+      { sequence: 1, description: "Windows Update", createdMs: Date.UTC(2026, 0, 1, 3, 0) },
+    ],
+  };
+}
+
 /** Anything that would change the system is refused outright, never simulated. */
 function refuse(): Promise<never> {
   const err: BackendError = { code: "preview", message: "Not available in browser preview" };
@@ -782,6 +811,8 @@ function sleepSamples(): SleepSample[] {
 
 export const preview = {
   deviceReport,
+  firmwareReport,
+  restorePoints,
   hardwareDetails,
   serviceStates,
   ping,

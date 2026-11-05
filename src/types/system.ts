@@ -352,7 +352,10 @@ export type WindowsTool =
   | "taskManager"
   | "deviceManager"
   | "servicesConsole"
-  | "networkConnections";
+  | "networkConnections"
+  | "systemRestore"
+  | "systemProtection"
+  | "optimizeDrives";
 
 /** The backend's fixed list of pages. Names, never addresses. */
 export type ExternalLink =
@@ -365,7 +368,78 @@ export type ExternalLink =
   | "networkSettings"
   | "timerDocs"
   | "reportIssue"
-  | "projectPage";
+  | "projectPage"
+  | "troubleshoot"
+  | "secureBootDocs"
+  | "tpmDocs"
+  | "memoryIntegrityDocs"
+  | "resizableBarNvidia"
+  | "resizableBarAmd"
+  | "expoDocs"
+  | "xmpDocs"
+  | "intelInstabilityDocs"
+  | "autoruns"
+  | "processExplorer"
+  | "hwinfo"
+  | "latencyMon"
+  | "capFrameX"
+  | "crystalDiskInfo"
+  | "occt"
+  | "displayDriverUninstaller"
+  | "nvCleanstall"
+  | "nvidiaProfileInspector";
+
+// Mirrors src-tauri/src/engine/restore_points.rs.
+export type ProtectionStatus = "on" | "off" | "blocked" | "unknown";
+
+export interface RestorePoint {
+  sequence: number;
+  description: string;
+  createdMs: number | null;
+}
+
+export interface RestoreOverview {
+  protection: ProtectionStatus;
+  /** Newest first. `null` when Windows wouldn't list them, which isn't the same as having none. */
+  points: RestorePoint[] | null;
+}
+
+/** `false` when Windows skipped it, because one was made recently. */
+export interface CreatedPoint {
+  created: boolean;
+}
+
+// Mirrors src-tauri/src/engine/drives.rs.
+export interface DriveOutcome {
+  drive: string;
+  optimized: boolean;
+  problem: string | null;
+}
+
+// Mirrors src-tauri/src/engine/repair.rs.
+export type RepairTool = "systemFiles" | "windowsImage";
+
+export interface RepairOutcome {
+  tool: RepairTool;
+  succeeded: boolean;
+  output: string;
+}
+
+// Mirrors src-tauri/src/system/firmware.rs.
+export type BootMode = "uefi" | "legacy" | "unknown";
+
+export interface FirmwareReport {
+  bootMode: BootMode;
+  vendor: string | null;
+  version: string | null;
+  releaseDate: string | null;
+  board: string | null;
+  virtualization: boolean | null;
+  /** 2 for TPM 2.0, 1 for 1.2. `null` when no TPM answers. */
+  tpmVersion: number | null;
+  /** `null` when no adapter's memory windows could be read. */
+  resizableBar: boolean | null;
+}
 
 /** Serialised `AppError` from the backend. */
 export interface BackendError {

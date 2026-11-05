@@ -18,12 +18,18 @@ import type {
   CleanupLocation,
   CleanupProgress,
   CleanupResult,
+  CreatedPoint,
   DeviceReport,
+  DriveOutcome,
   ExternalLink,
+  FirmwareReport,
   HardwareDetails,
   PingResult,
   PingTarget,
   RemovableApp,
+  RepairOutcome,
+  RepairTool,
+  RestoreOverview,
   ServiceState,
   SleepSample,
   StartupInventory,
@@ -89,6 +95,17 @@ export const backend = {
   /** CPU layout, memory modules, drives, GPU drivers and devices. Read-only, needs no prompt. */
   getHardwareDetails: (): Promise<HardwareDetails> =>
     isDesktop ? call("get_hardware_details") : Promise.resolve(preview.hardwareDetails()),
+
+  /** Boot mode, BIOS version and what Windows can see of the firmware's settings. Read-only. */
+  getFirmwareReport: (): Promise<FirmwareReport> =>
+    isDesktop ? call("get_firmware_report") : Promise.resolve(preview.firmwareReport()),
+
+  /** Whether 2VX is holding the finest timer. It never outlives the app. */
+  getTimerHold: (): Promise<boolean> =>
+    isDesktop ? call("get_timer_hold") : Promise.resolve(false),
+
+  setTimerHold: (enabled: boolean): Promise<boolean> =>
+    isDesktop ? call("set_timer_hold", { enabled }) : preview.refuse(),
 
   /** How long a one-millisecond sleep really takes. Only sleeps. */
   measureSleep: (): Promise<SleepSample[]> =>
@@ -163,6 +180,29 @@ export const backend = {
 
   reinstallApp: (appId: string): Promise<void> =>
     isDesktop ? call("reinstall_app", { appId }) : preview.refuse(),
+
+  /** Windows' restore points and whether System Protection is on. Read-only. */
+  getRestorePoints: (): Promise<RestoreOverview> =>
+    isDesktop ? call("get_restore_points") : Promise.resolve(preview.restorePoints()),
+
+  /** One UAC prompt, and it can take a minute. Windows may skip it: see `CreatedPoint`. */
+  createRestorePoint: (): Promise<CreatedPoint> =>
+    isDesktop ? call("create_restore_point") : preview.refuse(),
+
+  /** One UAC prompt. Turns on System Protection for the system drive. */
+  enableSystemRestore: (): Promise<void> =>
+    isDesktop ? call("enable_system_restore") : preview.refuse(),
+
+  /** One UAC prompt. Windows' own TRIM or defragment; a hard drive can take hours. */
+  optimizeDrives: (): Promise<DriveOutcome[]> =>
+    isDesktop ? call("optimize_drives") : preview.refuse(),
+
+  /** One UAC prompt. Either tool can take many minutes, and the output comes at the end. */
+  runRepair: (tool: RepairTool): Promise<RepairOutcome> =>
+    isDesktop ? call("run_repair", { tool }) : preview.refuse(),
+
+  /** Restarts Windows. Only ever called from a confirmation dialog. */
+  restartPc: (): Promise<void> => (isDesktop ? call("restart_pc") : preview.refuse()),
 
   listTweaks: (): Promise<TweakMeta[]> =>
     isDesktop ? call("list_tweaks") : Promise.resolve(preview.tweaks()),

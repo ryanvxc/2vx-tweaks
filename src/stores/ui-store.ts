@@ -24,6 +24,10 @@ interface UiState {
   gameModeSnapshot: number | null;
   /** When PC Cleaner last cleared anything. */
   cleanerLastRun: number | null;
+  /** When Optimize Drives last finished. */
+  drivesLastRun: number | null;
+  /** The welcome dialog was seen or wasn't needed. */
+  firstRunSeen: boolean;
   /** Quickstart steps that were opened, for those with nothing to read from the PC. */
   quickstartOpened: string[];
   toggleSidebar: () => void;
@@ -46,6 +50,8 @@ export const useUiStore = create<UiState>()(
       gameModeTweaks: null,
       gameModeSnapshot: null,
       cleanerLastRun: null,
+      drivesLastRun: null,
+      firstRunSeen: false,
       quickstartOpened: [],
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       set: (patch) => set(patch),

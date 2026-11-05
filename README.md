@@ -13,7 +13,7 @@ Windows SmartScreen may warn you, because the installer isn't code-signed yet: c
 
 ## Development
 
-**Status: in development.** 320 tweaks with per-tweak undo, a Visuals page, Game Mode, a PC Cleaner and a Restore Centre.
+**Status: in development.** 320 tweaks with per-tweak undo, a Visuals page, Game Mode, a PC Cleaner, a Restore Centre with restore points and Windows repairs, and a read-only BIOS guide.
 See [project status](docs/PROJECT_STATUS.md).
 
 ```bash

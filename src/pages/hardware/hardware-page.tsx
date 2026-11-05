@@ -5,6 +5,7 @@ import { HARDWARE_VIEW } from "../tweaks/tweak-views";
 import { DeviceChip } from "./device-chip";
 import { GpuProfiles } from "./gpu-profiles";
 import { HardwareFacts } from "./hardware-facts";
+import { OptimizeDrives } from "./optimize-drives";
 
 export function HardwarePage() {
   const { data: snapshot } = useSystemSnapshot();
@@ -19,6 +20,7 @@ export function HardwarePage() {
           <>
             <HardwareFacts tab={tab} />
             {tab === "gpu" && <GpuProfiles />}
+            {tab === "storage" && <OptimizeDrives />}
           </>
         ),
       }}

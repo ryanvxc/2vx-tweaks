@@ -1,6 +1,6 @@
 [package]
 name = "twovx-tweaks"
-version = "0.5.0"
+version = "0.6.0"
 description = "2VX Tweaks - Windows PC optimisation suite"
 authors = ["2VX"]
 edition = "2024"
@@ -27,7 +27,7 @@ thiserror = "2.0.21"
 tracing = "0.1.44"
 tracing-appender = "0.2.5"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
-windows = { version = "0.62.2", features = ["ApplicationModel", "Foundation", "Foundation_Collections", "Management_Deployment", "Win32_Devices_DeviceAndDriverInstallation", "Win32_Devices_Properties", "Win32_Foundation", "Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_Ndis", "Win32_Networking_WinSock", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_IO", "Win32_System_Ioctl", "Win32_System_Pipes", "Win32_System_Com", "Win32_System_Environment", "Win32_System_Power", "Win32_System_Ole", "Win32_System_Registry", "Win32_System_Services", "Win32_System_SystemInformation", "Win32_System_TaskScheduler", "Win32_System_Threading", "Win32_System_Variant", "Win32_System_Wmi", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_WindowsAndMessaging"] }
+windows = { version = "0.62.2", features = ["ApplicationModel", "Foundation", "Foundation_Collections", "Management_Deployment", "Win32_Devices_DeviceAndDriverInstallation", "Win32_Devices_Properties", "Win32_Foundation", "Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_Ndis", "Win32_Networking_WinSock", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_IO", "Win32_System_Ioctl", "Win32_System_Pipes", "Win32_System_Com", "Win32_System_Environment", "Win32_System_Power", "Win32_System_Ole", "Win32_System_Registry", "Win32_System_Services", "Win32_System_Shutdown", "Win32_System_SystemInformation", "Win32_System_TaskScheduler", "Win32_System_Threading", "Win32_System_TpmBaseServices", "Win32_System_Variant", "Win32_System_Wmi", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_WindowsAndMessaging"] }
 windows-collections = "0.3.2"
 windows-registry = "0.100.0"
 windows-result = "0.100.0"
