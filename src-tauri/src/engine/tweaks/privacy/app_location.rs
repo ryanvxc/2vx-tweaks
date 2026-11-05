@@ -28,6 +28,9 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         warning: Some("Maps, weather and other location features stop working in Store apps."),
         requires: None,
         added_in: "0.2",
+        section: None,
+        evidence: crate::engine::Evidence::Documented,
+        hardware: crate::engine::HardwareScope::Any,
         references: &[
             "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-privacy#letappsaccesslocation",
             "https://learn.microsoft.com/en-us/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services",

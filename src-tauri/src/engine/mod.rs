@@ -22,6 +22,7 @@ pub mod service;
 pub mod setting;
 pub mod startup;
 pub mod store;
+mod system_store;
 mod tweaks;
 
 use std::collections::BTreeMap;
@@ -53,7 +54,13 @@ pub enum TweakCategory {
     Network,
     Privacy,
     Services,
+    Tasks,
     Windows,
+    Cpu,
+    Gpu,
+    Memory,
+    Storage,
+    Apps,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -103,6 +110,30 @@ pub enum DeviceScope {
 pub enum EditionScope {
     Any,
     ProOrHigher,
+}
+
+/// The hardware a tweak only makes sense on. A value in NVIDIA's driver key means nothing on AMD.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum HardwareScope {
+    Any,
+    NvidiaGpu,
+    AmdGpu,
+    IntelGpu,
+    IntelCpu,
+    AmdCpu,
+}
+
+/// How much is known about a setting. Shown on the tweak, so nobody has to guess.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "camelCase")]
+pub enum Evidence {
+    /// Microsoft or the vendor documents the setting.
+    Documented,
+    /// Undocumented, but Windows or the driver contains the value name, so something reads it.
+    Observed,
+    /// From community tweak packs only. Its effect isn't confirmed.
+    Community,
 }
 
 /// Inclusive build range a tweak has been verified on.
@@ -156,6 +187,10 @@ pub struct TweakMeta {
     pub requires: Option<RegTarget>,
     /// App version (`major.minor`) that first shipped the tweak; the UI labels recent ones "New".
     pub added_in: &'static str,
+    /// Library section within the category tab. `None` for tweaks placed by the frontend.
+    pub section: Option<&'static str>,
+    pub evidence: Evidence,
+    pub hardware: HardwareScope,
     /// Documentation the change is based on (Microsoft Learn etc.). `https://` URLs, at least one.
     pub references: &'static [&'static str],
 }
@@ -190,6 +225,9 @@ pub struct TweakContext {
     pub is_elevated: bool,
     /// `None` when the power status could not be read; device-scoped tweaks are then allowed.
     pub has_battery: Option<bool>,
+    /// Vendors of the display adapters and the CPU, as PCI vendor ID and CPUID vendor string.
+    pub gpu_vendors: Vec<u16>,
+    pub cpu_vendor: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -199,6 +237,8 @@ pub enum Compatibility {
     UnsupportedBuild,
     UnsupportedEdition,
     WrongDevice,
+    /// For hardware this PC doesn't have, such as another GPU vendor.
+    WrongHardware,
     /// What the tweak configures isn't on this PC.
     NotInstalled,
     /// Applicable, but applying will show a UAC prompt.
@@ -223,6 +263,23 @@ fn is_home_edition(edition_id: Option<&str>) -> bool {
     })
 }
 
+/// `None` facts allow the tweak, as with `has_battery`: a failed read must not hide tweaks.
+fn hardware_matches(scope: HardwareScope, ctx: &TweakContext) -> bool {
+    const NVIDIA: u16 = 0x10de;
+    const AMD: u16 = 0x1002;
+    const INTEL: u16 = 0x8086;
+    let cpu = |vendor: &str| ctx.cpu_vendor.as_deref().is_none_or(|v| v == vendor);
+    let gpu = |id: u16| ctx.gpu_vendors.is_empty() || ctx.gpu_vendors.contains(&id);
+    match scope {
+        HardwareScope::Any => true,
+        HardwareScope::NvidiaGpu => gpu(NVIDIA),
+        HardwareScope::AmdGpu => gpu(AMD),
+        HardwareScope::IntelGpu => gpu(INTEL),
+        HardwareScope::IntelCpu => cpu("GenuineIntel"),
+        HardwareScope::AmdCpu => cpu("AuthenticAMD"),
+    }
+}
+
 pub fn check_compatibility(meta: &TweakMeta, ctx: &TweakContext) -> Compatibility {
     let device_ok = !matches!(
         (meta.device, ctx.has_battery),
@@ -236,6 +293,8 @@ pub fn check_compatibility(meta: &TweakMeta, ctx: &TweakContext) -> Compatibilit
         Compatibility::UnsupportedEdition
     } else if !device_ok {
         Compatibility::WrongDevice
+    } else if !hardware_matches(meta.hardware, ctx) {
+        Compatibility::WrongHardware
     } else if meta.permission == Permission::Administrator && !ctx.is_elevated {
         Compatibility::NeedsElevation
     } else {
@@ -246,6 +305,13 @@ pub fn check_compatibility(meta: &TweakMeta, ctx: &TweakContext) -> Compatibilit
 #[derive(Default)]
 pub struct TweakRegistry {
     tweaks: BTreeMap<&'static str, Box<dyn Tweak>>,
+    /// Which tweak owns each target, by [`target_key`]. One owner per target, so the library can't
+    /// hold the same change twice or two tweaks that undo each other.
+    owners: BTreeMap<String, &'static str>,
+}
+
+fn target_key(target: &RegTarget) -> String {
+    target.to_string().to_ascii_lowercase()
 }
 
 impl TweakRegistry {
@@ -271,22 +337,16 @@ impl TweakRegistry {
                 meta.id
             )));
         }
-        // Two tweaks wanting different values for one target would undo each other.
         for setting in tweak.settings() {
-            for other in self.tweaks.values() {
-                if let Some(clash) = other
-                    .settings()
-                    .iter()
-                    .find(|s| s.target.same_as(&setting.target) && s.value != setting.value)
-                {
-                    return Err(AppError::Internal(format!(
-                        "tweak `{}` conflicts with `{}` on `{}`",
-                        meta.id,
-                        other.meta().id,
-                        clash.target
-                    )));
-                }
+            if let Some(owner) = self.owners.get(&target_key(&setting.target)) {
+                return Err(AppError::Internal(format!(
+                    "tweak `{}` duplicates `{owner}` on `{}`",
+                    meta.id, setting.target
+                )));
             }
+        }
+        for setting in tweak.settings() {
+            self.owners.insert(target_key(&setting.target), meta.id);
         }
         self.tweaks.insert(meta.id, tweak);
         Ok(())
@@ -353,7 +413,7 @@ fn validate(tweak: &dyn Tweak) -> AppResult<()> {
         return fail("warning must be 1 to 160 characters".into());
     }
     if meta.references.is_empty() {
-        return fail("has no documentation references".into());
+        return fail("has no source references".into());
     }
     if let Some(bad) = meta.references.iter().find(|r| !r.starts_with("https://")) {
         return fail(format!("reference `{bad}` is not an https URL"));
@@ -380,6 +440,7 @@ fn validate(tweak: &dyn Tweak) -> AppResult<()> {
     }
     for (i, setting) in settings.iter().enumerate() {
         policy::check_target(&setting.target).or_else(|e| fail(e.to_string()))?;
+        policy::check_value(setting).or_else(|e| fail(e.to_string()))?;
         if settings[..i]
             .iter()
             .any(|s| s.target.same_as(&setting.target))
@@ -435,6 +496,9 @@ pub(crate) mod tests {
             warning: None,
             requires: None,
             added_in: "0.1",
+            section: None,
+            evidence: crate::engine::Evidence::Documented,
+            hardware: crate::engine::HardwareScope::Any,
             references: &["https://learn.microsoft.com/"],
         }
     }
@@ -456,6 +520,8 @@ pub(crate) mod tests {
             },
             is_elevated,
             has_battery: Some(false),
+            gpu_vendors: vec![0x10de],
+            cpu_vendor: Some("GenuineIntel".into()),
         }
     }
 
@@ -488,8 +554,8 @@ pub(crate) mod tests {
         let mut r = TweakRegistry::default();
         r.register(tweak(meta("gaming.a"), USER_SETTINGS)).unwrap();
         assert!(r.register(tweak(meta("gaming.b"), OTHER)).is_err());
-        // Agreeing on the same value is fine.
-        r.register(tweak(meta("gaming.c"), SAME)).unwrap();
+        // One owner per target, even when both would write the same value.
+        assert!(r.register(tweak(meta("gaming.c"), SAME)).is_err());
     }
 
     #[test]

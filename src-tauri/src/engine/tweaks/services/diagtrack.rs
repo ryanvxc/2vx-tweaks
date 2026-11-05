@@ -29,6 +29,9 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
             "ImagePath",
         )),
         added_in: "0.2",
+        section: None,
+        evidence: crate::engine::Evidence::Documented,
+        hardware: crate::engine::HardwareScope::Any,
         references: &[
             "https://learn.microsoft.com/en-us/windows-server/security/windows-services/security-guidelines-for-disabling-system-services-in-windows-server",
             "https://learn.microsoft.com/en-us/windows/privacy/configure-windows-diagnostic-data-in-your-organization",

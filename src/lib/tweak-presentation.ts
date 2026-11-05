@@ -7,10 +7,12 @@ import {
   BluetoothOff,
   Bug,
   Cable,
+  CalendarClock,
   ChartNoAxesColumn,
   CirclePlay,
   CloudDownload,
   CloudOff,
+  Cpu,
   Eye,
   EyeOff,
   FileClock,
@@ -20,6 +22,8 @@ import {
   Gamepad2,
   Gauge,
   Globe,
+  Gpu,
+  HardDrive,
   HardDriveDownload,
   History,
   Keyboard,
@@ -79,7 +83,13 @@ export const CATEGORY_LABEL: Record<TweakCategory, string> = {
   network: "Network",
   privacy: "Privacy",
   services: "Services",
+  tasks: "Tasks",
   windows: "Windows",
+  cpu: "CPU",
+  gpu: "GPU",
+  memory: "Memory",
+  storage: "Storage",
+  apps: "Apps",
 };
 
 const CATEGORY_ICON: Record<TweakCategory, LucideIcon> = {
@@ -89,7 +99,13 @@ const CATEGORY_ICON: Record<TweakCategory, LucideIcon> = {
   network: Network,
   privacy: EyeOff,
   services: Server,
+  tasks: CalendarClock,
   windows: MonitorCog,
+  cpu: Cpu,
+  gpu: Gpu,
+  memory: MemoryStick,
+  storage: HardDrive,
+  apps: AppWindow,
 };
 
 export const TWEAK_ICON: Record<string, LucideIcon> = {
@@ -307,6 +323,7 @@ const TAB_ROUTE: Record<PlacedTab, string> = {
   devices: "/advanced",
 };
 
+export const LIBRARY_ROUTE = "/library";
 export const MORE_SECTION = "More";
 export const UNAVAILABLE_SECTION = "Unavailable";
 
@@ -324,13 +341,28 @@ const FALLBACK_TAB: Record<TweakCategory, PlacedTab> = {
   windows: "core",
   privacy: "privacy",
   services: "services",
+  tasks: "services",
+  cpu: "cpu",
+  gpu: "gpu",
+  memory: "ram",
+  storage: "storage",
+  apps: "apps",
 };
 
-/** Where a tweak lives. One not placed yet still shows, in its category's tab. */
-export function tweakPlacement(meta: Pick<TweakMeta, "id" | "category">) {
+/** What placing a tweak needs to know. Fixtures for the older pages leave `section` out. */
+type Placeable = Pick<TweakMeta, "id" | "category"> & Partial<Pick<TweakMeta, "section">>;
+
+/**
+ * Where a tweak lives: its one primary location. One with a section is in the Library, under its
+ * category. One not placed yet still shows, in its category's tab.
+ */
+export function tweakPlacement(meta: Placeable) {
+  if (meta.section) {
+    return { tab: meta.category as string, section: meta.section, route: LIBRARY_ROUTE };
+  }
   const placed = PLACEMENT.get(meta.id);
   const tab = placed?.tab ?? FALLBACK_TAB[meta.category];
-  return { tab, section: placed?.section ?? MORE_SECTION, route: TAB_ROUTE[tab] };
+  return { tab: tab as string, section: placed?.section ?? MORE_SECTION, route: TAB_ROUTE[tab] };
 }
 
 export interface TweakGroup<T> {
@@ -339,43 +371,94 @@ export interface TweakGroup<T> {
   tweaks: T[];
 }
 
+/** The Library's sections come from the tweaks themselves, in name order. */
+function bySection<T extends { meta: Placeable }>(tweaks: T[]): TweakGroup<T>[] {
+  const titles = [...new Set(tweaks.map((t) => tweakPlacement(t.meta).section))].sort((a, b) =>
+    a.localeCompare(b),
+  );
+  return titles.map((title) => ({
+    title,
+    tweaks: tweaks.filter((t) => tweakPlacement(t.meta).section === title),
+  }));
+}
+
 /**
  * Splits tweaks into the sections of `tab`, or one flat list when `tab` is null. They keep the
- * order they arrive in, unless `catalogue` asks for each section's written order. Whatever
- * can't run on this PC goes in a section of its own, always last.
+ * order they arrive in, unless `catalogue` asks for each section's written order. With `library`
+ * the sections are the tweaks' own. Whatever can't run on this PC goes in a section of its own,
+ * always last.
  */
-export function groupTweaks<T extends { meta: Pick<TweakMeta, "id" | "category"> }>(
+export function groupTweaks<T extends { meta: Placeable }>(
   tweaks: T[],
   {
     tab,
     catalogue,
+    library = false,
     unavailable,
-  }: { tab: PlacedTab | null; catalogue: boolean; unavailable: (tweak: T) => boolean },
+  }: {
+    tab: PlacedTab | null;
+    catalogue: boolean;
+    library?: boolean;
+    unavailable: (tweak: T) => boolean;
+  },
 ): TweakGroup<T>[] {
   const usable = tweaks.filter((t) => !unavailable(t));
   const blocked = tweaks.filter(unavailable);
 
-  const groups: TweakGroup<T>[] = tab
-    ? [...TWEAK_SECTIONS[tab], { title: MORE_SECTION, ids: [] as string[] }].map((section) => {
-        const inSection = usable.filter((t) => tweakPlacement(t.meta).section === section.title);
-        return {
-          title: section.title,
-          tweaks: catalogue
-            ? inSection.toSorted(
-                (a, b) => section.ids.indexOf(a.meta.id) - section.ids.indexOf(b.meta.id),
-              )
-            : inSection,
-        };
-      })
-    : [{ title: null, tweaks: usable }];
+  const placed = (tab: PlacedTab): TweakGroup<T>[] =>
+    [...TWEAK_SECTIONS[tab], { title: MORE_SECTION, ids: [] as string[] }].map((section) => {
+      const inSection = usable.filter((t) => tweakPlacement(t.meta).section === section.title);
+      return {
+        title: section.title,
+        tweaks: catalogue
+          ? inSection.toSorted(
+              (a, b) => section.ids.indexOf(a.meta.id) - section.ids.indexOf(b.meta.id),
+            )
+          : inSection,
+      };
+    });
+
+  const groups = !tab
+    ? [{ title: null, tweaks: usable }]
+    : library
+      ? bySection(usable)
+      : placed(tab);
 
   return [...groups, { title: UNAVAILABLE_SECTION, tweaks: blocked }].filter(
     (group) => group.tweaks.length > 0,
   );
 }
 
+/** Keeps the first `limit` tweaks across the groups, so a broad search stays quick to draw. */
+export function capGroups<T>(groups: TweakGroup<T>[], limit: number): TweakGroup<T>[] {
+  let room = limit;
+  return groups.flatMap((group) => {
+    if (room <= 0) return [];
+    const tweaks = group.tweaks.slice(0, room);
+    room -= tweaks.length;
+    return [{ ...group, tweaks }];
+  });
+}
+
+/** How well a tweak matches a lowercase search, best first, or `null` if it doesn't. */
+export function searchRank(
+  meta: Pick<TweakMeta, "name" | "description" | "category"> & Partial<Pick<TweakMeta, "section">>,
+  query: string,
+): number | null {
+  const name = meta.name.toLowerCase();
+  if (name.startsWith(query)) return 0;
+  if (name.includes(` ${query}`)) return 1;
+  if (name.includes(query)) return 2;
+  if (meta.description.toLowerCase().includes(query)) return 3;
+  const section = meta.section?.toLowerCase() ?? "";
+  if (section.includes(query) || CATEGORY_LABEL[meta.category].toLowerCase().includes(query)) {
+    return 4;
+  }
+  return null;
+}
+
 /** A tweak's primary location, with its details open. */
-export function tweakHref(meta: Pick<TweakMeta, "id" | "category">) {
+export function tweakHref(meta: Placeable) {
   const { route, tab } = tweakPlacement(meta);
   return `${route}?tab=${tab}&tweak=${encodeURIComponent(meta.id)}`;
 }

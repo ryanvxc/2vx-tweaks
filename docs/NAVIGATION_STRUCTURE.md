@@ -15,6 +15,8 @@ Tools
 
 Optimisations
   Tweaks           /tweaks              ?tab=core | privacy | apps | services
+  Library          /library             ?tab=presets | windows | privacy | services | tasks | gaming | cpu | gpu |
+                                             memory | network | apps | storage | power
   Hardware         /hardware            ?tab=gpu | cpu | ram | peripherals | storage
   PC Cleaner       /cleaner             ?tab=system | services | uninstall | autoruns
   Network          /network             ?tab=tweaks | priority | adapters | bufferbloat

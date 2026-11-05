@@ -40,7 +40,7 @@ The nine areas from the project brief map like this:
 | App state and settings | `src/stores` (UI prefs). Durable engine state in the SQLite journal |
 | System information | `src-tauri/src/system` |
 | Optimisation engine | `src-tauri/src/engine/` (`service.rs` is the only path for tweaks; `cleanup.rs`, `startup.rs` and `apps.rs` hold the PC Cleaner's own fixed actions) |
-| Optimisation modules | `src-tauri/src/engine/tweaks/<category>/<tweak>.rs` (first tweaks: backlog P0-6) |
+| Optimisation modules | `src-tauri/src/engine/tweaks/<category>/<tweak>.rs` (first tweaks: backlog P0-6), and `engine/tweaks/library/<tab>.rs` for the Library |
 | Windows API integrations | `system/*`, `engine/store.rs`, `engine/broker.rs`. See `windows-integration.md` |
 | Backup and restore | `engine/journal.rs`: `%LOCALAPPDATA%\com.twovx.tweaks\journal.db` |
 | Logging and errors | `logging.rs`, `error.rs`, `src/services/logger.ts` |

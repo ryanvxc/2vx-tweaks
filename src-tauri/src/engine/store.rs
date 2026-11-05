@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use std::sync::Mutex;
 
 use crate::engine::setting::{Hive, RegTarget, RegValue};
+use crate::engine::system_store;
 use crate::error::{AppError, AppResult};
 
 pub trait SettingStore: Send + Sync {
@@ -49,8 +50,32 @@ const ERROR_ACCESS_DENIED: u32 = 0x8007_0005;
 fn root(hive: Hive) -> &'static windows_registry::Key {
     match hive {
         Hive::CurrentUser => windows_registry::CURRENT_USER,
-        Hive::LocalMachine => windows_registry::LOCAL_MACHINE,
+        _ => windows_registry::LOCAL_MACHINE,
     }
+}
+
+/// The registry target behind a `Gpu` target, or `None` without that vendor's driver key.
+fn gpu_target(target: &RegTarget) -> Option<RegTarget> {
+    let (vendor, rest) = match target.key.split_once('\\') {
+        Some((vendor, rest)) => (vendor, Some(rest)),
+        None => (target.key.as_ref(), None),
+    };
+    let id = match vendor {
+        "Nvidia" => 0x10de,
+        "Amd" => 0x1002,
+        "Intel" => 0x8086,
+        _ => return None,
+    };
+    let driver = crate::system::devices::gpu_key(id)?;
+    let key = match rest {
+        Some(rest) => format!(r"{driver}\{rest}"),
+        None => driver.to_string(),
+    };
+    Some(RegTarget {
+        hive: Hive::LocalMachine,
+        key: key.into(),
+        value: target.value.clone(),
+    })
 }
 
 fn hresult(err: &windows_registry::Result<()>) -> Option<u32> {
@@ -68,6 +93,17 @@ fn map_err(target: &RegTarget, err: windows_result::Error) -> AppError {
 
 impl SettingStore for WindowsRegistry {
     fn read(&self, target: &RegTarget) -> AppResult<Option<RegValue>> {
+        match target.hive {
+            Hive::ScheduledTask => return system_store::read_task(target),
+            Hive::PowerPlan => return system_store::read_power(target),
+            Hive::Gpu => {
+                return match gpu_target(target) {
+                    Some(real) => self.read(&real),
+                    None => Ok(None),
+                };
+            }
+            Hive::CurrentUser | Hive::LocalMachine => {}
+        }
         let key = match root(target.hive).open(target.key.as_ref()) {
             Ok(key) => key,
             Err(e) if e.code().0 as u32 == ERROR_FILE_NOT_FOUND => return Ok(None),
@@ -108,6 +144,16 @@ impl SettingStore for WindowsRegistry {
     }
 
     fn write(&self, target: &RegTarget, value: Option<&RegValue>) -> AppResult<()> {
+        match target.hive {
+            Hive::ScheduledTask => return system_store::write_task(target, value),
+            Hive::PowerPlan => return system_store::write_power(target, value),
+            Hive::Gpu => {
+                let real = gpu_target(target)
+                    .ok_or_else(|| AppError::Unsupported("no GPU driver found".into()))?;
+                return self.write(&real, value);
+            }
+            Hive::CurrentUser | Hive::LocalMachine => {}
+        }
         let name = target.value.as_ref();
         match value {
             Some(value) => {

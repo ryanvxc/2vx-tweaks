@@ -24,6 +24,9 @@ const base: Omit<TweakMeta, "id" | "name" | "permission"> = {
   impact: "low",
   warning: null,
   addedIn: "0.1",
+  section: null,
+  evidence: "documented",
+  hardware: "any",
   references: ["https://learn.microsoft.com/test"],
 };
 

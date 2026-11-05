@@ -16,6 +16,15 @@
 | Registry read/write (engine) | `windows-registry` | `windows-registry` | HKLM writes, and `HKCU\Software\Policies` (admin-only ACL) | Through `SettingStore`; HKLM via the broker; HKCU policy keys are not used |
 | Elevated helper | `ShellExecuteExW("runas")` self-relaunch + named pipe | `windows` | Prompts once per batch | See `security.md` § Privilege |
 
+## Tasks, power plans and display adapters (`engine/system_store.rs`, `engine/store.rs`)
+
+Library tweaks can target more than the registry, without starting another program:
+
+- **Scheduled tasks**: `ITaskService` over COM, reading and setting a registered task's `Enabled`.
+- **Power plans**: `PowerGetActiveScheme`, then `PowerReadACValueIndex`, `PowerReadDCValueIndex` and their write twins on the
+  active plan.
+- **Display adapters**: the display class key of the matching vendor, found from each adapter's `MatchingDeviceId`.
+
 ## Planned integrations (not implemented)
 
 - Power plans: `PowerGetActiveScheme` / `PowerSetActiveScheme` (powrprof), not `powercfg` text parsing.

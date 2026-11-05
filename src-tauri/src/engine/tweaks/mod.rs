@@ -4,6 +4,7 @@
 //! here; [`register_all`] runs every one through the metadata gate.
 
 mod gaming;
+mod library;
 mod network;
 mod performance;
 mod power;
@@ -82,7 +83,7 @@ const ALL: &[SettingsTweak] = &[
 ];
 
 pub fn register_all(registry: &mut TweakRegistry) -> AppResult<()> {
-    for tweak in ALL {
+    for tweak in ALL.iter().chain(library::ALL.iter().copied().flatten()) {
         registry.register(Box::new(SettingsTweak {
             meta: tweak.meta.clone(),
             settings: tweak.settings,
@@ -97,10 +98,14 @@ mod tests {
 
     use super::*;
     use crate::engine::journal::Journal;
+    use crate::engine::journal::SnapshotStatus;
     use crate::engine::service::{Engine, InProcess, TweakState};
     use crate::engine::store::{MemoryStore, SettingStore};
     use crate::engine::tests::ctx;
-    use crate::engine::{Compatibility, EditionScope, Hive, Permission, RegTarget, RegValue};
+    use crate::engine::{
+        Compatibility, EditionScope, HardwareScope, Hive, Permission, RegTarget, RegValue,
+        RiskLevel,
+    };
     use crate::error::AppResult;
 
     struct Shared(Arc<MemoryStore>);
@@ -131,10 +136,128 @@ mod tests {
         engine_on(store, None)
     }
 
+    fn library() -> impl Iterator<Item = &'static SettingsTweak> {
+        library::ALL.iter().copied().flatten()
+    }
+
+    /// A value the tweak doesn't write, so a revert to a Windows default would be caught.
+    fn original(tweak_writes: Option<&RegValue>) -> RegValue {
+        match tweak_writes {
+            Some(RegValue::Dword(v)) => RegValue::Dword(u32::from(*v == 0)),
+            Some(_) => RegValue::String("what this PC had".into()),
+            None => RegValue::Dword(7),
+        }
+    }
+
+    #[test]
+    fn library_tweaks_apply_once_and_restore_what_the_pc_had() {
+        let mut tested = 0;
+        for (has_battery, cpu) in [(false, "GenuineIntel"), (true, "AuthenticAMD")] {
+            let store = Arc::new(MemoryStore::default());
+            for t in library() {
+                if let Some(required) = &t.meta.requires {
+                    store.write(required, Some(&RegValue::Dword(1))).unwrap();
+                }
+                for s in t.settings {
+                    let was = original(s.value.as_ref());
+                    store.write(&s.target, Some(&was)).unwrap();
+                }
+            }
+            let e = Engine::new(
+                TweakRegistry::with_builtin_tweaks(),
+                Box::new(Shared(store.clone())),
+                Box::new(InProcess),
+                Journal::open_in_memory(),
+                Box::new(move || {
+                    let mut c = ctx(26_100, true);
+                    c.has_battery = Some(has_battery);
+                    c.gpu_vendors = vec![0x10de, 0x1002, 0x8086];
+                    c.cpu_vendor = Some(cpu.into());
+                    c
+                }),
+            );
+            let usable: std::collections::BTreeSet<String> = e
+                .tweak_statuses()
+                .into_iter()
+                .filter(|s| s.compatibility == Compatibility::Compatible)
+                .map(|s| s.meta.id.to_string())
+                .collect();
+
+            for t in library().filter(|t| usable.contains(t.meta.id)) {
+                let id = vec![t.meta.id.to_string()];
+                let read = |t: &SettingsTweak| {
+                    t.settings
+                        .iter()
+                        .map(|s| store.read(&s.target).unwrap())
+                        .collect::<Vec<_>>()
+                };
+                let before = read(t);
+
+                let plan = e.plan(&id).unwrap();
+                assert_eq!(plan.changes.len(), t.settings.len(), "{}", t.meta.id);
+                let out = e.apply(&plan.id).unwrap();
+                assert_eq!(out.status, SnapshotStatus::Completed, "{}", t.meta.id);
+                for s in t.settings {
+                    assert_eq!(store.read(&s.target).unwrap(), s.value, "{}", s.target);
+                }
+                assert!(e.plan(&id).unwrap().changes.is_empty(), "{}", t.meta.id);
+
+                let out = e.revert_tweak(t.meta.id).unwrap();
+                assert_eq!(out.status, SnapshotStatus::Completed, "{}", t.meta.id);
+                assert_eq!(read(t), before, "{} didn't restore", t.meta.id);
+                tested += 1;
+            }
+        }
+        assert!(tested > 1_000, "only {tested} library tweaks ran");
+    }
+
+    #[test]
+    fn library_tweaks_read_well_in_a_row() {
+        for t in library() {
+            let m = &t.meta;
+            assert!(m.name.chars().count() <= 40, "{} name", m.id);
+            assert!(m.description.chars().count() <= 74, "{} description", m.id);
+            assert!(m.section.is_some(), "{} section", m.id);
+            assert_eq!(m.id.split('.').count(), 2, "{} id", m.id);
+            if m.risk == RiskLevel::High {
+                assert!(m.warning.is_some(), "{} needs a warning", m.id);
+            }
+        }
+    }
+
+    #[test]
+    fn hardware_tweaks_stay_on_their_hardware() {
+        let e = engine(installed());
+        for s in e.tweak_statuses() {
+            let wrong = matches!(
+                s.meta.hardware,
+                HardwareScope::AmdGpu | HardwareScope::IntelGpu | HardwareScope::AmdCpu
+            );
+            assert_eq!(
+                s.compatibility == Compatibility::WrongHardware,
+                wrong,
+                "{}",
+                s.meta.id
+            );
+        }
+    }
+
+    #[test]
+    fn scheduled_tasks_are_only_turned_off() {
+        for t in library() {
+            for s in t.settings {
+                if s.target.hive == Hive::ScheduledTask {
+                    assert_eq!(s.value, Some(RegValue::Dword(0)), "{}", s.target);
+                    assert!(t.meta.requires.is_some(), "{}", t.meta.id);
+                }
+            }
+        }
+    }
+
     /// A store where everything the catalogue requires is installed.
     fn installed() -> Arc<MemoryStore> {
         let store = Arc::new(MemoryStore::default());
-        for t in ALL {
+        for t in ALL.iter().chain(library()) {
             if let Some(required) = &t.meta.requires {
                 let image = RegValue::ExpandString("image.exe".into());
                 store.write(required, Some(&image)).unwrap();
@@ -154,7 +277,8 @@ mod tests {
     #[test]
     fn catalogue_registers_with_user_and_admin_tweaks() {
         let registry = TweakRegistry::with_builtin_tweaks();
-        assert_eq!(registry.len(), ALL.len());
+        let library: usize = library::ALL.iter().map(|t| t.len()).sum();
+        assert_eq!(registry.len(), ALL.len() + library);
         let perms: Vec<_> = registry.list().map(|m| m.permission).collect();
         assert!(perms.contains(&Permission::User));
         assert!(perms.contains(&Permission::Administrator));

@@ -26,6 +26,11 @@ checked at 1280×720, 1024×600 and maximised. The window has since been fixed a
 
 ## Summary
 
+Version 0.3 adds the Library (`/library`): 1,221 more tweaks from the supplied tweak collection, 1,285 in all, with presets,
+whole-library search and hardware checks. Every one passes the simulated apply, verify, re-plan and restore test, and every
+state was read on a real PC, but none has been written to a real PC yet. See
+[OPTIMISATION_IMPLEMENTATION_STATUS.md](OPTIMISATION_IMPLEMENTATION_STATUS.md).
+
 Version 0.2: the app was restructured and restyled (`INFORMATION_ARCHITECTURE.md`, `REDESIGN_ROADMAP.md`,
 `DESIGN_SYSTEM.md`). 64 documented tweaks ship with per-tweak undo, placed on Tweaks, Hardware, Network and Advanced, with Game Mode and its
 presets built from those same tweaks. Monitoring, Hardware (GPU, CPU, RAM, Peripherals, Storage), Network (Tweaks, Network
@@ -109,6 +114,8 @@ Fixed in the UI in stage 3 (P0-1); kept for the record:
    manual run on a VM.
 3. **Primitive generalisation.** Power plans, services and QoS all need the journal to store more than registry
    targets. Doing this after the first UI slice avoids designing it blind.
-4. **Documented-only rule vs tweak supply.** Several popular tweaks have no Microsoft documentation. Policy CSP / ADMX
-   settings are documented with exact registry paths and are the most reliable source for the first set, at the cost
-   of Windows showing "managed by your organization" on affected Settings pages.
+4. **Evidence, not only documentation.** Many popular tweaks have no Microsoft documentation. The Library keeps them with
+   a stated evidence tier and leaves them out of presets. Policy CSP / ADMX settings remain the most reliable source,
+   at the cost of Windows showing "managed by your organization" on affected Settings pages.
+5. **Library writes need a VM.** Scheduled task, power plan and GPU writes have only run on the simulated store, and no
+   library tweak has been applied to a real PC.

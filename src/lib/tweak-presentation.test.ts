@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 import type { TweakCategory } from "@/types/engine";
 import { DEFAULT_GAME_MODE_TWEAKS, GAME_MODE_TWEAKS, GAMING_PROFILES } from "./profiles";
 import {
+  capGroups,
   groupTweaks,
+  LIBRARY_ROUTE,
+  searchRank,
   TWEAK_ICON,
   TWEAK_SECTIONS,
   tweakHref,
   tweakPlacement,
+  UNAVAILABLE_SECTION,
 } from "./tweak-presentation";
 
 // The Rust catalogue is the source of truth; this catches a tweak added there and not here.
@@ -111,5 +115,70 @@ describe("tweak presentation", () => {
       section: "More",
       route: "/tweaks",
     });
+  });
+});
+
+describe("the Library", () => {
+  const meta = (section: string | null, id = "privacy.a") => ({
+    id,
+    category: "privacy" as const,
+    section,
+  });
+
+  it("places a tweak with a section under its category", () => {
+    expect(tweakPlacement(meta("Telemetry"))).toEqual({
+      tab: "privacy",
+      section: "Telemetry",
+      route: LIBRARY_ROUTE,
+    });
+    expect(tweakPlacement(meta(null)).route).not.toBe(LIBRARY_ROUTE);
+  });
+
+  it("links a tweak to its one location", () => {
+    expect(tweakHref(meta("Telemetry"))).toBe("/library?tab=privacy&tweak=privacy.a");
+  });
+
+  it("groups by the tweaks' own sections, unavailable last", () => {
+    const tweaks = [
+      { meta: meta("Speech", "privacy.c") },
+      { meta: meta("Ads", "privacy.d") },
+      { meta: meta("Speech", "privacy.e") },
+    ];
+    const groups = groupTweaks(tweaks, {
+      tab: "privacy",
+      catalogue: true,
+      library: true,
+      unavailable: (t) => t.meta.id === "privacy.e",
+    });
+    expect(groups.map((g) => g.title)).toEqual(["Ads", "Speech", UNAVAILABLE_SECTION]);
+  });
+
+  it("caps a broad search across groups", () => {
+    const groups = [
+      { title: "A", tweaks: [1, 2] },
+      { title: "B", tweaks: [3, 4] },
+      { title: "C", tweaks: [5] },
+    ];
+    expect(capGroups(groups, 3)).toEqual([
+      { title: "A", tweaks: [1, 2] },
+      { title: "B", tweaks: [3] },
+    ]);
+    expect(capGroups(groups, Number.POSITIVE_INFINITY)).toEqual(groups);
+  });
+
+  it("ranks a search by where it matched", () => {
+    const m = {
+      name: "Game Bar tips",
+      description: "Hides the overlay.",
+      category: "gaming" as const,
+      section: "Overlays",
+    };
+    expect(searchRank(m, "game")).toBe(0);
+    expect(searchRank(m, "bar")).toBe(1);
+    expect(searchRank(m, "ame")).toBe(2);
+    expect(searchRank(m, "overlay.")).toBe(3);
+    expect(searchRank(m, "overlays")).toBe(4);
+    expect(searchRank(m, "gaming")).toBe(4);
+    expect(searchRank(m, "printer")).toBeNull();
   });
 });

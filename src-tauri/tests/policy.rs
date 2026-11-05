@@ -39,6 +39,43 @@ fn quoted_list_after(text: &str, marker: &str) -> Vec<String> {
         .collect()
 }
 
+/// Source with its string literals removed. The Library's tables hold real setting names, and some
+/// contain a forbidden word (`POWERSHELL_TELEMETRY_OPTOUT`, or the "wmic" inside `ShowMicrosoftRewards`).
+/// They are data, so only the code around them needs scanning.
+fn without_strings(source: &str) -> String {
+    let mut code = String::with_capacity(source.len());
+    let mut chars = source.chars().peekable();
+    let mut previous = ' ';
+    while let Some(c) = chars.next() {
+        if c != '"' {
+            code.push(c);
+            previous = c;
+            continue;
+        }
+        let raw = previous == 'r';
+        while let Some(s) = chars.next() {
+            match s {
+                '\\' if !raw => {
+                    chars.next();
+                }
+                '"' => break,
+                _ => {}
+            }
+        }
+        previous = '"';
+    }
+    code
+}
+
+#[test]
+fn blanking_strings_keeps_the_code() {
+    let source =
+        r#"name: "powershell", key: r"SOFTWARE\X", run: Command::new("cmd.exe"), s: "a\"b""#;
+    let code = without_strings(source).to_ascii_lowercase();
+    assert!(code.contains("command::new"));
+    assert!(!code.contains("powershell") && !code.contains("cmd.exe"));
+}
+
 /// No shell, no script host, no process spawning: the backend changes the system only
 /// through typed primitives. The elevated broker relaunches this executable via
 /// ShellExecuteExW, which is the single allowed exception.
@@ -64,6 +101,9 @@ fn backend_never_spawns_shells_or_processes() {
     rust_sources(&root().join("src"), &mut files);
     for file in files {
         let text = fs::read_to_string(&file).unwrap().to_ascii_lowercase();
+        let table =
+            file.parent().is_some_and(|dir| dir.ends_with("library")) && !file.ends_with("mod.rs");
+        let text = if table { without_strings(&text) } else { text };
         for needle in forbidden {
             assert!(
                 !text.contains(&needle.to_ascii_lowercase()),

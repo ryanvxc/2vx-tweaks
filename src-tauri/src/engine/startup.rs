@@ -154,14 +154,14 @@ const KEYS: &[(Hive, RunKey)] = &[
 fn root(hive: Hive) -> &'static Key {
     match hive {
         Hive::CurrentUser => CURRENT_USER,
-        Hive::LocalMachine => LOCAL_MACHINE,
+        _ => LOCAL_MACHINE,
     }
 }
 
 fn scope_of(hive: Hive) -> StartupScope {
     match hive {
         Hive::CurrentUser => StartupScope::CurrentUser,
-        Hive::LocalMachine => StartupScope::AllUsers,
+        _ => StartupScope::AllUsers,
     }
 }
 

@@ -147,12 +147,53 @@ type Sample = Pick<TweakMeta, "category" | "permission" | "impact" | "addedIn" |
   slug: string;
   title: string;
   state: TweakStatus["state"];
+  section?: string;
+  evidence?: TweakMeta["evidence"];
   risk?: TweakMeta["risk"];
   restart?: TweakMeta["restart"];
   warning?: string;
 };
 
 const SAMPLES: Sample[] = [
+  {
+    id: "privacy.preview-telemetry",
+    slug: "library-documented",
+    title: "documented Library setting",
+    category: "privacy",
+    permission: "administrator",
+    impact: "low",
+    addedIn: "0.3",
+    recommended: false,
+    state: "notApplied",
+    section: "Telemetry",
+  },
+  {
+    id: "privacy.preview-tailored",
+    slug: "library-observed",
+    title: "undocumented Library setting",
+    category: "privacy",
+    permission: "user",
+    impact: "low",
+    addedIn: "0.3",
+    recommended: false,
+    state: "applied",
+    section: "Telemetry",
+    evidence: "observed",
+    risk: "moderate",
+  },
+  {
+    id: "privacy.preview-speech",
+    slug: "library-community",
+    title: "community Library setting",
+    category: "privacy",
+    permission: "user",
+    impact: "low",
+    addedIn: "0.3",
+    recommended: false,
+    state: "notApplied",
+    section: "Speech",
+    evidence: "community",
+  },
   {
     id: "performance.foreground-boost",
     slug: "machine-wide",
@@ -386,6 +427,9 @@ const SAMPLE_TWEAKS: TweakMeta[] = SAMPLES.map((x) => ({
   impact: x.impact,
   warning: x.warning ?? null,
   addedIn: x.addedIn,
+  section: x.section ?? null,
+  evidence: x.evidence ?? "documented",
+  hardware: "any",
   references: ["https://learn.microsoft.com/"],
 }));
 

@@ -32,6 +32,8 @@ fn tweak_context() -> TweakContext {
         os: system::os::read_os_info(),
         is_elevated: system::privilege::is_elevated(),
         has_battery: system::power::has_battery(),
+        gpu_vendors: system::devices::gpu_vendors(),
+        cpu_vendor: system::devices::cpu_vendor(),
     }
 }
 

@@ -72,7 +72,8 @@ docs/                        status, backlog, roadmap, architecture, modules, Wi
 
 Full rationale in `docs/security.md`. In short:
 - Never disable Defender, Firewall, Windows Update, UAC, SmartScreen or other security features as an "optimisation".
-- No undocumented registry edits. Every tweak cites references (enforced by `TweakRegistry::register`).
+- Every tweak cites references (enforced by `TweakRegistry::register`) and states its evidence: `Documented`, `Observed`
+  (the value name is in a Windows or driver file) or `Community`. Community tweaks stay out of presets.
 - Every change: backup first → apply → verify → roll back on failure. Dry-run (`plan`) must be side-effect free.
 - No bulk service disabling, no deleting outside an allowlist of locations, no boot-config edits without explicit,
   informed confirmation (`ConfirmDialog` with `risk="high"`).
@@ -83,6 +84,14 @@ Full rationale in `docs/security.md`. In short:
 Stages 1 (foundation) and 2 (safety engine) are done; **stage 3 (first real optimisations) is in progress**. The single source
 of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_BACKLOG.md` (P0–P3) and stages in
 `docs/DEVELOPMENT_ROADMAP.md`. Use those stage and task IDs, not the older "Phase N" labels.
+
+In short (0.3): `/library` holds 1,221 more tweaks (1,285 in the app), generated into `engine/tweaks/library/<tab>.rs` with
+handwritten helpers in `library/mod.rs`. Tabs and presets are in `src/app/navigation.ts` and `lib/library-presets.ts`. Besides
+the registry, a `Setting` can target `ScheduledTask` (only ever turned off), `PowerPlan` (the active plan) and `Gpu` (`Nvidia`,
+`Amd` or `Intel`, resolved to that vendor's display adapter key); all three are handled in `engine/system_store.rs` and
+`engine/store.rs`, with no process spawned. One target has one owner, even for the same value. `HardwareScope` keeps vendor tweaks
+on their hardware. What was found, and why anything was left out, is in `docs/OPTIMISATION_LIBRARY_AUDIT.md` (+ `.csv`);
+`docs/OPTIMISATION_IMPLEMENTATION_STATUS.md` lists every tweak. Library writes have not run on a real PC yet: they need a VM.
 
 In short (0.2): the app was restructured (`docs/INFORMATION_ARCHITECTURE.md`, `docs/NAVIGATION_STRUCTURE.md`,
 `docs/DESIGN_SYSTEM.md`). Every feature has one primary location; pages and tabs live in `src/app/navigation.ts`, and

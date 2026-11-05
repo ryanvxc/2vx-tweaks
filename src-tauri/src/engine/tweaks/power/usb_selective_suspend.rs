@@ -21,6 +21,9 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         warning: None,
         requires: None,
         added_in: "0.2",
+        section: None,
+        evidence: crate::engine::Evidence::Documented,
+        hardware: crate::engine::HardwareScope::Any,
         references: &[
             "https://support.microsoft.com/en-us/help/968132/usb-devices-may-stop-functioning-correctly-when-multiple-devices-conne",
         ],

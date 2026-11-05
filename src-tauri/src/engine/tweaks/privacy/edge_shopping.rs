@@ -21,6 +21,9 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         warning: None,
         requires: None,
         added_in: "0.2",
+        section: None,
+        evidence: crate::engine::Evidence::Documented,
+        hardware: crate::engine::HardwareScope::Any,
         references: &[
             "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/edgeshoppingassistantenabled",
         ],

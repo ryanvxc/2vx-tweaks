@@ -8,9 +8,18 @@ import { Sidebar } from "./sidebar";
 import { TitleBar } from "./title-bar";
 
 /** Pages that carry their own title (`PageHero`), so the title bar stays thin. */
-const OWN_TITLE = ["/", "/gaming", "/cleaner", "/tweaks", "/hardware", "/network", "/advanced"];
+const OWN_TITLE = [
+  "/",
+  "/gaming",
+  "/cleaner",
+  "/tweaks",
+  "/library",
+  "/hardware",
+  "/network",
+  "/advanced",
+];
 /** Tab pages that reserve the scrollbar's width, or their cards shift between short and long tabs. */
-const STEADY = ["/tweaks", "/hardware", "/network", "/advanced"];
+const STEADY = ["/tweaks", "/library", "/hardware", "/network", "/advanced"];
 
 export function AppShell() {
   const { pathname, search } = useLocation();

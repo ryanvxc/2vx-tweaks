@@ -55,6 +55,11 @@ Core keeps its six tweaks: moving any to Hardware would leave Core empty on PCs 
 | Xbox | `services.xbox-auth-off`, `services.xbox-save-off` |
 | Other | `services.maps-broker-off`, `services.wap-push-off`, `services.compat-assistant-off`, `services.sync-host-off` |
 
+## Library
+
+1,221 tweaks in 12 tabs, listed in [OPTIMISATION_CATEGORIES.md](OPTIMISATION_CATEGORIES.md). A tweak's tab and section come from
+its `category` and `section`. Tweaks with no `section` stay on Tweaks, Hardware, Network or Advanced.
+
 ## Game Mode presets
 
 Presets reference tweaks; each tweak's card stays in its primary location, on Tweaks. Configure lists all seven tweaks

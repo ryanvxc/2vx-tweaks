@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { COMPATIBILITY, isBlocked, RESTART_HINT, TWEAK_STATE } from "@/lib/engine-text";
+import { COMPATIBILITY, EVIDENCE, isBlocked, RESTART_HINT, TWEAK_STATE } from "@/lib/engine-text";
 import { CATEGORY_LABEL, tweakIcon } from "@/lib/tweak-presentation";
 import type { Impact, TweakStatus } from "@/types/engine";
 
@@ -46,6 +46,7 @@ export function TweakDetails({
   const note = compatibility === "needsElevation" ? null : COMPATIBILITY[compatibility];
   const restart = RESTART_HINT[meta.restart];
   const blocked = isBlocked(compatibility);
+  const onPowerPlan = shown.settings.some((s) => s.target.hive === "powerPlan");
 
   return (
     <Dialog open={tweak !== null} onOpenChange={onOpenChange}>
@@ -73,8 +74,20 @@ export function TweakDetails({
             {meta.permission === "administrator" && <StatusLabel tone="info">Admin</StatusLabel>}
             {restart && <StatusLabel tone="neutral">{restart}</StatusLabel>}
             {meta.recommended && <StatusLabel tone="success">Recommended</StatusLabel>}
+            {meta.section && (
+              <StatusLabel tone="neutral">{EVIDENCE[meta.evidence].label}</StatusLabel>
+            )}
           </div>
           {note && <p className="text-[12.5px] text-muted-foreground">{note}</p>}
+          {meta.section && meta.evidence !== "documented" && (
+            <p className="text-[12.5px] text-muted-foreground">{EVIDENCE[meta.evidence].note}</p>
+          )}
+          {onPowerPlan && (
+            <p className="text-[12.5px] text-muted-foreground">
+              Changes the active power plan. Undo restores the value on whichever plan is active
+              then.
+            </p>
+          )}
           {meta.warning && (
             <p className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/8 px-3 py-2 text-[12.5px] leading-snug">
               <AlertTriangle className="mt-px size-3.5 shrink-0 text-destructive" />
@@ -82,9 +95,11 @@ export function TweakDetails({
             </p>
           )}
 
-          <p data-selectable className="text-[13px] leading-relaxed text-muted-foreground">
-            {meta.details}
-          </p>
+          {meta.details !== meta.description && (
+            <p data-selectable className="text-[13px] leading-relaxed text-muted-foreground">
+              {meta.details}
+            </p>
+          )}
 
           <section>
             <h3 className="mb-1.5 text-[12.5px] font-semibold">Values on this PC</h3>

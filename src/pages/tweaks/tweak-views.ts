@@ -2,13 +2,22 @@ import type { ReactNode } from "react";
 import {
   ADVANCED_TABS,
   HARDWARE_TABS,
+  LIBRARY_TABS,
   NETWORK_TABS,
   TWEAK_TABS,
   type NavTab,
 } from "@/app/navigation";
+import type { TweakStatus } from "@/types/engine";
 
 /** `check` marks what's in effect; `letter` is a tile with the first letter, for game lists. */
 export type RowStyle = "check" | "letter";
+
+/** What a tab's own content can reach: the catalogue and the page's review. */
+export interface TweakViewContext {
+  statuses: TweakStatus[];
+  select: (ids: string[]) => void;
+  disabled: boolean;
+}
 
 /** A page built on the tweak grid: its title, tabs and whatever a tab adds around the tweaks. */
 export interface TweakView {
@@ -28,7 +37,12 @@ export interface TweakView {
   /** Between the search row and the tweaks. */
   intro?: (tab: string) => ReactNode;
   /** A tab's own content, in place of the search row and tweaks. */
-  body?: (tab: string) => ReactNode;
+  body?: (tab: string, context: TweakViewContext) => ReactNode;
+  /**
+   * For a page too long for cards: rows in collapsed sections, a search across every tweak in the
+   * app, and the extra filters.
+   */
+  library?: boolean;
 }
 
 export const TWEAKS_VIEW: TweakView = {
@@ -38,6 +52,15 @@ export const TWEAKS_VIEW: TweakView = {
   tabs: TWEAK_TABS,
   defaultTab: "core",
   headings: "always",
+};
+
+export const LIBRARY_VIEW: TweakView = {
+  route: "/library",
+  title: "Library",
+  subtitle: "Every setting is backed up and can be undone.",
+  tabs: LIBRARY_TABS,
+  defaultTab: "presets",
+  library: true,
 };
 
 export const HARDWARE_VIEW: TweakView = {

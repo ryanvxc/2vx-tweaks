@@ -21,6 +21,7 @@ export function PageTabs<T extends string>({
   label,
   end,
   filled = false,
+  dense = false,
 }: {
   tabs: PageTab<T>[];
   value: T;
@@ -29,6 +30,8 @@ export function PageTabs<T extends string>({
   end?: ReactNode;
   /** A full-width bar with a raised active tab, for tabs that split a whole page. */
   filled?: boolean;
+  /** Words only, for a page with too many tabs for a row of icons. */
+  dense?: boolean;
 }) {
   const { container, indicator } = useSlidingIndicator<HTMLDivElement>('[aria-selected="true"]');
   return (
@@ -58,6 +61,7 @@ export function PageTabs<T extends string>({
               className={cn(
                 "relative flex h-9 items-center gap-2 rounded-t-md px-3 text-[13px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 filled && "rounded-b-md px-4",
+                dense && "px-3",
                 filled && active && "border border-hairline bg-raised",
                 active
                   ? "text-foreground"
@@ -66,7 +70,7 @@ export function PageTabs<T extends string>({
                     : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {Icon && (
+              {Icon && !dense && (
                 <Icon className={cn("size-4", active && !filled && "text-brand")} aria-hidden />
               )}
               {t.label}

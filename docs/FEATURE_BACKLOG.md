@@ -70,6 +70,18 @@ Every task ends with `npm run check:all` passing and the docs updated (see `docs
 | P3-5 | Opt-in, visible, user-level scheduled re-apply after Windows updates                                           | Task Scheduler COM          | P0-8       | M   | VM                    | Settings that survive feature updates, never as SYSTEM   |
 | P3-6 | Light theme and localisation                                                                                   | `globals.css`, i18n         | P1-1       | M   | Visual review         | Wider audience                                           |
 
+## Library: next batches
+
+Legitimate items the audit deferred, by what each needs. Counts and reasons are in
+[OPTIMISATION_LIBRARY_AUDIT.md](OPTIMISATION_LIBRARY_AUDIT.md).
+
+- Apply the Library on a VM, including scheduled task, power plan and GPU writes.
+- CIM: `netsh`-style TCP globals, memory compression and per-adapter settings.
+- Boot configuration: `bcdedit` settings behind a `risk="high"` confirmation.
+- DISM: optional features and capabilities.
+- Binary registry values: `UserPreferencesMask`, mouse curves and AMD UMD settings.
+- Power plans: creating and switching plans, and hibernation.
+
 ## Not planned (from the EXM research)
 
 Server-delivered scripts, generic command execution, TrustedInstaller or SYSTEM execution, a background service,

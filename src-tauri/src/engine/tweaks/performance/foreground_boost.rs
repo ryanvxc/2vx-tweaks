@@ -24,6 +24,9 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         warning: None,
         requires: None,
         added_in: "0.2",
+        section: None,
+        evidence: crate::engine::Evidence::Documented,
+        hardware: crate::engine::HardwareScope::Any,
         references: &[
             "https://learn.microsoft.com/en-us/previous-versions/cc976120(v=technet.10)",
             "https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-operatingsystem",

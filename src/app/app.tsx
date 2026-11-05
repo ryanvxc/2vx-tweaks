@@ -14,6 +14,7 @@ import { MonitoringPage } from "@/pages/monitoring/monitoring-page";
 import { RestorePage } from "@/pages/restore/restore-page";
 import { SettingsPage } from "@/pages/settings/settings-page";
 import { ToolsPage } from "@/pages/tools/tools-page";
+import { LibraryPage } from "@/pages/library/library-page";
 import { TweaksPage } from "@/pages/tweaks/tweaks-page";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -47,6 +48,7 @@ export function App() {
               <Route path="network" element={<NetworkPage />} />
               <Route path="advanced" element={<AdvancedPage />} />
               <Route path="tweaks" element={<TweaksPage />} />
+              <Route path="library" element={<LibraryPage />} />
               <Route path="system" element={<Moved to="/tweaks" />} />
               <Route path="gaming" element={<GamingPage />} />
               <Route path="startup" element={<Navigate to="/cleaner?tab=autoruns" replace />} />

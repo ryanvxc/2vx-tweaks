@@ -2,13 +2,28 @@
 
 export type RiskLevel = "low" | "moderate" | "high";
 export type TweakCategory =
-  "gaming" | "performance" | "power" | "network" | "privacy" | "services" | "windows";
+  | "gaming"
+  | "performance"
+  | "power"
+  | "network"
+  | "privacy"
+  | "services"
+  | "tasks"
+  | "windows"
+  | "cpu"
+  | "gpu"
+  | "memory"
+  | "storage"
+  | "apps";
 export type Permission = "user" | "administrator";
 export type RestartRequirement = "none" | "signOut" | "reboot";
 export type DeviceScope = "any" | "desktopOnly" | "laptopOnly";
 export type EditionScope = "any" | "proOrHigher";
 /** Documented estimate of how noticeable a tweak is. Never a measurement. */
 export type Impact = "low" | "medium" | "high";
+/** How sure 2VX is that Windows reads a setting. See `Evidence` in the engine. */
+export type Evidence = "documented" | "observed" | "community";
+export type HardwareScope = "any" | "nvidiaGpu" | "amdGpu" | "intelGpu" | "intelCpu" | "amdCpu";
 
 export interface BuildRange {
   minBuild: number;
@@ -33,6 +48,10 @@ export interface TweakMeta {
   warning: string | null;
   /** `major.minor` app version that first shipped the tweak. */
   addedIn: string;
+  /** Its section in the Library. `null` for a tweak with its own page. */
+  section: string | null;
+  evidence: Evidence;
+  hardware: HardwareScope;
   references: string[];
 }
 
@@ -42,10 +61,11 @@ export type Compatibility =
   | "unsupportedBuild"
   | "unsupportedEdition"
   | "wrongDevice"
+  | "wrongHardware"
   | "notInstalled"
   | "needsElevation";
 
-export type Hive = "currentUser" | "localMachine";
+export type Hive = "currentUser" | "localMachine" | "scheduledTask" | "powerPlan" | "gpu";
 
 export interface RegTarget {
   hive: Hive;

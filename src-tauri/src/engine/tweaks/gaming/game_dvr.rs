@@ -23,6 +23,9 @@ pub const TWEAK: SettingsTweak = SettingsTweak {
         warning: Some("Game Bar recording, screenshots and broadcasting stop working."),
         requires: None,
         added_in: "0.2",
+        section: None,
+        evidence: crate::engine::Evidence::Documented,
+        hardware: crate::engine::HardwareScope::Any,
         references: &[
             "https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-applicationmanagement#allowgamedvr",
         ],

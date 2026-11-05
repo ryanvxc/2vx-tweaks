@@ -69,10 +69,14 @@ against.
 | No kernel drivers | None bundled; not in scope |
 | No unrestricted command execution | The backend source may not spawn processes or shells (`Command::new`, PowerShell, cmd, reg, sc, schtasks, bcdedit, wmic…). The only process launch is the broker's self-relaunch. `links.rs` may call `ShellExecuteW` on its fixed list of pages, so Hardware, Network and Advanced can point to driver downloads and Windows Settings for what 2VX won't do itself; it never takes an address from the frontend. |
 | No unnecessary privilege | `asInvoker`, per-batch broker, never SYSTEM or TrustedInstaller |
-| No undocumented or protected changes | Metadata gate (https references) and the policy denylist |
+| No protected changes, and evidence on everything else | Metadata gate (https references, stated evidence tier) and the policy denylist |
 | Every IPC command is deliberate | `build.rs` manifest, capability grants and `generate_handler!` must list the same commands; plugin permissions limited to window chrome, `updater:default` and `process:allow-restart` |
 
 Changing any of these requires updating this document and the guard test in the same change, with a reason.
+
+Revised 2026-11-05: `backend_never_spawns_shells_or_processes` scans `engine/tweaks/library/<tab>.rs` with string literals
+removed, because real setting names contain the banned words (`POWERSHELL_TELEMETRY_OPTOUT`, and "wmic" inside
+`ShowMicrosoftRewards`). The code in those files, and every other file in full, is scanned as before.
 
 ## Rules for system changes
 
@@ -81,7 +85,10 @@ Changing any of these requires updating this document and the guard test in the 
    list of reviewed tweaks (`lib/service-presets.ts`): it shows every change first, and leaves out anything protected.
    Revised 2026-11-04 for the PC Cleaner's Services tab, with no guard change, because each entry is still its own
    tweak with its own warning, journal entry and undo.
-3. Only documented settings, with references in `TweakMeta.references`.
+3. Every setting has references in `TweakMeta.references` and states its evidence: documented, found in a Windows or
+   driver file, or community. Revised 2026-11-05 at the owner's request (the library brief says to keep legitimate
+   tweaks unless there's a concrete technical reason not to). Tiers show in the details, community tweaks stay out of
+   presets, and values that no Windows or driver file contains were left out. Rule 1 and the denylist are unchanged.
 4. Back up before every change. If any step fails, roll back the earlier steps, then report the error (implemented
    once in the engine, see § Change safety).
 5. Deletion only inside a fixed allowlist of locations (temp, caches). Scan first, show results, delete on confirmation.
@@ -93,6 +100,10 @@ Changing any of these requires updating this document and the guard test in the 
 8. No performance claims without measurement on the user's machine.
 9. Apps are removed only from a fixed table (`engine/apps.rs`), through `PackageManager`, for the current account.
    Microsoft Store, App Installer, Windows Security, Edge, Xbox identity components and frameworks aren't in it.
+10. Scheduled tasks are only turned off and back on, through Task Scheduler's COM API. The engine never creates or
+    deletes a task or changes what it runs (`scheduled_tasks_are_only_turned_off`), and tasks on security paths are
+    denied. Power plan values go through the power API and act on the active plan. GPU values go only to a display
+    adapter key of the named vendor. All three use the same journal, broker and declared targets as the registry.
 
 ## Decisions (backlog P0-8, decided by the owner on 2026-11-03)
 

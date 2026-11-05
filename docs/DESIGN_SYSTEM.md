@@ -118,7 +118,7 @@ skips. Moving the cursor holds it for up to 7 s. Settings › Appearance turns i
 | `OptimisationCard`, `CardGrid`, `NewBadge` | The fixed-height card used by Tweaks: icon, one-line title, two-line description, a dashed line, then boxed indicators and one control |
 | `Indicator`, `ImpactMeter` | Bare 24 px icons with tooltips (warning, restart, blocked, partial) and the 3-bar impact estimate |
 | `FilterBar` | Search box, filter and sort menus on one row |
-| `PageTabs` | Accessible tab list (`role="tablist"`) used by Monitoring, Tweaks and PC Cleaner (`filled` is a full-width bar with a raised active tab and a white underline), with an `end` slot for that page's filters; `useTabParam` keeps the tab in the URL |
+| `PageTabs` | Accessible tab list (`role="tablist"`) used by Monitoring, Tweaks and PC Cleaner; `dense` drops icons so the Library's 13 tabs fit (`filled` is a full-width bar with a raised active tab and a white underline), with an `end` slot for that page's filters; `useTabParam` keeps the tab in the URL |
 | `OptimisationRow` | The `h-[68px]` full-width row used where EXM lists rather than cards: a leading tick or letter tile, title, one line, indicators, one control |
 | `InfoPanel`, `ActionCard` | "How it works" panel with an optional link, and a card for something 2VX reads or sends you to: icon, title, status, rows, one action. Links only come from the fixed list in `links.rs` |
 | `SettingsGroup`, `SettingsRow` | Rows under a heading for Settings: icon, title, optional line, control on the right. Groups sit inside a shared `panel` |

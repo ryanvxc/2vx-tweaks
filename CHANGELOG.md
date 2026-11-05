@@ -3,6 +3,20 @@
 Main-channel builds are released automatically from `main` (see `docs/GITHUB_RELEASE_PIPELINE.md`); their
 notes come from commit subjects. This file records the larger milestones.
 
+## 0.3.0 (unreleased)
+
+### Library
+- New Library page with 1,221 more tweaks in 12 tabs: Windows, Privacy, Services, Tasks, Gaming, CPU, GPU, Memory, Network,
+  Apps, Storage and Power. That takes the app to 1,285 tweaks.
+- Presets pick a low-risk set in one go: General, Gaming, Privacy, This hardware and Apps. You review every change first,
+  and a preset's changes can be undone together.
+- Search covers the whole Library from any tab, best match first. Filter by state, risk, effect, restart and source, or
+  sort by what you changed last.
+- Every tweak backs up what your PC had and restores exactly that.
+- Tweaks for other hardware can't be applied, so an NVIDIA setting never reaches an AMD card.
+- Each tweak says how well-known it is: Documented, Found in Windows or Community.
+- No tweak turns off a security feature, and none promise more FPS.
+
 ## 0.2.0 (unreleased)
 
 ### Updates

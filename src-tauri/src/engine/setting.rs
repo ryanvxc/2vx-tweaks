@@ -2,8 +2,9 @@
 //!
 //! A tweak never touches the OS itself: it declares the [`Setting`]s it wants and the
 //! engine does detection, backup, apply, verification and revert for all tweaks the same
-//! way. Only registry values exist today, service start types included (`Services\<name>\Start`);
-//! power schemes become a new primitive when the first tweak needs them.
+//! way. Most are registry values, service start types included (`Services\<name>\Start`). A few
+//! things Windows keeps elsewhere look the same to the engine: see the non-registry [`Hive`]s, which
+//! `store` routes to their own APIs so backup, verify and revert stay in one place.
 
 use std::borrow::Cow;
 use std::fmt;
@@ -17,6 +18,15 @@ pub enum Hive {
     CurrentUser,
     /// HKEY_LOCAL_MACHINE: system-wide, needs administrator rights to write.
     LocalMachine,
+    /// Not a registry hive: `key` is a Task Scheduler path, `value` is `Enabled`, data is 0 or 1.
+    ScheduledTask,
+    /// Not a registry hive: `key` is `<subgroup GUID>\<setting GUID>` in the active power plan and
+    /// `value` is `AC` or `DC`.
+    PowerPlan,
+    /// A vendor's GPU driver key under `Control\Class`, which scripts hardcode as `0000` though it
+    /// can be any index, and a PC with two GPUs has one per adapter. `key` is `Nvidia`, `Amd` or
+    /// `Intel`, optionally followed by `\<subkey>`.
+    Gpu,
 }
 
 impl Hive {
@@ -24,11 +34,14 @@ impl Hive {
         match self {
             Hive::CurrentUser => "HKCU",
             Hive::LocalMachine => "HKLM",
+            Hive::ScheduledTask => "TASK",
+            Hive::PowerPlan => "POWER",
+            Hive::Gpu => "GPU",
         }
     }
 
     pub fn needs_elevation(self) -> bool {
-        self == Hive::LocalMachine
+        self != Hive::CurrentUser
     }
 }
 

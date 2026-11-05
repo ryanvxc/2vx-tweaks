@@ -1,6 +1,7 @@
 import type {
   ChangeStatus,
   Compatibility,
+  Evidence,
   OperationOutcome,
   RestartRequirement,
   SnapshotKind,
@@ -33,7 +34,20 @@ export const COMPATIBILITY: Record<Compatibility, string | null> = {
   unsupportedBuild: "Not supported on this Windows build",
   unsupportedEdition: "Needs Windows Pro or higher",
   wrongDevice: "Not meant for this kind of PC",
+  wrongHardware: "Made for other hardware",
   notInstalled: "Not installed on this PC",
+};
+
+export const EVIDENCE: Record<Evidence, { label: string; note: string }> = {
+  documented: { label: "Documented", note: "Microsoft or the vendor documents this setting." },
+  observed: {
+    label: "Found in Windows",
+    note: "Windows or the driver reads this value, but it isn't documented.",
+  },
+  community: {
+    label: "Community",
+    note: "From community tweak packs. 2VX couldn't confirm Windows reads it.",
+  },
 };
 
 /** Mirrors `Compatibility::blocks` in the engine. */

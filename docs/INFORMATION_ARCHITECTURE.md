@@ -25,6 +25,7 @@ Every feature has one primary location. Other pages may summarise it and link th
 | **Network** | What can I tune on my connection? | Tweaks, Network Priority, Adapter Tuner, Bufferbloat | – |
 | **Advanced** | What's protecting this PC, and how does it run? | Security status, MSI mode, device settings, timer resolution | – |
 | **Tweaks** | What can I change? | Tabs, search, filters, cards in titled sections, with anything this PC can't run in a last Unavailable section | Details dialog with values and sources |
+| **Library** | What else can I change? | Presets, a tab per category with collapsible sections, search across every tab | Details dialog with evidence, values and sources |
 | **Game Mode** | Is a game running, and what should change for it? | Ring, detected game, live CPU and GPU | Configure (what it turns on), Add a Game |
 | **PC Cleaner** | What can I clear, turn off or remove? | Four tabs: System Cleaner, Services, Uninstall, Autoruns | The review before each change |
 | **Restore Centre** | What did 2VX change, and can I undo it? | One table of batches | Exact old and new values |

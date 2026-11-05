@@ -2,6 +2,7 @@
 //! by Hardware, Network and Advanced. Read-only: every registry write in the app goes through the
 //! tweak engine, and nothing here is one of its targets.
 
+use std::sync::OnceLock;
 use std::time::Instant;
 
 use serde::Serialize;
@@ -252,6 +253,60 @@ fn adapter_kind(if_type: u32, characteristics: u32, name: &str) -> Option<Adapte
         IF_TYPE_WIFI => Some(AdapterKind::Wifi),
         _ => None,
     }
+}
+
+/// PCI vendor IDs of the display adapters with a driver installed.
+pub fn gpu_vendors() -> Vec<u16> {
+    let mut vendors: Vec<u16> = display_drivers().iter().map(|(_, id)| *id).collect();
+    vendors.dedup();
+    vendors
+}
+
+/// This vendor's driver key under `Control\Class`, so a setting for one GPU never lands on another.
+pub fn gpu_key(vendor: u16) -> Option<&'static str> {
+    display_drivers()
+        .iter()
+        .find(|(_, id)| *id == vendor)
+        .map(|(key, _)| key.as_str())
+}
+
+/// Read once: the catalogue resolves this for every GPU tweak, and adapters don't change while the
+/// app runs.
+fn display_drivers() -> &'static [(String, u16)] {
+    static DRIVERS: OnceLock<Vec<(String, u16)>> = OnceLock::new();
+    DRIVERS.get_or_init(read_display_drivers)
+}
+
+/// Each display adapter as (key, PCI vendor ID), read from `MatchingDeviceId` (`pci\ven_10de&...`).
+fn read_display_drivers() -> Vec<(String, u16)> {
+    let class = format!(r"{CLASS}\{DISPLAY_CLASS}");
+    let Ok(root) = LOCAL_MACHINE.open(&class) else {
+        return Vec::new();
+    };
+    let Ok(names) = root.keys() else {
+        return Vec::new();
+    };
+    let mut drivers: Vec<_> = names
+        .filter_map(|name| {
+            let id = root.open(&name).ok()?.get_string("MatchingDeviceId").ok()?;
+            let vendor = id.to_ascii_lowercase();
+            let vendor = vendor.strip_prefix(r"pci\ven_")?.get(..4)?;
+            Some((
+                format!(r"{class}\{name}"),
+                u16::from_str_radix(vendor, 16).ok()?,
+            ))
+        })
+        .collect();
+    drivers.sort();
+    drivers
+}
+
+/// The CPUID vendor string, such as `GenuineIntel`.
+pub fn cpu_vendor() -> Option<String> {
+    LOCAL_MACHINE
+        .open(r"HARDWARE\DESCRIPTION\System\CentralProcessor\0")
+        .and_then(|key| key.get_string("VendorIdentifier"))
+        .ok()
 }
 
 fn msi_devices() -> Vec<MsiDevice> {

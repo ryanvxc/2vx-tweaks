@@ -137,16 +137,23 @@ that depend on the PC.
 | `windows.rdp-com-redirect-off` | `HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\fDisableCcm` = `1` | Pro+ | ADMX_TerminalServer |
 | `windows.rdp-pnp-redirect-off` | same key, `fDisablePNPRedir` = `1` | Pro+ | ADMX_TerminalServer |
 
-Looked at and left out:
+## The Library
+
+`engine/tweaks/library/` holds 1,221 more tweaks, placed on `/library` by their `section`. They come from the audit in
+[OPTIMISATION_LIBRARY_AUDIT.md](OPTIMISATION_LIBRARY_AUDIT.md), and [OPTIMISATION_CATEGORIES.md](OPTIMISATION_CATEGORIES.md)
+says how they're organised. They pass the same gate as everything else, with one difference: `evidence` records how well
+each one is established, so not all of them have a Microsoft page. Values no Windows or driver file contains were left out.
+
+Left out of the first set (the Library has since added some of these, labelled with their evidence):
 
 - **Security switches.** BottomUp and HighEntropy ASLR, Memory integrity, kernel stack randomization and SmartScreen are
   security features; Advanced shows their state and never changes them. Fault Tolerant Heap is a reliability feature, so
   it stays.
-- **`TdrDelay` and friends.** Microsoft: "End users shouldn't manipulate these registry keys."
+- **`TdrDelay` and friends.** Microsoft: "End users shouldn't manipulate these registry keys." Now in the Library with a warning.
 - **No official page.** `HwSchMode`, `NetworkThrottlingIndex`, `EnablePrefetcher`, `SvcHostSplitThresholdInKB`,
   `HibernateEnabled`, `GlobalTimerResolutionRequests`.
 - **`GPU Priority`.** Microsoft: "This priority is not yet used."
-- **`NonBestEffortLimit`.** The reserved 20% only applies to programs that reserve bandwidth, so there's nothing to gain.
+- **`NonBestEffortLimit`.** The reserved 20% only applies to programs that reserve bandwidth, so there's little to gain.
 - **Needs something the engine doesn't have.** NVIDIA profiles, driver installs and `netsh` settings start other
   programs. Power plans, per-adapter driver settings and writing MSI mode need new primitives. Disabling devices (HPET, COM
   ports, the GS synth, Hyper-V drivers) needs SetupAPI, has no documented benefit, and the Hyper-V driver underpins VBS.

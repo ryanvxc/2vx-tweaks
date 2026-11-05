@@ -4,7 +4,7 @@ import { StatusLabel } from "./notice";
 
 const STYLES: Record<RiskLevel, { label: string; tone: Tone }> = {
   low: { label: "Low risk", tone: "success" },
-  moderate: { label: "Moderate risk", tone: "warning" },
+  moderate: { label: "Medium risk", tone: "warning" },
   high: { label: "High risk", tone: "destructive" },
 };
 
