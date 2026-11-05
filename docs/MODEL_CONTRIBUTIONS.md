@@ -38,7 +38,7 @@ Each agent reported the model it ran on; those are the IDs above.
 | Network and Advanced | Sonnet 5.5 | Adapter Tuner, Bufferbloat, Timer Resolution, MSI Mode, Devices |
 
 Where the models disagreed, the lead made the call and moved on. Fable's "Expected effect" filter stayed because the brief
-asks for impact. Flat rows stayed where EXM uses taller ones, because the window is fixed. Fable's final QA asked for a cap on
+asks for impact. Flat rows stayed where EXM uses taller ones, because the window is fixed, until 0.4.2, when the owner asked for cards everywhere. Fable's final QA asked for a cap on
 the sidebar's gaps; that was declined, because the owner asked for the sidebar to stretch down, and 0.4.1 reversed it after
 the owner compared the gaps with EXM. The rest of its must-fix list
 was done, and its nice-to-haves except the same icon repeated in long lists, which the owner's request for icons outranks.

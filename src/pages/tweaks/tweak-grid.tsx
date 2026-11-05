@@ -1,10 +1,8 @@
-import { createElement, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import {
   AlertTriangle,
-  Ban,
   Check,
-  ChevronRight,
   CircleDashed,
   CircleHelp,
   CircleX,
@@ -26,16 +24,15 @@ import { FilterBar, type FilterGroup } from "@/components/common/filter-bar";
 import { ImpactMeter, Indicator } from "@/components/common/indicator";
 import {
   CardGrid,
+  CardSkeletons,
   NewBadge,
   OptimisationCard,
-  OptimisationRow,
 } from "@/components/common/optimisation-card";
 import { PageTabs } from "@/components/common/page-tabs";
 import { RecommendedAction } from "@/components/common/recommended-action";
 import { EmptyState, ErrorState } from "@/components/common/states";
 import { PageHero } from "@/components/layout/page-hero";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -47,6 +44,7 @@ import {
   refreshEngineState,
 } from "@/hooks/use-system";
 import { useStaggerIn } from "@/hooks/use-motion";
+import { useReveal } from "@/hooks/use-reveal";
 import { useTabParam } from "@/hooks/use-tab-param";
 import {
   BLOCKED_LABEL,
@@ -72,7 +70,6 @@ import {
   type PlacedTab,
 } from "@/lib/tweak-presentation";
 import { play } from "@/lib/motion";
-import { cn } from "@/lib/utils";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
 import type {
   Evidence,
@@ -85,7 +82,7 @@ import type {
 } from "@/types/engine";
 import { ChangeInspector } from "./change-inspector";
 import { TweakDetails } from "./tweak-details";
-import type { RowStyle, TweakView } from "./tweak-views";
+import type { TweakView } from "./tweak-views";
 
 type StateFilter = "applied" | "notApplied";
 type FitFilter = "fits" | "blocked";
@@ -100,10 +97,8 @@ const STATE_ORDER: Record<TweakState, number> = {
   notApplied: 2,
   unknown: 3,
 };
-/** Rows a search draws before asking: a one-letter search matches most of the catalogue. */
-const RESULT_LIMIT = 80;
-/** With one row of cards or fewer, the first list starts open so the page fills. */
-const CARDS_ABOVE_OPEN_LIST = 3;
+/** Cards drawn at a time. A tab can hold hundreds, and each is a switch and several tooltips. */
+const CARD_BATCH = 30;
 const NO_TABS: { value: string }[] = [];
 const NO_HISTORY = new Map<string, TweakHistory>();
 
@@ -140,8 +135,6 @@ export function TweakGrid({
   const [evidenceFilter, setEvidenceFilter] = useState<Evidence[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<TweakCategory[]>([]);
   const [sort, setSort] = useState<Sort>("recommended");
-  const [opened, setOpened] = useState<Record<string, boolean>>({});
-  const [limit, setLimit] = useState(RESULT_LIMIT);
 
   const [staged, setStaged] = useState<string[]>([]);
   const [reviewing, setReviewing] = useState(false);
@@ -249,17 +242,21 @@ export function TweakGrid({
     sort,
     history,
   ]);
-  const filtering =
-    q !== "" ||
-    stateFilter.length +
-      fitFilter.length +
-      hardwareFilter.length +
-      impactFilter.length +
-      riskFilter.length +
-      permFilter.length +
-      restartFilter.length +
-      evidenceFilter.length >
-      0;
+  // A different tab, search, filter or sort is a different list, drawn again from its first batch.
+  const listKey = JSON.stringify([
+    tab,
+    q,
+    sort,
+    stateFilter,
+    fitFilter,
+    hardwareFilter,
+    impactFilter,
+    riskFilter,
+    permFilter,
+    restartFilter,
+    evidenceFilter,
+    categoryFilter,
+  ]);
 
   const hardware = [...new Set(all.map((t) => t.meta.hardware))].filter(
     (h): h is Exclude<HardwareScope, "any"> => h !== "any",
@@ -413,8 +410,7 @@ export function TweakGrid({
   const newCount = (data ?? []).filter((t) => isNewTweak(t.meta, app.data?.version)).length;
   const markNew = newCount * 2 < (data?.length ?? 0);
 
-  const tabRow: RowStyle | undefined = q === "" ? view?.rows?.[tab] : undefined;
-  const card = (t: TweakStatus, row: RowStyle | undefined, flat: boolean) => (
+  const card = (t: TweakStatus) => (
     <TweakCard
       key={t.meta.id}
       tweak={t}
@@ -424,8 +420,6 @@ export function TweakGrid({
       isNew={markNew && isNewTweak(t.meta, app.data?.version)}
       history={history.get(t.meta.id)}
       onSwitch={(on) => onSwitch(t, on)}
-      row={row}
-      flat={flat}
       onOpen={() => openDetails(t.meta.id)}
     />
   );
@@ -442,15 +436,11 @@ export function TweakGrid({
     tab: view && q === "" && !body ? (tab as PlacedTab) : null,
     // Sections keep their written order unless the user asked for another.
     catalogue: sort === "recommended",
-    fillRows: !tabRow,
     unavailable: (t) => isBlocked(t.compatibility),
   });
   const headings = view?.headings === "always" || groups.length > 1;
-  const visible = filtering ? capGroups(groups, limit) : groups;
-  const hidden = shown.length - visible.reduce((n, group) => n + group.tweaks.length, 0);
-  // A row of cards above a stack of closed bars leaves the page half empty.
-  const firstList = visible.findIndex((g) => g.compact && g.title !== UNAVAILABLE_SECTION);
-  const cards = visible.reduce((n, g) => n + (g.compact ? 0 : g.tweaks.length), 0);
+  const { limit, end } = useReveal(CARD_BATCH, shown.length, listKey);
+  const visible = capGroups(groups, limit);
   // A tab without its own search row has nothing to count.
   const inEffect = onTab.filter((t) => t.state === "applied").length;
 
@@ -482,10 +472,7 @@ export function TweakGrid({
           {!body && (
             <FilterBar
               search={search}
-              onSearch={(value) => {
-                setSearch(value);
-                setLimit(RESULT_LIMIT);
-              }}
+              onSearch={setSearch}
               placeholder="Search"
               filters={filters}
               sort={{
@@ -522,102 +509,38 @@ export function TweakGrid({
       ) : error ? (
         <ErrorState message={error.message} onRetry={refetch} />
       ) : loading && !data ? (
-        <CardGrid>
-          {Array.from({ length: 6 }, (_, i) => (
-            <Skeleton key={i} className="h-[168px] rounded-xl" />
-          ))}
-        </CardGrid>
+        <CardSkeletons />
       ) : all.length === 0 ? (
         <EmptyState icon={PackageOpen} title="Nothing here yet" className="flex-1 panel" />
       ) : shown.length === 0 ? (
         <EmptyState icon={SearchX} title="No tweaks match" className="flex-1 panel" />
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-4">
           {visible.map((group, i) => {
-            const key = `${tab}:${group.title}`;
-            // Without a page there's no list to fold: it's a short fixed set.
-            const compact = view !== undefined && group.compact;
-            const fold = compact && group.title !== null;
-            // On a tab of lists the first starts open, so the tab never looks empty.
-            const open =
-              !fold ||
-              filtering ||
-              (opened[key] ?? (i === 0 || (i === firstList && cards <= CARDS_ABOVE_OPEN_LIST)));
-            const unavailable = group.title === UNAVAILABLE_SECTION;
+            // The count is the whole section's, however much of it has been drawn yet.
+            const whole = groups[i]!.tweaks;
             return (
-              <section key={group.title ?? "all"} className="flex flex-col gap-2">
-                {fold ? (
-                  <button
-                    type="button"
-                    aria-expanded={open}
-                    onClick={() => setOpened((o) => ({ ...o, [key]: !open }))}
-                    className="flex h-11 items-center gap-2.5 panel px-4 text-left text-[14.5px] font-semibold transition-colors outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <ChevronRight
-                      className={cn(
-                        "size-4 text-muted-foreground transition-transform duration-150",
-                        open && "rotate-90",
-                      )}
-                      aria-hidden
-                    />
-                    {createElement(unavailable ? Ban : tweakIcon(group.tweaks[0]!.meta), {
-                      className: cn(
-                        "size-[18px]",
-                        unavailable ? "text-muted-foreground" : "text-brand",
-                      ),
-                      strokeWidth: 1.75,
-                      "aria-hidden": true,
-                    })}
-                    <span className="flex-1 truncate">{group.title}</span>
-                    <span className="text-[12.5px] font-normal text-muted-foreground tabular">
-                      {unavailable
-                        ? group.tweaks.length
-                        : `${group.tweaks.filter((t) => t.state === "applied").length} of ${group.tweaks.length} in effect`}
+              <section key={group.title ?? "all"} className="flex flex-col gap-2.5">
+                {group.title && headings && (
+                  <div className="mt-1 flex items-baseline justify-between gap-3 pr-1">
+                    <h2 className="text-[19px] leading-tight">{group.title}</h2>
+                    <span className="text-[12.5px] text-muted-foreground tabular">
+                      {group.title === UNAVAILABLE_SECTION
+                        ? whole.length
+                        : `${whole.filter((t) => t.state === "applied").length} of ${whole.length} in effect`}
                     </span>
-                  </button>
-                ) : (
-                  group.title &&
-                  headings && (
-                    <div className="mt-1 flex items-baseline justify-between gap-3 pr-1">
-                      <h2 className="text-[19px] leading-tight">{group.title}</h2>
-                      <span className="text-[12.5px] text-muted-foreground tabular">
-                        {group.tweaks.filter((t) => t.state === "applied").length} of{" "}
-                        {group.tweaks.length} in effect
-                      </span>
-                    </div>
-                  )
+                  </div>
                 )}
-                {open &&
-                  (compact ? (
-                    <div className="flex flex-col divide-y overflow-hidden panel">
-                      {group.tweaks.map((t) => card(t, "icon", true))}
-                    </div>
-                  ) : tabRow ? (
-                    <div className="flex flex-col divide-y overflow-hidden panel">
-                      {group.tweaks.map((t) => card(t, tabRow, true))}
-                    </div>
-                  ) : (
-                    // A catalogue keeps its column width; a short fixed list spreads across the row.
-                    <CardGrid
-                      className={
-                        view ? undefined : "grid-cols-[repeat(auto-fit,minmax(19rem,1fr))]"
-                      }
-                    >
-                      {group.tweaks.map((t) => card(t, undefined, false))}
-                    </CardGrid>
-                  ))}
+                {/* A catalogue keeps its column width; a short fixed list spreads across the row. */}
+                <CardGrid
+                  className={view ? undefined : "grid-cols-[repeat(auto-fit,minmax(19rem,1fr))]"}
+                >
+                  {group.tweaks.map(card)}
+                </CardGrid>
               </section>
             );
           })}
-          {hidden > 0 && (
-            <Button
-              variant="outline"
-              className="self-center"
-              onClick={() => setLimit(Number.POSITIVE_INFINITY)}
-            >
-              Show {hidden.toLocaleString()} more
-            </Button>
-          )}
+          {limit < shown.length && <div ref={end} aria-hidden className="h-px" />}
         </div>
       )}
 
@@ -686,8 +609,6 @@ function TweakCard({
   disabled,
   isNew,
   history,
-  row,
-  flat,
   onSwitch,
   onOpen,
 }: {
@@ -697,10 +618,6 @@ function TweakCard({
   disabled: boolean;
   isNew: boolean;
   history: TweakHistory | undefined;
-  /** Draw it as a row instead of a card. */
-  row?: RowStyle;
-  /** A row in a shared panel, for a long list. */
-  flat?: boolean;
   onSwitch: (on: boolean) => void;
   onOpen: () => void;
 }) {
@@ -820,41 +737,6 @@ function TweakCard({
   ) : (
     switchControl
   );
-
-  if (row) {
-    return (
-      <OptimisationRow
-        ref={card}
-        leading={
-          row === "letter" ? (
-            <span className="flex size-7 items-center justify-center rounded-md bg-brand/12 text-[13px] font-semibold text-brand">
-              {meta.name.charAt(0)}
-            </span>
-          ) : (
-            createElement(tweakIcon(meta), {
-              className: flat ? "size-[18px] text-brand" : "size-[22px] text-brand",
-              strokeWidth: 1.75,
-              "aria-hidden": true,
-            })
-          )
-        }
-        title={meta.name}
-        description={row === "letter" ? undefined : meta.description}
-        highlighted={staged}
-        muted={blocked}
-        flat={flat}
-        onOpen={onOpen}
-        openLabel={`Details for ${meta.name}`}
-        indicators={
-          <>
-            {isNew && <NewBadge />}
-            {indicators}
-          </>
-        }
-        control={control}
-      />
-    );
-  }
 
   return (
     <OptimisationCard

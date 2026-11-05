@@ -65,7 +65,8 @@ docs/                        status, backlog, roadmap, architecture, modules, Wi
   `sample` (placeholder) and `planned` (not built) as words. Never present sample data without the badge. In browser
   preview, live/derived show "Preview".
 - Layout: pages fill the window (`flex flex-1 flex-col`; see `docs/DESIGN_SYSTEM.md`), surfaces use the `panel` utility,
-  lists are single-line table rows, state is `StatusLabel` (dot and word), no pill boxes.
+  anything you can switch or act on is an EXM card (`OptimisationCard` in a `CardGrid`), never a list or a folding section,
+  read-only data is single-line table rows, state is `StatusLabel` (dot and word), no pill boxes.
 - Styling: Tailwind tokens from `src/styles/globals.css` only (no raw hex except Windows caption red). Status colours
   (`success`/`warning`/`destructive`/`info`) mean state, never decoration. Dark-only for now.
 - File names kebab-case; components PascalCase; one page per folder under `pages/` when it has sub-components.
@@ -88,9 +89,9 @@ Stages 1 (foundation) and 2 (safety engine) are done; **stage 3 (first real opti
 of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_BACKLOG.md` (P0–P3) and stages in
 `docs/DEVELOPMENT_ROADMAP.md`. Use those stage and task IDs, not the older "Phase N" labels.
 
-In short (0.4): the app was redesigned to EXM's layout, and there is no Library or Monitoring page. A tweak's page, tab and folding
+In short (0.4): the app was redesigned to EXM's layout, and there is no Library or Monitoring page. A tweak's page, tab and
 section come from `category` and `section` (`CATEGORY_TAB`, `tweakPlacement` in `lib/tweak-presentation.ts`); a short hand-placed
-set shows as cards above the lists (`TWEAK_SECTIONS`). Every tweak page is `TweakGrid` with a `TweakView`: one search across the
+set comes first (`TWEAK_SECTIONS`), and every tweak is a card. Every tweak page is `TweakGrid` with a `TweakView`: one search across the
 page's tabs, the same filters and sorts, Unavailable last. Every page title is `PageHero`; the title bar is only the window
 controls. The top-right action is only ever `RecommendedAction`. Presets, service presets and GPU profiles are all `PresetCard`, and
 their facts are counts of real tweaks, never ratings. Services have one home, PC Cleaner. `docs/MODEL_CONTRIBUTIONS.md` records

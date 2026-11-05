@@ -30,7 +30,7 @@ describe("tweak presentation", () => {
   });
 
   it("gives every tweak its own icon", () => {
-    // Network Priority's game rows show a letter, not an icon.
+    // Network Priority's games share their section's icon.
     const iconned = CATALOGUE.filter((id) => !id.startsWith("network.qos-"));
     expect(iconned.filter((id) => !TWEAK_ICON[id])).toEqual([]);
     expect(new Set(Object.values(TWEAK_ICON)).size).toBe(Object.keys(TWEAK_ICON).length);
@@ -95,7 +95,7 @@ describe("tweak presentation", () => {
       ).toEqual([[TWEAK_SECTIONS.privacy[1]!.title, [id]]]);
     });
 
-    it("tops a section up to a full row of cards from the lists", () => {
+    it("tops a section up to a full row of cards from the library", () => {
       const listed = (id: string, name: string, section: string) => ({
         ...tweak(id),
         meta: { ...tweak(id).meta, name, section },
@@ -106,13 +106,7 @@ describe("tweak presentation", () => {
         listed("gaming.b", "Short", "Other"),
         listed("gaming.c", "Also short", "Other"),
       ];
-      const groups = groupTweaks(tweaks, {
-        ...options,
-        tab: "gaming",
-        catalogue: true,
-        fillRows: true,
-      });
-      expect(ids(groups)).toEqual([
+      expect(ids(groupTweaks(tweaks, { ...options, tab: "gaming", catalogue: true }))).toEqual([
         ["Essentials", ["gaming.mmcss-games-priority", "gaming.b", "gaming.c"]],
         ["Other", ["gaming.a"]],
       ]);
@@ -192,21 +186,22 @@ describe("long lists", () => {
       unavailable: (t) => t.meta.id === "privacy.e",
     });
     expect(groups.map((g) => g.title)).toEqual(["Ads", "Speech", UNAVAILABLE_SECTION]);
-    expect(groups.every((g) => g.compact)).toBe(true);
   });
 
-  it("puts hand-placed cards before the long lists, and keeps section names apart", () => {
-    const card = TWEAK_SECTIONS.privacy[1]!;
+  it("puts hand-placed sections first, and a library section of the same name joins its own", () => {
+    const hand = TWEAK_SECTIONS.privacy[1]!;
     const groups = groupTweaks(
       [
-        { meta: meta("App permissions", "privacy.z") },
-        { meta: { id: card.ids[0]!, category: "privacy" as const, section: null } },
+        { meta: meta(hand.title, "privacy.x") },
+        { meta: meta(hand.title, "privacy.y") },
+        { meta: meta("Ads", "privacy.z") },
+        { meta: { id: hand.ids[0]!, category: "privacy" as const, section: null } },
       ],
       { tab: "privacy", catalogue: true, unavailable: () => false },
     );
-    expect(groups.map((g) => [g.title, g.compact])).toEqual([
-      [card.title, false],
-      ["More app permissions", true],
+    expect(groups.map((g) => [g.title, g.tweaks.map((t) => t.meta.id)])).toEqual([
+      [hand.title, [hand.ids[0], "privacy.x", "privacy.y"]],
+      ["Ads", ["privacy.z"]],
     ]);
   });
 
@@ -216,15 +211,15 @@ describe("long lists", () => {
     expect(searchRank(m, "disabledbypolicy")).toBeNull();
   });
 
-  it("caps a broad search across groups", () => {
+  it("caps a long tab across groups", () => {
     const groups = [
-      { title: "A", tweaks: [1, 2], compact: true },
-      { title: "B", tweaks: [3, 4], compact: true },
-      { title: "C", tweaks: [5], compact: true },
+      { title: "A", tweaks: [1, 2] },
+      { title: "B", tweaks: [3, 4] },
+      { title: "C", tweaks: [5] },
     ];
     expect(capGroups(groups, 3)).toEqual([
-      { title: "A", tweaks: [1, 2], compact: true },
-      { title: "B", tweaks: [3], compact: true },
+      { title: "A", tweaks: [1, 2] },
+      { title: "B", tweaks: [3] },
     ]);
     expect(capGroups(groups, Number.POSITIVE_INFINITY)).toEqual(groups);
   });

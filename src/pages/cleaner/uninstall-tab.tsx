@@ -4,8 +4,8 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { FilterBar } from "@/components/common/filter-bar";
-import { StatusLabel } from "@/components/common/notice";
-import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
+import { CardGrid, CardSkeletons, OptimisationCard } from "@/components/common/optimisation-card";
+import { EmptyState, ErrorState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
 import { useStaggerIn } from "@/hooks/use-motion";
 import { useRemovableApps } from "@/hooks/use-system";
@@ -22,13 +22,12 @@ const SORTS: Record<string, (a: RemovableApp, b: RemovableApp) => number> = {
 };
 
 function AppLogo({ app }: { app: RemovableApp }) {
-  if (app.icon)
-    return <img src={app.icon} alt="" className="size-8 shrink-0 rounded-md object-contain" />;
-  return (
-    <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand/12 text-brand">
-      {createElement(appIcon(app.id), { className: "size-4", "aria-hidden": true })}
-    </span>
-  );
+  if (app.icon) return <img src={app.icon} alt="" className="size-6 shrink-0 object-contain" />;
+  return createElement(appIcon(app.id), {
+    className: "size-[22px] shrink-0 text-brand",
+    strokeWidth: 1.75,
+    "aria-hidden": true,
+  });
 }
 
 export function UninstallTab() {
@@ -38,7 +37,7 @@ export function UninstallTab() {
   const [sort, setSort] = useState("installed");
   const [busy, setBusy] = useState<string | null>(null);
   const [removing, setRemoving] = useState<RemovableApp | null>(null);
-  const list = useStaggerIn<HTMLUListElement>(data ? "apps" : null);
+  const list = useStaggerIn<HTMLDivElement>(data ? "apps" : null);
 
   const q = search.trim().toLowerCase();
   const shown = [...(data ?? [])]
@@ -99,48 +98,42 @@ export function UninstallTab() {
       {error ? (
         <ErrorState message={error.message} onRetry={refetch} />
       ) : loading && !data ? (
-        <LoadingRows rows={7} />
+        <CardSkeletons />
       ) : shown.length === 0 ? (
         <EmptyState icon={SearchX} title="No apps match" className="flex-1 panel" />
       ) : (
-        <ul ref={list} className="flex flex-col gap-2">
-          {shown.map((app) => (
-            <li
-              key={app.id}
-              data-stagger
-              className="flex h-14 items-center gap-3.5 panel px-4 transition-colors hover:bg-raised"
-            >
-              <AppLogo app={app} />
-              <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">{app.name}</span>
-              <span className="truncate text-right text-[12.5px] text-muted-foreground">
-                {app.description}
-              </span>
-              <StatusLabel tone={app.installed ? "success" : "neutral"} className="w-24 shrink-0">
-                {app.installed ? "Installed" : "Not installed"}
-              </StatusLabel>
-              {app.installed ? (
-                <Button
-                  size="sm"
-                  className="w-28 shrink-0"
-                  disabled={busy !== null}
-                  onClick={() => setRemoving(app)}
-                >
-                  <Trash2 /> {busy === app.id ? "Removing…" : "Uninstall"}
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="w-28 shrink-0"
-                  disabled={busy !== null}
-                  onClick={() => void run(app, backend.reinstallApp, "is back")}
-                >
-                  <Download /> {busy === app.id ? "Restoring…" : "Reinstall"}
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
+        <div ref={list}>
+          <CardGrid>
+            {shown.map((app) => (
+              <OptimisationCard
+                key={app.id}
+                leading={<AppLogo app={app} />}
+                title={app.name}
+                description={app.description}
+                footer={
+                  app.installed ? (
+                    <Button
+                      className="w-full"
+                      disabled={busy !== null}
+                      onClick={() => setRemoving(app)}
+                    >
+                      <Trash2 /> {busy === app.id ? "Removing…" : "Uninstall"}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      disabled={busy !== null}
+                      onClick={() => void run(app, backend.reinstallApp, "is back")}
+                    >
+                      <Download /> {busy === app.id ? "Restoring…" : "Reinstall"}
+                    </Button>
+                  )
+                }
+              />
+            ))}
+          </CardGrid>
+        </div>
       )}
 
       <ConfirmDialog

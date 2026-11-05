@@ -45,7 +45,7 @@ function tweak(
 
 const LISTED = [
   tweak("privacy.a", "Commercial pipeline", "privacy", "Telemetry"),
-  tweak("privacy.b", "Lock screen camera", "privacy", "App permissions"),
+  tweak("privacy.b", "Lock screen camera", "privacy", "Speech"),
   tweak("windows.a", "Taskbar search box", "windows", "Taskbar and Start"),
   tweak("privacy.c", "Applied already", "privacy", "Telemetry", {
     state: "applied",
@@ -81,21 +81,18 @@ beforeEach(() => {
 });
 
 describe("Long lists", () => {
-  it("folds a tab into sections with the first one open", async () => {
-    const user = userEvent.setup();
+  it("draws every section as cards, with nothing to open first", async () => {
     renderTweaks("/tweaks?tab=privacy");
 
     expect(await screen.findByText("Lock screen camera")).toBeInTheDocument();
-    expect(screen.queryByText("Commercial pipeline")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /Telemetry/ }));
     expect(screen.getByText("Commercial pipeline")).toBeInTheDocument();
+    expect(document.querySelector("section [aria-expanded]")).toBeNull();
   });
 
   it("counts what's in effect on each section", async () => {
     renderTweaks("/tweaks?tab=privacy");
-    const section = await screen.findByRole("button", { name: /Telemetry/ });
-    expect(within(section).getByText("1 of 2 in effect")).toBeInTheDocument();
+    const heading = await screen.findByRole("heading", { name: "Telemetry" });
+    expect(within(heading.parentElement!).getByText("1 of 2 in effect")).toBeInTheDocument();
   });
 
   it("searches the whole page from any tab, by name or by what a tweak changes", async () => {

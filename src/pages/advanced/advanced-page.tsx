@@ -9,8 +9,8 @@ import {
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { EngineBanner } from "@/components/common/engine-banner";
 import { StatusLabel } from "@/components/common/notice";
-import { OptimisationRow } from "@/components/common/optimisation-card";
-import { ErrorState, LoadingRows } from "@/components/common/states";
+import { CardGrid, CardSkeletons, OptimisationCard } from "@/components/common/optimisation-card";
+import { ErrorState } from "@/components/common/states";
 import { useDeviceReport } from "@/hooks/use-system";
 import type { ProtectionId, ProtectionState } from "@/types/system";
 import { TweakGrid } from "../tweaks/tweak-grid";
@@ -75,27 +75,33 @@ function Protections() {
       {error ? (
         <ErrorState message={error.message} onRetry={refetch} />
       ) : loading && !data ? (
-        <LoadingRows rows={5} />
+        <CardSkeletons count={5} />
       ) : (
-        <section data-stagger className="flex flex-col divide-y overflow-hidden panel">
-          <header className="flex h-11 shrink-0 items-center justify-between px-4">
-            <h2 className="text-[14px] font-semibold">Protections</h2>
-            <DataSourceBadge source="live" />
-          </header>
-          {data?.protections.map(({ id, state }) => {
-            const { icon: Icon, name, description } = PROTECTIONS[id];
-            const { label, tone } = STATE[state];
-            return (
-              <OptimisationRow
-                key={id}
-                flat
-                leading={<Icon className="size-[18px] text-brand" strokeWidth={1.75} aria-hidden />}
-                title={name}
-                description={description}
-                control={<StatusLabel tone={tone}>{label}</StatusLabel>}
+        <section className="flex flex-col gap-2.5">
+          <div className="mt-1 flex items-baseline justify-between gap-3 pr-1">
+            <h2 className="text-[19px] leading-tight">Protections</h2>
+            {data && (
+              <DataSourceBadge
+                source="live"
+                label={`${data.protections.filter((p) => p.state === "on").length} of ${data.protections.length} on`}
               />
-            );
-          })}
+            )}
+          </div>
+          <CardGrid>
+            {data?.protections.map(({ id, state }) => {
+              const { icon, name, description } = PROTECTIONS[id];
+              const { label, tone } = STATE[state];
+              return (
+                <OptimisationCard
+                  key={id}
+                  icon={icon}
+                  title={name}
+                  description={description}
+                  control={<StatusLabel tone={tone}>{label}</StatusLabel>}
+                />
+              );
+            })}
+          </CardGrid>
         </section>
       )}
     </>

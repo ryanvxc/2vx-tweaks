@@ -63,14 +63,14 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 - Pages fill the window: the page root is `flex flex-1 flex-col`, and something on it takes the spare height, usually a
   chart or one full-height table panel. Rows in such a panel may share the height (`flex-1`) so a short list still
   reaches the bottom.
-- Lists are tables, not stacks of cards: one panel, an `h-9` header row, single-line rows, columns shared through a
-  `COLUMNS` constant.
-- Tweaks come in two shapes. A hand-placed tweak is an EXM card. A long list is folding sections: a 44 px bar (chevron,
-  one violet icon, title, "N of M in effect") over `h-14` flat rows in one shared panel, split by hairlines. EXM uses
-  separate 68 px row panels; flat rows are a deliberate departure, because 1,300 tweaks in those would be five screens
-  of chrome per topic. Unavailable tweaks are always the last section, muted, with the reason where the switch would be.
-- A card section is never a lone card in an empty row: `groupTweaks` tops it up to a full row from the tab's lists, and with
-  one row of cards or fewer the first list starts open, so the page fills.
+- A read-only table is one panel, an `h-9` header row and single-line rows, with columns shared through a `COLUMNS`
+  constant.
+- Anything you can switch or act on is an EXM card, every time: every tweak on every tab, search results, Network
+  Priority, Protections, Uninstall and Autoruns. Never a row, and nothing folds. Sections are a plain heading and count over a
+  `CardGrid`, and Unavailable is always the last section, muted, with the reason where the switch would be. A long tab
+  draws 30 cards at a time as you scroll (`useReveal`), because each is a switch and several tooltips. A hand-placed section
+  is topped up to a full row from the library, so it's never a lone card in an empty row. Tables are for data you only
+  read, such as the service states, devices and backups.
 - A row's control sits in a fixed slot, so a word in one row doesn't push its indicators out of line with the next.
 - A tweak has one home. Search looks through every tab of its page, and matches names, descriptions and the registry
   or service names a tweak touches.
@@ -133,7 +133,7 @@ skips. Moving the cursor holds it for up to 7 s. Settings › Appearance turns i
 | `Indicator`, `ImpactMeter` | Bare icons with tooltips (high risk, hardware, community, warning, restart, failed, partial, unread) and the 3-bar impact rating. Each stands for a real state; the indicators shown must match what's true of the tweak |
 | `FilterBar` | Search box, filter and sort menus on one row. The filter menu is two columns, so every group fits without its own scrollbar. The active count is plain text, not a chip |
 | `PageTabs` | Accessible tab list (`role="tablist"`) on every page with tabs (`filled` is a full-width bar with a raised active tab and a white underline); `useTabParam` keeps the tab in the URL |
-| `OptimisationRow` | The full-width row: an icon or letter tile, title, one line, indicators, one control. `h-[68px]` on its own, or `flat` (`h-14`, no panel of its own) inside a shared panel for long lists |
+| `OptimisationRow` | A full-width row for something that isn't a tweak, such as a Windows tool to open: an icon, title, one line, one control. `h-[68px]` on its own, or `flat` (`h-14`) in a shared panel. Never for a tweak |
 | `PresetCard` | A named list of tweaks: icon, title, state top-right, one line, counts, then the buttons along the bottom |
 | `InfoPanel`, `ActionCard` | "How it works" panel with an optional link, and a card for something 2VX reads or sends you to: icon, title, status, rows, one action. Links only come from the fixed list in `links.rs` |
 | `SettingsGroup`, `SettingsRow` | Rows under a heading for Settings: icon, title, optional line, control on the right. Groups sit inside a shared `panel` |

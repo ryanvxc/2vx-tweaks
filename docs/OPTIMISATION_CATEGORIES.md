@@ -6,7 +6,7 @@ keep theirs.
 ## Structure
 
 There's no separate page for these. A tweak's `category` picks its page and tab (`CATEGORY_TAB` in
-`src/lib/tweak-presentation.ts`) and its `section` picks the folding list on that tab. The categories below map to: Windows
+`src/lib/tweak-presentation.ts`) and its `section` picks the section on that tab. The categories below map to: Windows
 and Performance → Tweaks › Core; Privacy, Gaming, Apps, Tasks and Power → the Tweaks tab of that name; CPU, GPU, Memory and
 Storage → Hardware; Network → Network › Tweaks; Services → PC Cleaner › Services. Search covers every tab of its page.
 

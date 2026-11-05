@@ -58,7 +58,7 @@ Core keeps its six tweaks: moving any to Hardware would leave Core empty on PCs 
 ## The long lists
 
 1,221 more tweaks, listed in [OPTIMISATION_CATEGORIES.md](OPTIMISATION_CATEGORIES.md), joined the pages above by topic in
-0.4. A tweak's tab comes from its `category` (`CATEGORY_TAB`) and its folding section from `section`.
+0.4. A tweak's tab comes from its `category` (`CATEGORY_TAB`) and its section from `section`.
 
 ## Game Mode presets
 

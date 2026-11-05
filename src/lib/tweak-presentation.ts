@@ -522,7 +522,7 @@ export function tweakPlacement(meta: Placeable) {
     tab: tab as string,
     section: placed?.section ?? meta.section ?? MORE_SECTION,
     route: TAB_ROUTE[tab],
-    /** Part of a long list, rather than a hand-placed card. */
+    /** Came from the library, rather than being hand-placed. */
     listed: !placed && !!meta.section,
   };
 }
@@ -531,8 +531,6 @@ export interface TweakGroup<T> {
   /** `null` for a flat list, such as search results across every tab. */
   title: string | null;
   tweaks: T[];
-  /** A long or secondary list: rows in a section that opens, rather than cards. */
-  compact: boolean;
 }
 
 /** Cards sit three to a row, and a longer name is cut off on one. */
@@ -556,7 +554,7 @@ export function cardTitle(meta: Pick<TweakMeta, "id" | "name">) {
   return CARD_TITLE[meta.id] ?? meta.name;
 }
 
-/** How well a tweak from the lists suits a card in `title`'s section: higher is better. */
+/** How well a library tweak suits a hand-placed section called `title`: higher is better. */
 function cardFit(meta: Placeable, title: string) {
   const family = tweakPlacement(meta).section.split(" ")[0] === title.split(" ")[0];
   return (
@@ -567,48 +565,33 @@ function cardFit(meta: Placeable, title: string) {
   );
 }
 
-/** Keep their capital after "More". */
-const PROPER_SECTION = /^(?:AMD|Bluetooth|CPU|Edge|GPU|Intel|NVIDIA|RAM|USB|Windows|Xbox)\b/;
-
-function moreTitle(title: string) {
-  const rest = PROPER_SECTION.test(title) ? title : title.charAt(0).toLowerCase() + title.slice(1);
-  return `More ${rest}`;
-}
-
-/** The long lists' sections come from the tweaks themselves, in name order. */
-function bySection<T extends { meta: Placeable }>(
-  tweaks: T[],
-  written: Set<string>,
-): TweakGroup<T>[] {
+/** The library's sections come from the tweaks themselves, in name order. */
+function bySection<T extends { meta: Placeable }>(tweaks: T[]): TweakGroup<T>[] {
   const titles = [...new Set(tweaks.map((t) => tweakPlacement(t.meta).section))].sort((a, b) =>
     a.localeCompare(b),
   );
   return titles.map((title) => ({
-    // A card section can share a name with a list on the same topic.
-    title: written.has(title) ? moreTitle(title) : title,
+    title,
     tweaks: tweaks.filter((t) => tweakPlacement(t.meta).section === title),
-    compact: true,
   }));
 }
 
 /**
  * Splits tweaks into the sections of `tab`, or one flat list when `tab` is null: the hand-placed
- * sections first, then the long lists. They keep the order they arrive in, unless `catalogue` asks
- * for each hand-placed section's written order. `fillRows` tops each hand-placed section up to a
- * full row of cards from the lists, because what's hand-placed can be Unavailable on this PC.
- * Whatever can't run on this PC goes in a section of its own, always last.
+ * sections first, then the library's. They keep the order they arrive in, unless `catalogue` asks
+ * for each hand-placed section's written order, and tops it up to a full row of cards from the
+ * library, because what's hand-placed can be Unavailable on this PC. A library section named like a
+ * hand-placed one joins it. Whatever can't run on this PC goes in a section of its own, always last.
  */
 export function groupTweaks<T extends { meta: Placeable }>(
   tweaks: T[],
   {
     tab,
     catalogue,
-    fillRows = false,
     unavailable,
   }: {
     tab: PlacedTab | null;
     catalogue: boolean;
-    fillRows?: boolean;
     unavailable: (tweak: T) => boolean;
   },
 ): TweakGroup<T>[] {
@@ -618,34 +601,37 @@ export function groupTweaks<T extends { meta: Placeable }>(
   const placed = (tab: PlacedTab): TweakGroup<T>[] => {
     const sections = [...TWEAK_SECTIONS[tab], { title: MORE_SECTION, ids: [] as string[] }];
     const hand = usable.filter((t) => !tweakPlacement(t.meta).listed);
-    let lists = usable.filter((t) => tweakPlacement(t.meta).listed);
-    const cards = sections.map((section) => {
-      const inSection = hand.filter((t) => tweakPlacement(t.meta).section === section.title);
-      const tweaks = catalogue
-        ? inSection.toSorted(
-            (a, b) => section.ids.indexOf(a.meta.id) - section.ids.indexOf(b.meta.id),
-          )
-        : inSection;
+    const titles = new Set(sections.map((s) => s.title));
+    const inSection = (group: T[], title: string) =>
+      group.filter((t) => tweakPlacement(t.meta).section === title);
+    const library = usable.filter((t) => tweakPlacement(t.meta).listed);
+    let rest = library.filter((t) => !titles.has(tweakPlacement(t.meta).section));
+    const written = sections.map(({ title, ids }) => {
+      const own = inSection(hand, title);
+      const tweaks = [
+        ...(catalogue
+          ? own.toSorted((a, b) => ids.indexOf(a.meta.id) - ids.indexOf(b.meta.id))
+          : own),
+        ...inSection(library, title),
+      ];
       const short = (CARDS_PER_ROW - (tweaks.length % CARDS_PER_ROW)) % CARDS_PER_ROW;
-      if (!fillRows || !catalogue || tweaks.length === 0 || short === 0) {
-        return { title: section.title, compact: false, tweaks };
-      }
-      const extra = lists
-        .toSorted((a, b) => cardFit(b.meta, section.title) - cardFit(a.meta, section.title))
+      if (!catalogue || tweaks.length === 0 || short === 0) return { title, tweaks };
+      const extra = rest
+        .toSorted((a, b) => cardFit(b.meta, title) - cardFit(a.meta, title))
         .slice(0, short);
-      lists = lists.filter((t) => !extra.includes(t));
-      return { title: section.title, compact: false, tweaks: [...tweaks, ...extra] };
+      rest = rest.filter((t) => !extra.includes(t));
+      return { title, tweaks: [...tweaks, ...extra] };
     });
-    return [...cards, ...bySection(lists, new Set(sections.map((s) => s.title)))];
+    return [...written, ...bySection(rest)];
   };
 
-  const groups = tab ? placed(tab) : [{ title: null, tweaks: usable, compact: true }];
-  return [...groups, { title: UNAVAILABLE_SECTION, tweaks: blocked, compact: true }].filter(
+  const groups = tab ? placed(tab) : [{ title: null, tweaks: usable }];
+  return [...groups, { title: UNAVAILABLE_SECTION, tweaks: blocked }].filter(
     (group) => group.tweaks.length > 0,
   );
 }
 
-/** Keeps the first `limit` tweaks across the groups, so a broad search stays quick to draw. */
+/** Keeps the first `limit` tweaks across the groups, so a long tab stays quick to draw. */
 export function capGroups<T>(groups: TweakGroup<T>[], limit: number): TweakGroup<T>[] {
   let room = limit;
   return groups.flatMap((group) => {

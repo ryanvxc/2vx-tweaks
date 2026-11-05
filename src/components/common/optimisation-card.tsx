@@ -1,19 +1,23 @@
 import type { ReactNode, Ref } from "react";
 import type { LucideIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 /**
  * The card for anything the user can switch: icon and title on top, a short description, then
- * indicators on the left and the control on the right. Clicking the body (not the control)
- * opens details.
+ * indicators on the left and the control on the right, or one full-width action. Clicking the
+ * body (not the control) opens details.
  */
 export function OptimisationCard({
   icon: Icon,
+  leading,
   title,
+  titleHint,
   description,
   badge,
   indicators,
   control,
+  footer,
   onOpen,
   openLabel,
   highlighted,
@@ -21,13 +25,19 @@ export function OptimisationCard({
   className,
   ref,
 }: {
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  /** In place of `icon`, for something with a real logo. */
+  leading?: ReactNode;
   title: string;
+  /** Shown on hover when the title isn't the whole story, such as a path. */
+  titleHint?: string;
   description: string;
   /** Top-right label, e.g. "New". */
   badge?: ReactNode;
   indicators?: ReactNode;
   control?: ReactNode;
+  /** In place of the indicators and control. */
+  footer?: ReactNode;
   onOpen?: () => void;
   openLabel?: string;
   /** Selected for review. Applied tweaks stay neutral: the switch already says so. */
@@ -50,11 +60,14 @@ export function OptimisationCard({
       )}
     >
       <div className={cn("flex items-center gap-3", badge && "pr-10")}>
-        <Icon
-          className="size-[22px] shrink-0 text-brand transition-transform duration-200 group-hover:scale-110"
-          strokeWidth={1.75}
-          aria-hidden
-        />
+        {leading ??
+          (Icon && (
+            <Icon
+              className="size-[22px] shrink-0 text-brand transition-transform duration-200 group-hover:scale-110"
+              strokeWidth={1.75}
+              aria-hidden
+            />
+          ))}
         <div className="min-w-0 flex-1">
           {onOpen ? (
             <button
@@ -67,7 +80,13 @@ export function OptimisationCard({
               {title}
             </button>
           ) : (
-            <div className="truncate text-[14.5px] font-semibold">{title}</div>
+            <div
+              data-selectable
+              title={titleHint ?? title}
+              className="truncate text-[14.5px] font-semibold"
+            >
+              {title}
+            </div>
           )}
         </div>
       </div>
@@ -75,18 +94,22 @@ export function OptimisationCard({
       <p className="mt-2.5 line-clamp-2 text-[13px] leading-normal text-muted-foreground">
         {description}
       </p>
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-dashed pt-3">
-        {/* Raised above the stretched open-button so tooltips and the control stay usable. */}
-        <div className="relative flex min-w-0 items-center gap-1.5">{indicators}</div>
-        {control && <div className="relative flex shrink-0 justify-end">{control}</div>}
-      </div>
+      {footer ? (
+        <div className="relative mt-auto">{footer}</div>
+      ) : (
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-dashed pt-3">
+          {/* Raised above the stretched open-button so tooltips and the control stay usable. */}
+          <div className="relative flex min-w-0 items-center gap-1.5">{indicators}</div>
+          {control && <div className="relative flex shrink-0 justify-end">{control}</div>}
+        </div>
+      )}
     </div>
   );
 }
 
 /**
- * The same thing as a full-width row, for lists. `flat` is for long lists: the row loses its own
- * panel and sits in a shared one, split by hairlines.
+ * A full-width row, for something that isn't a tweak, such as a tool to open. `flat` drops its own
+ * panel so it can sit in a shared one, split by hairlines.
  */
 export function OptimisationRow({
   leading,
@@ -164,5 +187,15 @@ export function CardGrid({ children, className }: { children: ReactNode; classNa
     <div className={cn("grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-3", className)}>
       {children}
     </div>
+  );
+}
+
+export function CardSkeletons({ count = 6 }: { count?: number }) {
+  return (
+    <CardGrid>
+      {Array.from({ length: count }, (_, i) => (
+        <Skeleton key={i} className="h-44 rounded-xl" />
+      ))}
+    </CardGrid>
   );
 }

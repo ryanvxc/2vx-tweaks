@@ -257,10 +257,7 @@ describe("TweakGrid", () => {
     ]);
     renderGrid("/tweaks?tab=privacy", true);
 
-    const last = async () => {
-      await screen.findAllByRole("button", { expanded: false });
-      return [...document.querySelectorAll("section > [aria-expanded]")].at(-1);
-    };
+    const last = async () => (await screen.findAllByRole("heading", { level: 2 })).at(-1);
     expect(await last()).toHaveTextContent("Unavailable");
 
     await user.click(screen.getByRole("button", { name: /Sort/ }));

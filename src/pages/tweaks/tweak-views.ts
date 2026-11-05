@@ -9,9 +9,6 @@ import {
 } from "@/app/navigation";
 import type { TweakStatus } from "@/types/engine";
 
-/** `icon` shows the tweak's own icon; `letter` is a tile with the first letter, for game lists. */
-export type RowStyle = "icon" | "letter";
-
 /** What a tab's own content can reach: the catalogue and the page's review. */
 export interface TweakViewContext {
   statuses: TweakStatus[];
@@ -28,8 +25,6 @@ export interface TweakView {
   defaultTab: string;
   /** Section headings on every tab, or only on tabs with more than one section. */
   headings?: "always" | "several";
-  /** Tabs drawn as rows rather than cards. */
-  rows?: Record<string, RowStyle>;
   /** Between the tabs and the search row. */
   banner?: ReactNode;
   /** The right end of the search row. */
@@ -63,7 +58,6 @@ export const NETWORK_VIEW: TweakView = {
   subtitle: "Network settings, game priority and your adapters.",
   tabs: NETWORK_TABS,
   defaultTab: "tweaks",
-  rows: { priority: "letter" },
 };
 
 export const ADVANCED_VIEW: TweakView = {
@@ -73,7 +67,6 @@ export const ADVANCED_VIEW: TweakView = {
   subtitle: "Security status, interrupts, devices and the system timer.",
   tabs: ADVANCED_TABS,
   defaultTab: "security",
-  rows: { security: "icon", devices: "icon" },
 };
 
 export const CLEANER_VIEW: TweakView = {

@@ -12,12 +12,12 @@ import { toast } from "sonner";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { FilterBar } from "@/components/common/filter-bar";
 import { StatusLabel } from "@/components/common/notice";
-import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
+import { CardGrid, CardSkeletons, OptimisationCard } from "@/components/common/optimisation-card";
+import { EmptyState, ErrorState } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useStaggerIn } from "@/hooks/use-motion";
 import { useStartupItems } from "@/hooks/use-system";
-import { cn } from "@/lib/utils";
 import { backend, toBackendError } from "@/services/backend";
 import type { StartupItem, StartupOrigin, StartupScope, StartupSource } from "@/types/system";
 
@@ -48,7 +48,7 @@ export function AutorunsTab() {
   const [source, setSource] = useState<StartupSource[]>([]);
   const [sort, setSort] = useState("name");
   const [busy, setBusy] = useState<string | null>(null);
-  const list = useStaggerIn<HTMLUListElement>(data ? "autoruns" : null);
+  const list = useStaggerIn<HTMLDivElement>(data ? "autoruns" : null);
 
   const items = data?.items ?? [];
   const q = search.trim().toLowerCase();
@@ -151,7 +151,7 @@ export function AutorunsTab() {
       {error ? (
         <ErrorState message={error.message} onRetry={refetch} />
       ) : loading && !data ? (
-        <LoadingRows rows={5} />
+        <CardSkeletons />
       ) : shown.length === 0 ? (
         <EmptyState
           icon={items.length === 0 ? Rocket : SearchX}
@@ -159,16 +159,18 @@ export function AutorunsTab() {
           className="flex-1 panel"
         />
       ) : (
-        <ul ref={list} className="flex flex-col gap-2">
-          {shown.map((item) => (
-            <AutorunCard
-              key={item.id}
-              item={item}
-              busy={busy !== null}
-              onToggle={(on) => void toggle(item, on)}
-            />
-          ))}
-        </ul>
+        <div ref={list}>
+          <CardGrid>
+            {shown.map((item) => (
+              <AutorunCard
+                key={item.id}
+                item={item}
+                busy={busy !== null}
+                onToggle={(on) => void toggle(item, on)}
+              />
+            ))}
+          </CardGrid>
+        </div>
       )}
       {data && data.unreadable.length > 0 && (
         <p className="text-[12px] text-warning">Couldn't read: {data.unreadable.join("; ")}</p>
@@ -186,7 +188,6 @@ function AutorunCard({
   busy: boolean;
   onToggle: (on: boolean) => void;
 }) {
-  const Icon = ICON[item.source];
   const task = item.source === "task";
   const blocked = task
     ? "2VX only reads scheduled tasks. Change them in Task Scheduler."
@@ -195,52 +196,45 @@ function AutorunCard({
       : "2VX can't switch entries in the all-users Startup folder.";
   const where = `${item.scope === "allUsers" ? "All users" : "Your account"}: ${item.location}`;
   return (
-    <li
-      data-stagger
-      className="flex h-12 items-center gap-3 panel px-4 transition-colors hover:bg-raised"
-    >
-      <Icon className="size-[18px] shrink-0 text-brand" aria-hidden />
-      <span
-        data-selectable
-        title={`${item.path}\n${item.description ?? ""}`.trim()}
-        className={cn(
-          "min-w-0 flex-1 truncate text-[13.5px] font-medium",
-          !isOn(item) && "text-muted-foreground",
-        )}
-      >
-        {item.name}
-      </span>
-      <span
-        className="w-48 shrink-0 truncate text-[12.5px] text-muted-foreground"
-        title={item.publisher ? "Reported by the program itself" : undefined}
-      >
-        {item.publisher ?? ""}
-      </span>
-      <span className="w-28 shrink-0 truncate text-[12.5px] text-muted-foreground" title={where}>
-        {item.sourceLabel}
-      </span>
-      {/* A fixed slot, so the publisher and source columns line up from row to row. */}
-      <div className="flex w-56 shrink-0 items-center justify-end gap-3">
-        {item.offInTaskManager && (
-          <StatusLabel tone="warning" title={blocked}>
-            Off in Task Manager
-          </StatusLabel>
-        )}
-        {!task && item.changeable ? (
-          <Switch
-            aria-label={`Start ${item.name} with Windows`}
-            checked={isOn(item)}
-            disabled={busy}
-            onCheckedChange={onToggle}
-          />
-        ) : (
-          !item.offInTaskManager && (
-            <StatusLabel tone={isOn(item) ? "success" : "neutral"} title={blocked}>
-              {isOn(item) ? "On, read-only" : "Off, read-only"}
+    <OptimisationCard
+      icon={ICON[item.source]}
+      title={item.name}
+      titleHint={[
+        item.path,
+        item.description,
+        item.publisher && "The publisher is reported by the program itself",
+      ]
+        .filter(Boolean)
+        .join("\n")}
+      description={item.publisher ?? item.path}
+      indicators={
+        <span className="truncate text-[12.5px] text-muted-foreground" title={where}>
+          {item.sourceLabel}
+        </span>
+      }
+      control={
+        <div className="flex items-center gap-3">
+          {item.offInTaskManager && (
+            <StatusLabel tone="warning" title={blocked}>
+              Off in Task Manager
             </StatusLabel>
-          )
-        )}
-      </div>
-    </li>
+          )}
+          {!task && item.changeable ? (
+            <Switch
+              aria-label={`Start ${item.name} with Windows`}
+              checked={isOn(item)}
+              disabled={busy}
+              onCheckedChange={onToggle}
+            />
+          ) : (
+            !item.offInTaskManager && (
+              <StatusLabel tone={isOn(item) ? "success" : "neutral"} title={blocked}>
+                {isOn(item) ? "On, read-only" : "Off, read-only"}
+              </StatusLabel>
+            )
+          )}
+        </div>
+      }
+    />
   );
 }

@@ -3,6 +3,13 @@
 Main-channel builds are released automatically from `main` (see `docs/GITHUB_RELEASE_PIPELINE.md`); their
 notes come from commit subjects. This file records the larger milestones.
 
+## 0.4.2
+
+### Cards everywhere
+- Every tweak is now a card on every tab, like EXM. The folding lists are gone, so nothing needs opening first.
+- Uninstall, Autoruns, Network Priority and Protections are cards too.
+- Long tabs draw as you scroll, so they stay quick.
+
 ## 0.4.1
 
 ### Sidebar
