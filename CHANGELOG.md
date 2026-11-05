@@ -3,7 +3,16 @@
 Main-channel builds are released automatically from `main` (see `docs/GITHUB_RELEASE_PIPELINE.md`); their
 notes come from commit subjects. This file records the larger milestones.
 
-## 0.4.0 (unreleased)
+## 0.4.1
+
+### Sidebar
+- The groups now sit together like EXM's, with no big gaps around Game Mode, and Settings has its own row.
+
+### Tweaks
+- Medium risk is gone from the app. High risk still shows, and still asks you to confirm.
+- A tweak's effect no longer says "(estimate)".
+
+## 0.4.0
 
 ### A simpler app
 - The Library and Monitoring pages are gone, and nothing was lost. Every tweak now lives with its topic: Tweaks has Core,

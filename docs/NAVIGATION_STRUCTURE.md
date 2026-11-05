@@ -22,11 +22,10 @@ Optimisations
 [Account card]     opens the account menu
 ```
 
-Nine rows in three groups, named as EXM names them. Rows and groups share out the sidebar's height, so the list ends a
-little above the account card at any window size. A row stops growing at 46 px; on a taller window the spare height goes
-between the groups.
-Settings has no sidebar row: it's in the account menu, Search and the title of its
-own page. Search is in the account menu, and Ctrl K opens it from anywhere. The title bar holds only minimise and close.
+Ten rows in three groups, named as EXM names them. The groups sit together at the top, 20 px apart, and any spare height
+goes above the account card, never between groups. A row is 46 px, down to 34 px on a short screen. Settings is also in
+the account menu, as it is in EXM. Search is in the account menu, and Ctrl K opens it from anywhere. The title bar holds
+only minimise and close.
 
 ## Account menu
 
@@ -48,7 +47,7 @@ a confirmation. With none saved, the menu offers Set up account instead.
 - **Monitoring folded into Home.** Home already had the chart; CPU, GPU, RAM and Network views with a one or five minute
   range cover what the page did. `/monitoring` lands on Home.
 - **A row is always a real destination**, never padding to fill the sidebar. That's why there are no Support, BIOS or
-  Debloat rows.
+  Debloat rows. Settings holds General's fourth row, the one EXM gives to Support.
 - **History became Restore Centre**: it says what the page is for.
 - **Resources stays small** but stays in the sidebar: the report and Windows tools have no better home. Its URL is still
   `/tools`.

@@ -50,9 +50,10 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 - A surface is the `panel` utility: `--card` fill with a faint `--hairline` edge. Separation comes from the fill, not a
   visible outline, and panels are never nested.
 - Page padding 20 px, panel padding 16 px, every gap 12 px.
-- Sidebar 240 px (`--sidebar-width`), 64 px when compact. Its rows share out the height from 34 to 46 px, with the
-  highlight capped at 40 px, and past that the spare height goes between the groups. Content uses the full window width; `CardGrid` fits as many
-  19rem columns as there's room for.
+- Sidebar 240 px (`--sidebar-width`), 64 px when compact, with a 72 px brand block. Its rows are 46 px, down to 34 px on a
+  short screen, with the highlight capped at 40 px. Groups sit together 20 px apart, as in EXM, and spare height goes above
+  the account card, never between groups. Content uses the full window width; `CardGrid` fits as many 19rem columns as
+  there's room for.
 - The window is one size, 1280×820 (`tauri.conf.json`), and can only be minimised or closed. On a screen too small for
   it, `preventOverflow` shrinks it to fit and pages scroll. Check layouts at 1280×820.
 - Page anatomy, on every page: a thin title bar with the window controls, the title in the page (`PageHero`) with the
@@ -129,7 +130,7 @@ skips. Moving the cursor holds it for up to 7 s. Settings › Appearance turns i
 | Component | Purpose |
 | --- | --- |
 | `OptimisationCard`, `CardGrid`, `NewBadge` | The fixed-height card used by Tweaks: icon, one-line title, two-line description, a dashed line, then boxed indicators and one control |
-| `Indicator`, `ImpactMeter` | Bare icons with tooltips (risk, hardware, community, warning, restart, failed, partial, unread) and the 3-bar impact estimate. Each stands for a real state; the indicators shown must match what's true of the tweak |
+| `Indicator`, `ImpactMeter` | Bare icons with tooltips (high risk, hardware, community, warning, restart, failed, partial, unread) and the 3-bar impact rating. Each stands for a real state; the indicators shown must match what's true of the tweak |
 | `FilterBar` | Search box, filter and sort menus on one row. The filter menu is two columns, so every group fits without its own scrollbar. The active count is plain text, not a chip |
 | `PageTabs` | Accessible tab list (`role="tablist"`) on every page with tabs (`filled` is a full-width bar with a raised active tab and a white underline); `useTabParam` keeps the tab in the URL |
 | `OptimisationRow` | The full-width row: an icon or letter tile, title, one line, indicators, one control. `h-[68px]` on its own, or `flat` (`h-14`, no panel of its own) inside a shared panel for long lists |

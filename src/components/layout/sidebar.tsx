@@ -8,9 +8,9 @@ import { useUiStore } from "@/stores/ui-store";
 import { AccountMenu } from "./account-menu";
 
 /** Height of a group's heading, and of the line that stands in for it when compact. */
-const GROUP_HEAD_PX = 24;
+const GROUP_HEAD_PX = 28;
 const GROUP_LINE_PX = 9;
-/** Rows stop growing here. On a taller window the spare height goes between the groups. */
+/** Rows stop growing here. The groups stay together, and spare height goes above the account. */
 const ROW_MAX_PX = 46;
 
 export function Sidebar({ onSearch }: { onSearch: () => void }) {
@@ -30,13 +30,13 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
       <div
         data-tauri-drag-region
         className={cn(
-          "flex h-(--titlebar-height) shrink-0 items-center gap-2.5 border-b border-sidebar-border",
+          "flex h-18 shrink-0 items-center gap-2.5 border-b border-sidebar-border",
           collapsed ? "justify-center" : "px-5",
         )}
       >
-        <img src={logo} alt="" className="pointer-events-none size-7" draggable={false} />
+        <img src={logo} alt="" className="pointer-events-none size-8" draggable={false} />
         {!collapsed && (
-          <span data-tauri-drag-region className="text-[16px] font-semibold tracking-tight">
+          <span data-tauri-drag-region className="text-[17px] font-semibold tracking-tight">
             2VX <span className="font-normal text-muted-foreground">Tweaks</span>
           </span>
         )}
@@ -44,7 +44,7 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
 
       <nav
         ref={navBox}
-        className="relative isolate flex min-h-0 flex-1 flex-col justify-between gap-1.5 overflow-y-auto px-3 pt-2 pb-6"
+        className="relative isolate flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-3 pt-5 pb-2"
         aria-label="Main"
       >
         <span
@@ -56,7 +56,7 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
           const head = collapsed ? (i > 0 ? GROUP_LINE_PX : 0) : GROUP_HEAD_PX;
           return (
             // Growing by row count, from the heading's height, keeps every row the same height
-            // across groups of different sizes, so the list fills the sidebar at any window height.
+            // across groups of different sizes when a short screen squeezes the list.
             <div
               key={group.label}
               className="flex flex-col"
@@ -66,7 +66,7 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
               }}
             >
               {!collapsed && (
-                <div className="flex h-6 shrink-0 items-center px-3 text-[12.5px] text-muted-foreground/60">
+                <div className="flex h-7 shrink-0 items-center px-3 text-[12.5px] text-muted-foreground/60">
                   {group.label}
                 </div>
               )}

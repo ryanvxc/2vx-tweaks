@@ -165,7 +165,7 @@ Storage → Hardware; Network → Network › Tweaks; Services → PC Cleaner �
 | Level | Meaning | In the app |
 | --- | --- | --- |
 | Low | Ordinary and reversible | Nothing shown |
-| Medium | Can affect a particular app, feature or hardware | "Medium risk" |
+| Medium | Can affect a particular app, feature or hardware | Nothing shown |
 | High | Can disrupt common setups | "High risk", plus a warning that names what breaks |
 | Critical | Destructive, hard to recover, or weakens security or data integrity | Not shipped |
 

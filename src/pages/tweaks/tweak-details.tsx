@@ -22,14 +22,13 @@ import { CATEGORY_LABEL, tweakIcon } from "@/lib/tweak-presentation";
 import type { Impact, RiskLevel, TweakMeta, TweakStatus } from "@/types/engine";
 
 const IMPACT_LABEL: Record<Impact, string> = {
-  low: "Small (estimate)",
-  medium: "Noticeable (estimate)",
-  high: "Large (estimate)",
+  low: "Small",
+  medium: "Noticeable",
+  high: "Large",
 };
 
-const RISK_LABEL: Record<RiskLevel, string> = {
+const RISK_LABEL: Partial<Record<RiskLevel, string>> = {
   low: "Low",
-  moderate: "Medium",
   high: "High",
 };
 
@@ -72,9 +71,10 @@ export function TweakDetails({
   const stateInfo = TWEAK_STATE[state];
   const restart = RESTART_HINT[meta.restart];
   const builds = buildsLabel(meta);
+  const risk = RISK_LABEL[meta.risk];
   const facts: [string, string][] = [
     ["Expected effect", IMPACT_LABEL[meta.impact]],
-    ["Risk", RISK_LABEL[meta.risk]],
+    ...(risk ? [["Risk", risk] as [string, string]] : []),
     ["Runs as", meta.permission === "administrator" ? "Administrator" : "Your account"],
     ["Takes effect", restart ?? "Straight away"],
     ["Undo", undoLabel(shown)],

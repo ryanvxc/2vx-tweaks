@@ -301,7 +301,6 @@ export function TweakGrid({
       label: "Risk",
       options: [
         { value: "low", label: "Low" },
-        { value: "moderate", label: "Medium" },
         { value: "high", label: "High" },
       ],
       selected: riskFilter,
@@ -749,13 +748,8 @@ function TweakCard({
   const indicators = (
     <>
       <ImpactMeter impact={meta.impact} />
-      {meta.risk !== "low" && (
-        <Indicator
-          boxed
-          icon={ShieldAlert}
-          tone={meta.risk === "high" ? "destructive" : "warning"}
-          title={meta.risk === "high" ? "High risk" : "Medium risk"}
-        />
+      {meta.risk === "high" && (
+        <Indicator boxed icon={ShieldAlert} tone="destructive" title="High risk" />
       )}
       {meta.hardware !== "any" && (
         <Indicator

@@ -118,6 +118,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Package,
         description: "System report and Windows tools",
       },
+      {
+        to: "/settings",
+        label: "Settings",
+        icon: Settings,
+        description: "Preferences, updates and engine status",
+      },
     ],
   },
   {
@@ -174,11 +180,4 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-export const SETTINGS_ITEM: NavItem = {
-  to: "/settings",
-  label: "Settings",
-  icon: Settings,
-  description: "Preferences, updates and engine status",
-};
-
-export const ALL_NAV_ITEMS: NavItem[] = [...NAV_GROUPS.flatMap((g) => g.items), SETTINGS_ITEM];
+export const ALL_NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);

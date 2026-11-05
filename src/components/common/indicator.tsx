@@ -89,7 +89,7 @@ const IMPACT: Record<Impact, { bars: number; color: string; title: string }> = {
   high: { bars: 3, color: "bg-destructive", title: "Large effect" },
 };
 
-/** Three bars for the documented size of a tweak's effect. An estimate, said so in the tooltip. */
+/** Three bars for the documented size of a tweak's effect. A rating, never a measurement. */
 export function ImpactMeter({ impact }: { impact: Impact }) {
   const info = IMPACT[impact];
   return (
@@ -97,7 +97,7 @@ export function ImpactMeter({ impact }: { impact: Impact }) {
       <TooltipTrigger asChild>
         <span
           tabIndex={0}
-          aria-label={`${info.title} (estimate)`}
+          aria-label={info.title}
           className={cn(
             "group/impact inline-flex cursor-default items-end justify-center gap-[3px] rounded-md pb-[7px] transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
             BOX,
@@ -115,7 +115,7 @@ export function ImpactMeter({ impact }: { impact: Impact }) {
           ))}
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top">{info.title} (estimate)</TooltipContent>
+      <TooltipContent side="top">{info.title}</TooltipContent>
     </Tooltip>
   );
 }

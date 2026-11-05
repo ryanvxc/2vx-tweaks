@@ -50,9 +50,11 @@ export function ConfirmDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <div className="mb-1">
-            <RiskBadge risk={risk} />
-          </div>
+          {risk !== "moderate" && (
+            <div className="mb-1">
+              <RiskBadge risk={risk} />
+            </div>
+          )}
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
