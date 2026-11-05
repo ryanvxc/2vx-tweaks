@@ -1,37 +1,55 @@
 import {
   AppWindow,
+  Archive,
+  AudioLines,
   BatteryCharging,
   Ban,
   BellOff,
   BellRing,
+  Binary,
+  Bluetooth,
   BluetoothOff,
+  Bot,
   Bug,
+  Building2,
   Cable,
   CalendarClock,
+  Captions,
   ChartNoAxesColumn,
   CirclePlay,
+  Clapperboard,
   CloudDownload,
   CloudOff,
   Cpu,
+  CreditCard,
+  Dices,
   Eye,
   EyeOff,
   FileClock,
+  FileStack,
+  FileText,
   FileType,
   Fingerprint,
+  FlaskConical,
+  FolderOpen,
   FolderSync,
   Gamepad2,
   Gauge,
+  Glasses,
   Globe,
   Gpu,
   HardDrive,
   HardDriveDownload,
+  HeartPulse,
   History,
+  HousePlug,
   Keyboard,
   KeyboardOff,
   KeyRound,
   Languages,
   Layers,
   Layers2,
+  LayoutPanelLeft,
   Map as MapIcon,
   MapPin,
   MapPinOff,
@@ -41,12 +59,17 @@ import {
   MessagesSquare,
   MicOff,
   MonitorCog,
+  MonitorDot,
   MonitorSmartphone,
+  MonitorUp,
   Mouse,
+  MousePointerClick,
   Network,
+  Package,
   PackageSearch,
   PanelRight,
   PenLine,
+  Plug,
   Power,
   Printer,
   Puzzle,
@@ -56,17 +79,33 @@ import {
   Rocket,
   RotateCw,
   Route,
+  Scale,
+  ScanSearch,
+  Search,
   Server,
+  ServerCog,
+  Share2,
+  ShieldHalf,
   ShoppingBag,
+  Smartphone,
+  Sparkles,
   Stethoscope,
+  Store,
   SunDim,
+  TimerReset,
+  Trophy,
   Usb,
   UserRound,
+  Users,
   VideoOff,
+  Wifi,
+  EthernetPort,
   Wind,
+  Wrench,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
-import type { HardwareTab, TweakTab } from "@/app/navigation";
+import type { CleanerTab, HardwareTab, TweakTab } from "@/app/navigation";
 import type { TweakCategory, TweakMeta } from "@/types/engine";
 
 // How tweaks look and where they sit in the UI. Kept apart from the engine metadata: icons
@@ -74,7 +113,15 @@ import type { TweakCategory, TweakMeta } from "@/types/engine";
 // say what a tweak touches; tabs are what someone goes looking for.
 
 /** Every tab that lists tweaks, across the pages that have them. */
-export type PlacedTab = TweakTab | HardwareTab | "tweaks" | "priority" | "security" | "devices";
+export type PlacedTab =
+  | Exclude<TweakTab, "presets">
+  | HardwareTab
+  | Extract<CleanerTab, "services">
+  | "tweaks"
+  | "priority"
+  | "adapters"
+  | "security"
+  | "devices";
 
 export const CATEGORY_LABEL: Record<TweakCategory, string> = {
   gaming: "Gaming",
@@ -167,8 +214,108 @@ export const TWEAK_ICON: Record<string, LucideIcon> = {
   "windows.window-animations-off": Wind,
 };
 
-export function tweakIcon(meta: Pick<TweakMeta, "id" | "category">): LucideIcon {
-  return TWEAK_ICON[meta.id] ?? CATEGORY_ICON[meta.category] ?? Globe;
+/**
+ * Each section of the longer lists has one icon, used on its heading and its rows. Not one per
+ * tweak: 1,200 icons would stop meaning anything.
+ */
+export const SECTION_ICON: Record<string, LucideIcon> = {
+  // Windows
+  Explorer: FolderOpen,
+  "Taskbar and Start": LayoutPanelLeft,
+  System: MonitorCog,
+  "Visual effects": Sparkles,
+  "Startup and shutdown": Power,
+  // Privacy
+  "App permissions": KeyRound,
+  Telemetry: ChartNoAxesColumn,
+  "Advertising and suggestions": Megaphone,
+  "Sync and cross-device": RefreshCcw,
+  Search: Search,
+  "Speech and typing": Captions,
+  "System reports": FileText,
+  "Copilot and AI": Bot,
+  // Gaming
+  "Game settings": Gamepad2,
+  Input: MousePointerClick,
+  "Per-game priority": Trophy,
+  "Game Bar and capture": Clapperboard,
+  Audio: AudioLines,
+  // Apps
+  Edge: Globe,
+  Chrome: Globe,
+  Firefox: Globe,
+  "Brave, Opera and Vivaldi": Globe,
+  Office: FileStack,
+  "Other apps": Package,
+  // Tasks
+  Maintenance: Wrench,
+  "Third-party": Plug,
+  "Input sync": Keyboard,
+  "Family and account": Users,
+  Network: Network,
+  Diagnostics: Stethoscope,
+  "Flighting and experiments": FlaskConical,
+  "Maps and location": MapIcon,
+  // Power
+  "Sleep and buttons": Power,
+  "Display and devices": MonitorDot,
+  Disk: HardDrive,
+  "USB and PCIe": Usb,
+  // Hardware
+  NVIDIA: Gpu,
+  AMD: Gpu,
+  Intel: Gpu,
+  "Windows graphics": MonitorUp,
+  "Scheduler and timers": TimerReset,
+  "Power plan": Zap,
+  "Paging and cache": MemoryStick,
+  Prefetch: Rocket,
+  Drives: HardDriveDownload,
+  "File system": FileType,
+  // Network
+  TCP: Share2,
+  SMB: FolderSync,
+  "Winsock and resolution": Binary,
+  "DNS cache": ScanSearch,
+  "Discovery and Wi-Fi": Wifi,
+  "Ethernet adapter": EthernetPort,
+  "Wi-Fi adapter": Wifi,
+  QoS: Scale,
+  // Services
+  "Store and apps": Store,
+  "Sync and account": UserRound,
+  "Network discovery": Radar,
+  "Backup and storage": Archive,
+  "Search and shell": Search,
+  "Telemetry and diagnostics": HeartPulse,
+  "Smart card and sign-in": CreditCard,
+  "Remote access": MonitorSmartphone,
+  Enterprise: Building2,
+  "Hyper-V": ServerCog,
+  "Phone and cellular": Smartphone,
+  Bluetooth: Bluetooth,
+  VPN: ShieldHalf,
+  Xbox: Dices,
+  "Mixed reality": Glasses,
+  "Printing and scanning": Printer,
+  "Location and sensors": MapPin,
+  "Peer networking": HousePlug,
+};
+
+/** A hand-picked icon, then its section's, then its category's. */
+export function tweakIcon(
+  meta: Pick<TweakMeta, "id" | "category"> & Partial<Pick<TweakMeta, "section">>,
+): LucideIcon {
+  return (
+    TWEAK_ICON[meta.id] ??
+    (meta.section ? SECTION_ICON[meta.section] : undefined) ??
+    CATEGORY_ICON[meta.category] ??
+    Globe
+  );
+}
+
+export function sectionIcon(title: string, category: TweakCategory): LucideIcon {
+  return SECTION_ICON[title] ?? CATEGORY_ICON[category] ?? Globe;
 }
 
 /** Sections per tab, in display order. */
@@ -179,14 +326,13 @@ export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[
       title: "Core",
       ids: [
         "performance.foreground-boost",
-        "gaming.mmcss-games-priority",
         "performance.last-access-off",
-        "gaming.game-dvr-off",
         "windows.storage-sense-off",
         "windows.window-animations-off",
       ],
     },
   ],
+  gaming: [{ title: "Essentials", ids: ["gaming.mmcss-games-priority", "gaming.game-dvr-off"] }],
   privacy: [
     {
       title: "Windows data",
@@ -214,7 +360,7 @@ export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[
   ],
   apps: [
     {
-      title: "Microsoft Edge",
+      title: "Edge",
       ids: [
         "performance.edge-background-mode-off",
         "performance.edge-startup-boost-off",
@@ -224,8 +370,13 @@ export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[
       ],
     },
   ],
+  tasks: [],
+  power: [],
   services: [
-    { title: "Printing", ids: ["services.print-spooler-off", "services.print-notify-off"] },
+    {
+      title: "Printing and scanning",
+      ids: ["services.print-spooler-off", "services.print-notify-off"],
+    },
     {
       title: "Bluetooth and sensors",
       ids: ["services.bluetooth-off", "services.sensor-off", "services.sensor-monitoring-off"],
@@ -248,7 +399,7 @@ export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[
   ram: [{ title: "RAM", ids: ["performance.kernel-in-ram"] }],
   peripherals: [
     {
-      title: "Keyboard & Mouse",
+      title: "Keyboard and mouse",
       ids: [
         "windows.mouse-acceleration-off",
         "windows.keyboard-repeat-fast",
@@ -268,6 +419,7 @@ export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[
       ],
     },
   ],
+  adapters: [],
   priority: [
     {
       title: "Games",
@@ -295,7 +447,7 @@ export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[
   ],
   devices: [
     {
-      title: "Devices",
+      title: "Settings",
       ids: [
         "windows.autoplay-off",
         "windows.device-metadata-off",
@@ -310,8 +462,11 @@ export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[
 const TAB_ROUTE: Record<PlacedTab, string> = {
   core: "/tweaks",
   privacy: "/tweaks",
+  gaming: "/tweaks",
   apps: "/tweaks",
-  services: "/tweaks",
+  tasks: "/tweaks",
+  power: "/tweaks",
+  services: "/cleaner",
   gpu: "/hardware",
   cpu: "/hardware",
   ram: "/hardware",
@@ -319,11 +474,11 @@ const TAB_ROUTE: Record<PlacedTab, string> = {
   storage: "/hardware",
   tweaks: "/network",
   priority: "/network",
+  adapters: "/network",
   security: "/advanced",
   devices: "/advanced",
 };
 
-export const LIBRARY_ROUTE = "/library";
 export const MORE_SECTION = "More";
 export const UNAVAILABLE_SECTION = "Unavailable";
 
@@ -333,15 +488,16 @@ const PLACEMENT = new Map(
   ),
 );
 
-const FALLBACK_TAB: Record<TweakCategory, PlacedTab> = {
-  gaming: "core",
+/** Where a category's long list sits: every tweak lives with its topic, not on a page of its own. */
+const CATEGORY_TAB: Record<TweakCategory, PlacedTab> = {
+  gaming: "gaming",
   performance: "core",
-  power: "cpu",
+  power: "power",
   network: "tweaks",
   windows: "core",
   privacy: "privacy",
   services: "services",
-  tasks: "services",
+  tasks: "tasks",
   cpu: "cpu",
   gpu: "gpu",
   memory: "ram",
@@ -349,82 +505,142 @@ const FALLBACK_TAB: Record<TweakCategory, PlacedTab> = {
   apps: "apps",
 };
 
-/** What placing a tweak needs to know. Fixtures for the older pages leave `section` out. */
-type Placeable = Pick<TweakMeta, "id" | "category"> & Partial<Pick<TweakMeta, "section">>;
+/** Driver settings have their own tab, beside the adapters they apply to. */
+const ADAPTER_SECTIONS = new Set(["Ethernet adapter", "Wi-Fi adapter"]);
 
-/**
- * Where a tweak lives: its one primary location. One with a section is in the Library, under its
- * category. One not placed yet still shows, in its category's tab.
- */
+/** What placing a tweak needs to know. Fixtures for the older pages leave `section` out. */
+type Placeable = Pick<TweakMeta, "id" | "category"> &
+  Partial<Pick<TweakMeta, "section" | "name" | "evidence" | "recommended">>;
+
+/** Where a tweak lives: its one primary location. One not placed yet still shows, under its topic. */
 export function tweakPlacement(meta: Placeable) {
-  if (meta.section) {
-    return { tab: meta.category as string, section: meta.section, route: LIBRARY_ROUTE };
-  }
   const placed = PLACEMENT.get(meta.id);
-  const tab = placed?.tab ?? FALLBACK_TAB[meta.category];
-  return { tab: tab as string, section: placed?.section ?? MORE_SECTION, route: TAB_ROUTE[tab] };
+  const tab =
+    placed?.tab ??
+    (meta.section && ADAPTER_SECTIONS.has(meta.section) ? "adapters" : CATEGORY_TAB[meta.category]);
+  return {
+    tab: tab as string,
+    section: placed?.section ?? meta.section ?? MORE_SECTION,
+    route: TAB_ROUTE[tab],
+    /** Part of a long list, rather than a hand-placed card. */
+    listed: !placed && !!meta.section,
+  };
 }
 
 export interface TweakGroup<T> {
   /** `null` for a flat list, such as search results across every tab. */
   title: string | null;
   tweaks: T[];
+  /** A long or secondary list: rows in a section that opens, rather than cards. */
+  compact: boolean;
 }
 
-/** The Library's sections come from the tweaks themselves, in name order. */
-function bySection<T extends { meta: Placeable }>(tweaks: T[]): TweakGroup<T>[] {
+/** Cards sit three to a row, and a longer name is cut off on one. */
+const CARDS_PER_ROW = 3;
+const CARD_NAME_MAX = 33;
+
+/** On a card the section's heading names the product, so the name doesn't have to. */
+const CARD_TITLE: Record<string, string> = {
+  "performance.edge-background-mode-off": "Stop running in the background",
+  "performance.edge-startup-boost-off": "Turn off Startup boost",
+  "privacy.edge-shopping-off": "Turn off Shopping",
+  "privacy.inking-typing-collection-off": "Stop learning from your typing",
+  "privacy.language-list-opt-out": "Keep your language list private",
+  "privacy.online-speech-off": "Stop online speech recognition",
+  "services.compat-assistant-off": "Disable Compatibility Assistant",
+  "windows.edge-recommendations-off": "Stop feature suggestions",
+  "windows.edge-sidebar-off": "Hide the sidebar",
+};
+
+export function cardTitle(meta: Pick<TweakMeta, "id" | "name">) {
+  return CARD_TITLE[meta.id] ?? meta.name;
+}
+
+/** How well a tweak from the lists suits a card in `title`'s section: higher is better. */
+function cardFit(meta: Placeable, title: string) {
+  const family = tweakPlacement(meta).section.split(" ")[0] === title.split(" ")[0];
+  return (
+    Number(family) * 8 +
+    Number(meta.evidence !== "community") * 4 +
+    Number((meta.name?.length ?? 0) <= CARD_NAME_MAX) * 2 +
+    Number(meta.recommended === true)
+  );
+}
+
+/** Keep their capital after "More". */
+const PROPER_SECTION = /^(?:AMD|Bluetooth|CPU|Edge|GPU|Intel|NVIDIA|RAM|USB|Windows|Xbox)\b/;
+
+function moreTitle(title: string) {
+  const rest = PROPER_SECTION.test(title) ? title : title.charAt(0).toLowerCase() + title.slice(1);
+  return `More ${rest}`;
+}
+
+/** The long lists' sections come from the tweaks themselves, in name order. */
+function bySection<T extends { meta: Placeable }>(
+  tweaks: T[],
+  written: Set<string>,
+): TweakGroup<T>[] {
   const titles = [...new Set(tweaks.map((t) => tweakPlacement(t.meta).section))].sort((a, b) =>
     a.localeCompare(b),
   );
   return titles.map((title) => ({
-    title,
+    // A card section can share a name with a list on the same topic.
+    title: written.has(title) ? moreTitle(title) : title,
     tweaks: tweaks.filter((t) => tweakPlacement(t.meta).section === title),
+    compact: true,
   }));
 }
 
 /**
- * Splits tweaks into the sections of `tab`, or one flat list when `tab` is null. They keep the
- * order they arrive in, unless `catalogue` asks for each section's written order. With `library`
- * the sections are the tweaks' own. Whatever can't run on this PC goes in a section of its own,
- * always last.
+ * Splits tweaks into the sections of `tab`, or one flat list when `tab` is null: the hand-placed
+ * sections first, then the long lists. They keep the order they arrive in, unless `catalogue` asks
+ * for each hand-placed section's written order. `fillRows` tops each hand-placed section up to a
+ * full row of cards from the lists, because what's hand-placed can be Unavailable on this PC.
+ * Whatever can't run on this PC goes in a section of its own, always last.
  */
 export function groupTweaks<T extends { meta: Placeable }>(
   tweaks: T[],
   {
     tab,
     catalogue,
-    library = false,
+    fillRows = false,
     unavailable,
   }: {
     tab: PlacedTab | null;
     catalogue: boolean;
-    library?: boolean;
+    fillRows?: boolean;
     unavailable: (tweak: T) => boolean;
   },
 ): TweakGroup<T>[] {
   const usable = tweaks.filter((t) => !unavailable(t));
   const blocked = tweaks.filter(unavailable);
 
-  const placed = (tab: PlacedTab): TweakGroup<T>[] =>
-    [...TWEAK_SECTIONS[tab], { title: MORE_SECTION, ids: [] as string[] }].map((section) => {
-      const inSection = usable.filter((t) => tweakPlacement(t.meta).section === section.title);
-      return {
-        title: section.title,
-        tweaks: catalogue
-          ? inSection.toSorted(
-              (a, b) => section.ids.indexOf(a.meta.id) - section.ids.indexOf(b.meta.id),
-            )
-          : inSection,
-      };
+  const placed = (tab: PlacedTab): TweakGroup<T>[] => {
+    const sections = [...TWEAK_SECTIONS[tab], { title: MORE_SECTION, ids: [] as string[] }];
+    const hand = usable.filter((t) => !tweakPlacement(t.meta).listed);
+    let lists = usable.filter((t) => tweakPlacement(t.meta).listed);
+    const cards = sections.map((section) => {
+      const inSection = hand.filter((t) => tweakPlacement(t.meta).section === section.title);
+      const tweaks = catalogue
+        ? inSection.toSorted(
+            (a, b) => section.ids.indexOf(a.meta.id) - section.ids.indexOf(b.meta.id),
+          )
+        : inSection;
+      const short = (CARDS_PER_ROW - (tweaks.length % CARDS_PER_ROW)) % CARDS_PER_ROW;
+      if (!fillRows || !catalogue || tweaks.length === 0 || short === 0) {
+        return { title: section.title, compact: false, tweaks };
+      }
+      const extra = lists
+        .toSorted((a, b) => cardFit(b.meta, section.title) - cardFit(a.meta, section.title))
+        .slice(0, short);
+      lists = lists.filter((t) => !extra.includes(t));
+      return { title: section.title, compact: false, tweaks: [...tweaks, ...extra] };
     });
+    return [...cards, ...bySection(lists, new Set(sections.map((s) => s.title)))];
+  };
 
-  const groups = !tab
-    ? [{ title: null, tweaks: usable }]
-    : library
-      ? bySection(usable)
-      : placed(tab);
-
-  return [...groups, { title: UNAVAILABLE_SECTION, tweaks: blocked }].filter(
+  const groups = tab ? placed(tab) : [{ title: null, tweaks: usable, compact: true }];
+  return [...groups, { title: UNAVAILABLE_SECTION, tweaks: blocked, compact: true }].filter(
     (group) => group.tweaks.length > 0,
   );
 }
@@ -440,10 +656,14 @@ export function capGroups<T>(groups: TweakGroup<T>[], limit: number): TweakGroup
   });
 }
 
-/** How well a tweak matches a lowercase search, best first, or `null` if it doesn't. */
+/**
+ * How well a tweak matches a lowercase search, best first, or `null` if it doesn't. `targets` are
+ * what it changes, so someone who knows a value or service name can search for that.
+ */
 export function searchRank(
   meta: Pick<TweakMeta, "name" | "description" | "category"> & Partial<Pick<TweakMeta, "section">>,
   query: string,
+  targets: string[] = [],
 ): number | null {
   const name = meta.name.toLowerCase();
   if (name.startsWith(query)) return 0;
@@ -454,6 +674,7 @@ export function searchRank(
   if (section.includes(query) || CATEGORY_LABEL[meta.category].toLowerCase().includes(query)) {
     return 4;
   }
+  if (targets.some((t) => t.toLowerCase().includes(query))) return 5;
   return null;
 }
 

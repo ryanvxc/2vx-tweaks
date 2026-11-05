@@ -8,7 +8,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -74,50 +73,46 @@ export function FilterBar({
             <Button variant="outline" className={cn("h-10 px-4", active > 0 && "text-brand")}>
               <ListFilter /> Filter
               {active > 0 && (
-                <span
-                  key={active}
-                  className="animate-pop rounded-full bg-brand/20 px-1.5 text-[10.5px] text-brand tabular"
-                >
+                <span key={active} className="animate-pop tabular">
                   {active}
                 </span>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            {filters.map((g, i) => (
-              <div key={g.id}>
-                {i > 0 && <DropdownMenuSeparator />}
-                <DropdownMenuLabel className="text-[11px] text-muted-foreground">
-                  {g.label}
-                </DropdownMenuLabel>
-                {g.options.map((o) => (
-                  <DropdownMenuCheckboxItem
-                    key={o.value}
-                    checked={g.selected.includes(o.value)}
-                    onSelect={(e) => e.preventDefault()}
-                    onCheckedChange={(on) =>
-                      g.onChange(
-                        on ? [...g.selected, o.value] : g.selected.filter((v) => v !== o.value),
-                      )
-                    }
-                    className="text-[13px]"
-                  >
-                    {o.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </div>
-            ))}
+          {/* Two columns, so every group fits on screen without a second scrollbar. */}
+          <DropdownMenuContent align="start" className="w-[30rem] p-1.5">
+            <div className="columns-2 gap-1.5">
+              {filters.map((g) => (
+                <div key={g.id} className="break-inside-avoid pb-1">
+                  <DropdownMenuLabel className="text-[11px] text-muted-foreground">
+                    {g.label}
+                  </DropdownMenuLabel>
+                  {g.options.map((o) => (
+                    <DropdownMenuCheckboxItem
+                      key={o.value}
+                      checked={g.selected.includes(o.value)}
+                      onSelect={(e) => e.preventDefault()}
+                      onCheckedChange={(on) =>
+                        g.onChange(
+                          on ? [...g.selected, o.value] : g.selected.filter((v) => v !== o.value),
+                        )
+                      }
+                      className="text-[13px]"
+                    >
+                      {o.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </div>
+              ))}
+            </div>
             {active > 0 && (
-              <>
-                <DropdownMenuSeparator />
-                <button
-                  type="button"
-                  className="w-full rounded-sm px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
-                  onClick={() => filters.forEach((g) => g.onChange([]))}
-                >
-                  Clear filters
-                </button>
-              </>
+              <button
+                type="button"
+                className="w-full rounded-sm border-t px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                onClick={() => filters.forEach((g) => g.onChange([]))}
+              >
+                Clear filters
+              </button>
             )}
           </DropdownMenuContent>
         </DropdownMenu>

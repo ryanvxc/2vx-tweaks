@@ -78,13 +78,16 @@ export function OptimisationCard({
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-dashed pt-3">
         {/* Raised above the stretched open-button so tooltips and the control stay usable. */}
         <div className="relative flex min-w-0 items-center gap-1.5">{indicators}</div>
-        {control && <div className="relative shrink-0">{control}</div>}
+        {control && <div className="relative flex shrink-0 justify-end">{control}</div>}
       </div>
     </div>
   );
 }
 
-/** The same thing as a full-width row, for lists: EXM's Security, Devices and game lists. */
+/**
+ * The same thing as a full-width row, for lists. `flat` is for long lists: the row loses its own
+ * panel and sits in a shared one, split by hairlines.
+ */
 export function OptimisationRow({
   leading,
   title,
@@ -95,6 +98,7 @@ export function OptimisationRow({
   openLabel,
   highlighted,
   muted,
+  flat,
   ref,
 }: {
   leading: ReactNode;
@@ -106,6 +110,7 @@ export function OptimisationRow({
   openLabel?: string;
   highlighted?: boolean;
   muted?: boolean;
+  flat?: boolean;
   ref?: Ref<HTMLDivElement>;
 }) {
   return (
@@ -113,13 +118,15 @@ export function OptimisationRow({
       ref={ref}
       data-stagger
       className={cn(
-        "group relative flex h-[68px] items-center gap-4 panel px-5 transition-colors",
-        "hover:bg-raised",
-        highlighted && "border-primary/50",
+        "group relative flex items-center transition-colors hover:bg-raised",
+        flat ? "h-14 gap-3 px-4" : "h-[68px] gap-4 panel px-5",
+        highlighted && (flat ? "bg-primary/8" : "border-primary/50"),
         muted && "opacity-60",
       )}
     >
-      <span className="flex size-9 shrink-0 items-center justify-center">{leading}</span>
+      <span className={cn("flex shrink-0 items-center justify-center", flat ? "size-7" : "size-9")}>
+        {leading}
+      </span>
       <div className="min-w-0 flex-1">
         {onOpen ? (
           <button
@@ -137,7 +144,8 @@ export function OptimisationRow({
         {description && <p className="truncate text-[13px] text-muted-foreground">{description}</p>}
       </div>
       {indicators && <div className="relative flex items-center gap-1.5">{indicators}</div>}
-      {control && <div className="relative shrink-0">{control}</div>}
+      {/* A fixed slot, so a label in one row doesn't push that row's indicators out of line. */}
+      {control && <div className="relative flex w-32 shrink-0 justify-end">{control}</div>}
     </div>
   );
 }

@@ -26,7 +26,15 @@ checked at 1280×720, 1024×600 and maximised. The window has since been fixed a
 
 ## Summary
 
-Version 0.3 adds the Library (`/library`): 1,221 more tweaks from the supplied tweak collection, 1,285 in all, with presets,
+Version 0.4 is a redesign to EXM's layout, and the journal moves to schema 2 (a `device` column, so undo never touches a
+different adapter or GPU). The Library and Monitoring pages are gone and every tweak lives with its topic;
+every page has the same title, tabs, search, filter and sort; Hardware shows real details; PC Cleaner shows real progress,
+service states and scheduled startup tasks; Adapter Tuner writes real driver settings (15 tweaks, 1,300 in all); Bufferbloat
+measures latency under load with no grade; Resources opens Windows tools and exports the report; Settings gained Open at
+sign-in. Tested read-only in the real app on the dev PC: no tweak was applied, nothing was cleaned, and the broker's real UAC
+path, adapter writes, auto launch and the save dialog have only unit tests. See `MODEL_CONTRIBUTIONS.md`.
+
+Version 0.3 added the Library: 1,221 more tweaks from the supplied tweak collection, 1,285 in all, with presets,
 whole-library search and hardware checks. Every one passes the simulated apply, verify, re-plan and restore test, and every
 state was read on a real PC, but none has been written to a real PC yet. See
 [OPTIMISATION_IMPLEMENTATION_STATUS.md](OPTIMISATION_IMPLEMENTATION_STATUS.md).
@@ -39,8 +47,8 @@ Cleaner, Services, Uninstall, Autoruns), the Restore Centre and Tools are real p
 and a signed Tauri updater with an Update Centre is built (`UPDATE_SYSTEM.md`). The repository is public at `ryanvxc/2vx-tweaks`,
 the signing secrets are set, and the pipeline published prereleases v0.2.0 and v0.2.1 with the update feed. The
 update from v0.2.2 to v0.2.3 installed through Check for updates, the first CI-to-CI update. The broker's real UAC path
-(P0-7) still needs a VM. Not built: Adapter Tuner's per-adapter settings (read-only for now), and changing MSI mode or
-disabling devices, which need new engine primitives and a VM to test on.
+(P0-7) still needs a VM. Not built: changing MSI mode or disabling devices, which need new engine primitives and a VM to
+test on.
 
 ## Status by area
 
@@ -54,9 +62,9 @@ disabling devices, which need new engine primitives and a VM to test on.
 | Dashboard: system health                                                                                          | **Implemented** (read-only heuristics, unit-tested)                  | Detail lines truncate at minimum width                                                                                                                                              | Layout fix                                                  | P1-1        |
 | Dashboard: Recommendations | **Implemented** (derived) | Recommended tweaks are derived from detected state and drive the action button and Quickstart; no sample data left on Home. | Keep | – |
 | Dashboard: Recently applied                                                                                       | **Implemented** (last 4 journal batches)                             | –                                                                                                                                                                                   | Keep                                                        | –           |
-| Monitoring page | **Implemented** (Hardware page, 0.2) | `/monitoring` redirects to `/hardware`. Per-thread CPU, GPU, memory, storage, network tabs from the existing sampler. No disk throughput or persisted history. | Extend sampler | P1-3 |
+| Live usage | **Implemented** (Home, 0.4) | CPU, GPU, RAM and Network over one or five minutes. `/monitoring` lands on Home. No disk throughput or persisted history. | Extend sampler | P1-3 |
 | Game Mode page | **Implemented** (detection, ring, Configure, Add a Game) | Turning on reviews and applies the chosen tweaks; turning off reverts that batch. Stays on until turned off: session-scoped automatic undo is P2-2 | Automatic undo on game exit | P2-2 |
-| Tweaks page | **Implemented** (topic tabs, 33 tweaks, card grid, filters, switch-off undo, break warnings) | Desktop flow not yet run on a VM | VM checklist | P0-7 |
+| Tweaks page | **Implemented** (topic tabs, cards and folding sections, presets, filters, sort, switch-off undo, break warnings) | Desktop flow not yet run on a VM | VM checklist | P0-7 |
 | PC Cleaner page | **Implemented, not exercised on the dev PC** | Four tabs. Checked read-only in the real app, with every dialog opened and cancelled; cleaning, uninstalling, reinstalling, switching entries and the UAC path have only unit tests | Run them on a VM | P0-7, P1-5, P1-6 |
 | Resources page | **Partial** | Copyable system report and Windows tool commands to copy; nothing is launched (no process spawning). | SFC/DISM per P0-8c | P2-8 |
 | Settings page | **Implemented** (row-based sections, Update Centre) | No journal export or log viewer yet | Journal export, log viewer | P1-10 |

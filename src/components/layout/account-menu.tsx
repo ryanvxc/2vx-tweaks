@@ -11,6 +11,16 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -44,9 +54,10 @@ export function AccountMenu({ collapsed, onSearch }: { collapsed: boolean; onSea
   // Always mounted, unlike the menu's contents, so the updater starts with the app.
   const { state: update } = useUpdater();
   const [settingUp, setSettingUp] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const name = account?.email.split("@")[0];
 
-  const logOut = () => {
+  const removeAccount = () => {
     backend
       .clearAccount()
       .then(refreshAccount, (err: unknown) => toast.error(toBackendError(err).message));
@@ -100,7 +111,7 @@ export function AccountMenu({ collapsed, onSearch }: { collapsed: boolean; onSea
                 </div>
               )}
               <div className="truncate text-[12px] text-info tabular">
-                {[account && "Local account", app && `v${app.version}`].filter(Boolean).join(" · ")}
+                {app && `Version ${app.version}`}
               </div>
             </div>
           </div>
@@ -118,23 +129,38 @@ export function AccountMenu({ collapsed, onSearch }: { collapsed: boolean; onSea
               Settings
             </MenuRow>
             <MenuRow icon={MonitorCog} onSelect={() => void navigate("/hardware")}>
-              System detection
+              Hardware
             </MenuRow>
             <UpdateMenuItem className={ROW} />
           </div>
           {account && (
             <div className="px-3 pb-3">
               <DropdownMenuItem
-                onSelect={logOut}
+                onSelect={() => setRemoving(true)}
                 className="h-10 justify-between rounded-lg border px-3 text-[13.5px] focus:bg-sidebar-accent"
               >
-                Log out
+                Remove account
                 <LogOut className="size-[18px]" strokeWidth={1.75} aria-hidden />
               </DropdownMenuItem>
             </div>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog open={removing} onOpenChange={setRemoving}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove account</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deletes the email saved on this PC. Your tweaks and history stay.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={removeAccount}>Remove</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AccountDialog open={settingUp} onOpenChange={setSettingUp} />
     </>

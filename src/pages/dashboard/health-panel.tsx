@@ -1,5 +1,6 @@
 import { CheckCircle2, CircleAlert, TriangleAlert } from "lucide-react";
 import { LoadingRows } from "@/components/common/states";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   HEALTH_HEADLINE,
   summariseHealth,
@@ -52,5 +53,27 @@ export function HealthChecks({ checks }: { checks: HealthCheck[] }) {
         })}
       </ul>
     </div>
+  );
+}
+
+/** The full list behind the Home card, which only has room for the score. */
+export function HealthDialog({
+  open,
+  onOpenChange,
+  checks,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  checks: HealthCheck[];
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[calc(100vh-4rem)] flex-col sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>System health</DialogTitle>
+        </DialogHeader>
+        <HealthChecks checks={checks} />
+      </DialogContent>
+    </Dialog>
   );
 }

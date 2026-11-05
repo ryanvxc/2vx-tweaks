@@ -3,37 +3,28 @@ import { Link } from "react-router";
 import { Megaphone } from "lucide-react";
 import patchNotesArt from "@/assets/home/patch-notes.webp";
 import recentChangesArt from "@/assets/home/recent-changes.webp";
-import systemHealthArt from "@/assets/home/system-health.webp";
+import updateCentreArt from "@/assets/home/system-health.webp";
 import { DataSourceBadge, type DataSource } from "@/components/common/data-source-badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAppInfo, useSnapshots, useTweaks } from "@/hooks/use-system";
+import { useUpdater } from "@/hooks/use-updater";
 import { latestNotes } from "@/lib/changelog";
 import { formatTimestamp } from "@/lib/engine-text";
-import { evaluateHealth, HEALTH_HEADLINE, summariseHealth } from "@/lib/health";
-import type { MetricsSample, SystemSnapshot } from "@/types/system";
-import { HealthChecks } from "./health-panel";
+import { updateStatus } from "./update-status";
 
 const CARD =
   "group relative isolate flex min-h-48 flex-col justify-end overflow-hidden panel p-4 text-left transition-colors duration-300 outline-none hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-ring";
 
-export function UpdatesSection({
-  snapshot,
-  latest,
-}: {
-  snapshot: SystemSnapshot | undefined;
-  latest: MetricsSample | undefined;
-}) {
-  const [reading, setReading] = useState<"notes" | "health" | null>(null);
+export function UpdatesSection() {
+  const [reading, setReading] = useState(false);
   const app = useAppInfo();
+  const { state: update, lastCheckedAt } = useUpdater();
   const snapshots = useSnapshots();
   const tweaks = useTweaks();
 
   const notes = latestNotes();
   const recent = snapshots.data?.[0];
   const names = Object.fromEntries((tweaks.data ?? []).map((t) => [t.id, t.name]));
-  const checks = snapshot ? evaluateHealth(snapshot, latest) : [];
-  const health = summariseHealth(checks);
-  const passed = health.total - health.attention - health.warnings;
 
   return (
     <section className="flex flex-1 flex-col gap-2 pt-1">
@@ -47,7 +38,7 @@ export function UpdatesSection({
           type="button"
           data-stagger
           className={CARD}
-          onClick={() => setReading("notes")}
+          onClick={() => setReading(true)}
           aria-haspopup="dialog"
         >
           <Face art={patchNotesArt} title="Patch Notes">
@@ -70,47 +61,36 @@ export function UpdatesSection({
           </Face>
         </Link>
 
-        <button
-          type="button"
-          data-stagger
-          className={CARD}
-          onClick={() => setReading("health")}
-          aria-haspopup="dialog"
-        >
-          <Face art={systemHealthArt} title="System health" source="derived">
-            {snapshot ? `${HEALTH_HEADLINE[health.status]}, ${passed} of ${health.total}.` : "…"}
+        <Link to="/settings?tab=updates" data-stagger className={CARD}>
+          <Face art={updateCentreArt} title="Update Centre" source="live">
+            {updateStatus(update)}
+            {lastCheckedAt && (
+              <>
+                <br />
+                Checked {formatTimestamp(lastCheckedAt)}
+              </>
+            )}
           </Face>
-        </button>
+        </Link>
       </div>
 
-      <Dialog open={reading !== null} onOpenChange={(open) => !open && setReading(null)}>
+      <Dialog open={reading} onOpenChange={setReading}>
         <DialogContent className="flex max-h-[calc(100vh-4rem)] flex-col sm:max-w-xl">
-          {reading === "health" ? (
-            <>
-              <DialogHeader>
-                <DialogTitle>System health</DialogTitle>
-              </DialogHeader>
-              <HealthChecks checks={checks} />
-            </>
-          ) : (
-            <>
-              <DialogHeader>
-                <DialogTitle>Patch Notes {notes?.version}</DialogTitle>
-              </DialogHeader>
-              <div className="-mr-3 flex min-h-0 flex-col gap-4 overflow-y-auto pr-3">
-                {notes?.sections.map((section) => (
-                  <section key={section.title} className="flex flex-col gap-1.5">
-                    <h3 className="text-section-title">{section.title}</h3>
-                    <ul className="flex list-disc flex-col gap-1 pl-4 text-[13px] leading-relaxed text-muted-foreground marker:text-border">
-                      {section.items.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </section>
-                ))}
-              </div>
-            </>
-          )}
+          <DialogHeader>
+            <DialogTitle>Patch Notes {notes?.version}</DialogTitle>
+          </DialogHeader>
+          <div className="-mr-3 flex min-h-0 flex-col gap-4 overflow-y-auto pr-3">
+            {notes?.sections.map((section) => (
+              <section key={section.title} className="flex flex-col gap-1.5">
+                <h3 className="text-section-title">{section.title}</h3>
+                <ul className="flex list-disc flex-col gap-1 pl-4 text-[13px] leading-relaxed text-muted-foreground marker:text-border">
+                  {section.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
     </section>

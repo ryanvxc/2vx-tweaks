@@ -63,9 +63,12 @@ export type Compatibility =
   | "wrongDevice"
   | "wrongHardware"
   | "notInstalled"
+  /** Plans only: a target can't be read, so it can't be backed up. */
+  | "unreadable"
   | "needsElevation";
 
-export type Hive = "currentUser" | "localMachine" | "scheduledTask" | "powerPlan" | "gpu";
+export type Hive =
+  "currentUser" | "localMachine" | "scheduledTask" | "powerPlan" | "gpu" | "adapter";
 
 export interface RegTarget {
   hive: Hive;
@@ -117,6 +120,8 @@ export interface PlannedChange {
 export interface SkippedTweak {
   tweakId: string;
   reason: Compatibility;
+  /** The read error behind `unreadable`, which names the target. `null` for other reasons. */
+  detail: string | null;
 }
 
 /** Dry-run result. Single use; `applyPlan` refuses it after `expiresAtMs` or if a target moved. */
@@ -176,6 +181,8 @@ export interface OperationOutcome {
   error: string | null;
   changes: ChangeRecord[];
   restart: RestartRequirement;
+  /** Tweaks of the plan that weren't applied. Left out when there are none. */
+  skipped?: SkippedTweak[];
 }
 
 export interface EngineStatus {

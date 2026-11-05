@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { TweakMeta, TweakStatus } from "@/types/engine";
-import { LIBRARY_PRESETS, presetProgress } from "./library-presets";
+import { TWEAK_PRESETS, presetProgress } from "./tweak-presets";
 
-const preset = (id: string) => LIBRARY_PRESETS.find((p) => p.id === id)!;
+const preset = (id: string) => TWEAK_PRESETS.find((p) => p.id === id)!;
 
 function status(meta: Partial<TweakMeta>, rest: Partial<TweakStatus> = {}): TweakStatus {
   return {

@@ -1,17 +1,17 @@
 import { useState, type ReactNode } from "react";
 import {
+  AppWindow,
   Cpu,
   Gamepad2,
   Gauge,
   Gpu,
   Joystick,
-  ListChecks,
   Loader2,
   MoonStar,
   Plus,
+  PowerOff,
   Settings,
   Timer,
-  Undo2,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -46,16 +46,16 @@ const PROMISES: { icon: LucideIcon; colour: string; title: string; text: string 
     text: "Edge stops running in the background while you play.",
   },
   {
-    icon: ListChecks,
+    icon: AppWindow,
     colour: "text-chart-3",
-    title: "Review first",
-    text: "You see every value before it changes.",
+    title: "Fewer apps",
+    text: "Store apps stop running in the background.",
   },
   {
-    icon: Undo2,
+    icon: PowerOff,
     colour: "text-chart-1",
-    title: "Full undo",
-    text: "Turning it off puts back exactly what it changed.",
+    title: "No preloading",
+    text: "Edge stops loading itself at sign-in.",
   },
 ];
 
@@ -152,7 +152,7 @@ export function GameModeMain({
             }}
           />
           <div className="relative flex min-w-0 flex-col">
-            <DataSourceBadge source="live" className="absolute -top-2 right-0" />
+            <DataSourceBadge source="live" spelled className="absolute -top-2 right-0" />
             <Stat icon={Gamepad2} label="Detected game">
               <span className="block max-w-64 truncate" title={game?.name}>
                 {game?.name ?? "N/A"}

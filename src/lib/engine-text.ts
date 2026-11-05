@@ -2,6 +2,7 @@ import type {
   ChangeStatus,
   Compatibility,
   Evidence,
+  HardwareScope,
   OperationOutcome,
   RestartRequirement,
   SnapshotKind,
@@ -22,9 +23,9 @@ export interface Message {
 }
 
 export const TWEAK_STATE: Record<TweakState, { label: string; tone: Tone }> = {
-  applied: { label: "Applied", tone: "success" },
-  notApplied: { label: "Not applied", tone: "neutral" },
-  partial: { label: "Partly applied", tone: "warning" },
+  applied: { label: "In effect", tone: "success" },
+  notApplied: { label: "Not in effect", tone: "neutral" },
+  partial: { label: "Partly in effect", tone: "warning" },
   unknown: { label: "Unknown", tone: "warning" },
 };
 
@@ -36,6 +37,27 @@ export const COMPATIBILITY: Record<Compatibility, string | null> = {
   wrongDevice: "Not meant for this kind of PC",
   wrongHardware: "Made for other hardware",
   notInstalled: "Not installed on this PC",
+  unreadable: "Its current value can't be read, so it can't be backed up",
+};
+
+/** The same reasons, short enough for the switch's place on a card. */
+export const BLOCKED_LABEL: Record<Compatibility, string | null> = {
+  compatible: null,
+  needsElevation: null,
+  unsupportedBuild: "Other Windows build",
+  unsupportedEdition: "Needs Windows Pro",
+  wrongDevice: "Other PC type",
+  wrongHardware: "Other hardware",
+  notInstalled: "Not installed",
+  unreadable: "Can't be read",
+};
+
+export const HARDWARE_LABEL: Record<Exclude<HardwareScope, "any">, string> = {
+  nvidiaGpu: "NVIDIA GPU",
+  amdGpu: "AMD GPU",
+  intelGpu: "Intel GPU",
+  intelCpu: "Intel CPU",
+  amdCpu: "AMD CPU",
 };
 
 export const EVIDENCE: Record<Evidence, { label: string; note: string }> = {
@@ -119,7 +141,7 @@ export function describeOutcome(outcome: OperationOutcome, kind: SnapshotKind): 
       : {
           tone: "warning",
           title: "Partly reverted",
-          description: "Some values changed since and were left as is.",
+          description: "Some values couldn't be restored and were left as is.",
         };
   }
   switch (outcome.status) {

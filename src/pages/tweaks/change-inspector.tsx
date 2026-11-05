@@ -22,7 +22,7 @@ import {
   restartNote,
 } from "@/lib/engine-text";
 import { backend, toBackendError } from "@/services/backend";
-import type { OperationOutcome, Plan } from "@/types/engine";
+import type { OperationOutcome, Plan, SkippedTweak } from "@/types/engine";
 import type { BackendError } from "@/types/system";
 
 // Just longer than the dialog's exit in components/ui/dialog.tsx, so the loading rows never show as it leaves.
@@ -99,15 +99,19 @@ export function ChangeInspector({
       (outcome) => {
         refreshEngineState();
         if (id !== run.current) return;
-        // The switch already shows a clean apply. Anything else has to be read, so it stays open.
-        if (outcome.status === "completed" && outcome.snapshotId != null) {
-          onApplied?.(outcome.snapshotId);
+        const { snapshotId } = outcome;
+        if (outcome.status === "completed" && snapshotId != null) {
+          onApplied?.(snapshotId);
           const restart = restartNote(outcome.restart);
           if (restart) toast.info(restart);
-          close();
-        } else {
-          setStep({ kind: "done", outcome });
+          // The switch already shows a clean apply. It can't show what was left out.
+          if (!outcome.skipped?.length) {
+            close();
+            return;
+          }
         }
+        // Anything else has to be read, so it stays open.
+        setStep({ kind: "done", outcome });
       },
       (err: unknown) => {
         const error = toBackendError(err);
@@ -196,6 +200,31 @@ function applyLabel(plan: Plan) {
   return `Apply ${n} change${n === 1 ? "" : "s"}`;
 }
 
+/** What wasn't applied and why. Near the top, where a long list of changes can't bury it. */
+function SkippedList({
+  skipped,
+  names,
+}: {
+  skipped: SkippedTweak[];
+  names: Record<string, string>;
+}) {
+  const n = skipped.length;
+  if (n === 0) return null;
+  return (
+    <Notice tone="warning" title={`Skipped ${n} ${n === 1 ? "tweak" : "tweaks"}`}>
+      <ul className="flex max-h-36 flex-col gap-1 overflow-y-auto pr-1">
+        {skipped.map((s) => (
+          <li key={s.tweakId}>
+            <span className="font-medium text-foreground">{names[s.tweakId] ?? s.tweakId}</span>
+            {": "}
+            {s.detail ?? COMPATIBILITY[s.reason] ?? s.reason}
+          </li>
+        ))}
+      </ul>
+    </Notice>
+  );
+}
+
 function PlanView({
   plan,
   names,
@@ -208,9 +237,14 @@ function PlanView({
   const restart = restartNote(plan.restart);
   return (
     <div className="flex flex-col gap-3">
-      {plan.changes.length === 0 ? (
-        <Notice tone="neutral" title="Nothing to change" />
-      ) : (
+      {plan.changes.length === 0 && (
+        <Notice
+          tone="neutral"
+          title={plan.skipped.length > 0 ? "Nothing can be applied" : "Nothing to change"}
+        />
+      )}
+      <SkippedList skipped={plan.skipped} names={names} />
+      {plan.changes.length > 0 && (
         <>
           <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-muted-foreground">
             {plan.highestRisk && <RiskBadge risk={plan.highestRisk} />}
@@ -253,15 +287,6 @@ function PlanView({
           Already in place: {plan.alreadyApplied.map((id) => names[id] ?? id).join(", ")}.
         </p>
       )}
-      {plan.skipped.length > 0 && (
-        <p className="text-[12.5px] text-muted-foreground">
-          Skipped:{" "}
-          {plan.skipped
-            .map((s) => `${names[s.tweakId] ?? s.tweakId} (${COMPATIBILITY[s.reason] ?? s.reason})`)
-            .join(", ")}
-          .
-        </p>
-      )}
     </div>
   );
 }
@@ -276,6 +301,7 @@ function OutcomeView({
   return (
     <div className="flex flex-col gap-3">
       <MessageNotice {...describeOutcome(outcome, "apply")} />
+      <SkippedList skipped={outcome.skipped ?? []} names={names} />
       {outcome.changes.length > 0 && (
         <ul className="divide-y rounded-md border">
           {outcome.changes.map((c) => (

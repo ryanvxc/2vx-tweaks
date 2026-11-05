@@ -6,7 +6,8 @@ import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { EngineBanner } from "@/components/common/engine-banner";
 import { MessageNotice, StatusLabel } from "@/components/common/notice";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
-import { PageHeader } from "@/components/layout/page-header";
+import { RecommendedAction } from "@/components/common/recommended-action";
+import { PageHero } from "@/components/layout/page-hero";
 import { Button } from "@/components/ui/button";
 import { refreshEngineState, useSnapshots, useTweaks } from "@/hooks/use-system";
 import {
@@ -38,8 +39,12 @@ export function RestorePage() {
         : "low";
 
   return (
-    <>
-      <PageHeader title="Restore Centre" description={summary(data)} />
+    <div className="flex flex-1 flex-col gap-3 font-nav [--font-heading:var(--font-nav)]">
+      <PageHero
+        title="Restore Centre"
+        subtitle={summary(data) ?? "Every change 2VX has made"}
+        action={<RecommendedAction />}
+      />
       <div className="flex flex-1 flex-col gap-3">
         <EngineBanner showHistoryLink={false} />
         <div className="flex flex-1 flex-col overflow-hidden panel">
@@ -82,7 +87,7 @@ export function RestorePage() {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -168,9 +173,18 @@ function SnapshotRow({
         <span className="text-[12.5px] text-muted-foreground tabular">
           {formatTimestamp(s.createdAtMs)}
         </span>
-        <span className="text-right text-[12.5px] text-muted-foreground tabular">
+        {/* A button, so it looks like one: a quiet count that opens the row. */}
+        <Button
+          size="xs"
+          variant="ghost"
+          className="justify-self-end text-muted-foreground tabular"
+          aria-expanded={expanded}
+          aria-controls={detailsId}
+          aria-label={`${s.changeCount} value${s.changeCount === 1 ? "" : "s"} in #${s.id}`}
+          onClick={() => setExpanded((e) => !e)}
+        >
           {s.changeCount}
-        </span>
+        </Button>
         {revertable ? (
           <Button
             size="xs"

@@ -66,11 +66,11 @@ export const QUICKSTART_STEPS: QuickstartStep[] = [
     done: visited("backups"),
   },
   {
-    id: "monitoring",
-    title: "Watch your PC live",
-    text: "CPU, GPU, memory and network.",
-    to: "/monitoring",
-    done: visited("monitoring"),
+    id: "resources",
+    title: "Open Resources",
+    text: "System report and Windows tools.",
+    to: "/tools",
+    done: visited("resources"),
   },
 ];
 

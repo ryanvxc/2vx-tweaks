@@ -1,4 +1,4 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { Channel, invoke, isTauri } from "@tauri-apps/api/core";
 import type {
   ChangeRecord,
   EngineStatus,
@@ -11,18 +11,25 @@ import type {
 import type {
   Account,
   AppInfo,
+  AutoLaunch,
   BackendError,
   MetricsSample,
   CleanupLocation,
+  CleanupProgress,
   CleanupResult,
   DeviceReport,
   ExternalLink,
+  HardwareDetails,
+  PingResult,
+  PingTarget,
   RemovableApp,
+  ServiceState,
   SleepSample,
   StartupInventory,
   SystemSnapshot,
   UpdateSupport,
   RunningProgram,
+  WindowsTool,
 } from "@/types/system";
 import { preview } from "./preview";
 
@@ -78,13 +85,42 @@ export const backend = {
   getDeviceReport: (): Promise<DeviceReport> =>
     isDesktop ? call("get_device_report") : Promise.resolve(preview.deviceReport()),
 
+  /** CPU layout, memory modules, drives, GPU drivers and devices. Read-only, needs no prompt. */
+  getHardwareDetails: (): Promise<HardwareDetails> =>
+    isDesktop ? call("get_hardware_details") : Promise.resolve(preview.hardwareDetails()),
+
   /** How long a one-millisecond sleep really takes. Only sleeps. */
   measureSleep: (): Promise<SleepSample[]> =>
     isDesktop ? call("measure_sleep") : Promise.resolve(preview.sleepSamples()),
 
+  /** State of the services the catalogue's tweaks name. Read-only. */
+  getServiceStates: (): Promise<ServiceState[]> =>
+    isDesktop ? call("get_service_states") : Promise.resolve(preview.serviceStates()),
+
+  /** One ICMP echo with a 1 s timeout. Only ever started by the user. */
+  pingTarget: (target: PingTarget): Promise<PingResult> =>
+    isDesktop ? call("ping_target", { target }) : Promise.resolve(preview.ping(target)),
+
   /** Opens a page from the backend's fixed list. Takes an entry name, never an address. */
   openLink: (link: ExternalLink): Promise<void> =>
     isDesktop ? call("open_link", { link }) : Promise.resolve(),
+
+  /** Opens a Windows tool from the backend's fixed list. Takes a name, never a command. */
+  openTool: (tool: WindowsTool): Promise<void> =>
+    isDesktop ? call("open_tool", { tool }) : Promise.resolve(),
+
+  openLogFolder: (): Promise<void> => (isDesktop ? call("open_log_folder") : Promise.resolve()),
+
+  /** Shows the save dialog. Resolves to the file's name, or `null` if the user cancels. */
+  exportReport: (text: string): Promise<string | null> =>
+    isDesktop ? call("export_report", { text }) : preview.refuse(),
+
+  /** Whether 2VX opens at sign-in. Off unless the user turned it on. */
+  getAutoLaunch: (): Promise<AutoLaunch> =>
+    isDesktop ? call("get_auto_launch") : Promise.resolve("off"),
+
+  setAutoLaunch: (on: boolean): Promise<void> =>
+    isDesktop ? call("set_auto_launch", { enabled: on }) : preview.refuse(),
 
   /** Samples newer than `sinceMs`, or the full backend history (up to 5 min) when omitted. */
   getMetrics: (sinceMs?: number): Promise<MetricsSample[]> =>
@@ -100,9 +136,19 @@ export const backend = {
   scanCleanupLocations: (): Promise<CleanupLocation[]> =>
     isDesktop ? call("scan_cleanup_locations") : preview.cleanup(),
 
-  /** Clears allowlisted locations. Can't be undone, and may show one UAC prompt. */
-  cleanLocations: (ids: string[]): Promise<CleanupResult[]> =>
-    isDesktop ? call("clean_locations", { ids }) : preview.refuse(),
+  /**
+   * Clears allowlisted locations. Can't be undone, and may show one UAC prompt. Refusing it doesn't
+   * reject: those locations come back with status `elevationDeclined`.
+   */
+  runCleanup: (
+    ids: string[],
+    onProgress?: (progress: CleanupProgress) => void,
+  ): Promise<CleanupResult[]> => {
+    if (!isDesktop) return preview.refuse();
+    const channel = new Channel<CleanupProgress>();
+    if (onProgress) channel.onmessage = onProgress;
+    return call("clean_locations", { ids, onProgress: channel });
+  },
 
   /** Switches a startup entry by the ID a scan gave it. May show one UAC prompt. */
   setStartupEnabled: (id: string, enabled: boolean): Promise<void> =>
@@ -146,7 +192,7 @@ export const backend = {
   revertTweaks: (tweakIds: string[]): Promise<OperationOutcome> =>
     isDesktop ? call("revert_tweaks", { tweakIds }) : preview.refuse(),
 
-  /** Newest first; the backend defaults to 50. */
+  /** Newest first; the backend defaults to 50 and returns at most 5,000. */
   listSnapshots: (limit?: number): Promise<SnapshotRecord[]> =>
     isDesktop ? call("list_snapshots", { limit: limit ?? null }) : Promise.resolve([]),
 

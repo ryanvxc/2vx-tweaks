@@ -14,7 +14,7 @@ use crate::engine::setting::{RegTarget, RegValue, describe};
 use crate::error::{AppError, AppResult};
 
 /// Bump when adding a migration below.
-const SCHEMA_VERSION: i64 = 1;
+const SCHEMA_VERSION: i64 = 2;
 
 const MIGRATION_1: &str = r#"
 CREATE TABLE snapshots (
@@ -49,6 +49,11 @@ CREATE TABLE audit_log (
     detail TEXT    NOT NULL                   -- JSON
 );
 "#;
+
+/// Which driver instance a change reached (`0008`), for targets that resolve to a device. NULL on
+/// every other target, and on rows from before this column, which match any device as they always
+/// did. In the wild those are `Hive::Gpu` rows from 0.3.
+const MIGRATION_2: &str = "ALTER TABLE changes ADD COLUMN device TEXT;";
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -153,6 +158,10 @@ pub struct ChangeRecord {
     pub target: RegTarget,
     /// Display forms, as in `PlannedChange`, so history needs no value formatting in the UI.
     pub target_label: String,
+    /// The driver instance this change reached, which undo compares with where the target resolves
+    /// to now. Not sent to the UI. `None` for a fixed location and for rows from before schema 2.
+    #[serde(skip)]
+    pub device: Option<String>,
     pub before: Option<RegValue>,
     pub before_label: String,
     pub after: Option<RegValue>,
@@ -229,6 +238,9 @@ impl Journal {
         if version < 1 {
             tx.execute_batch(MIGRATION_1)?;
         }
+        if version < 2 {
+            tx.execute_batch(MIGRATION_2)?;
+        }
         tx.pragma_update(None, "user_version", SCHEMA_VERSION)?;
         tx.commit()?;
         Ok(())
@@ -252,6 +264,16 @@ impl Journal {
             )?;
         }
         Ok(count)
+    }
+
+    /// Counted here rather than from `snapshots`: engine status runs often and the history is long.
+    pub fn interrupted_count(&self) -> AppResult<usize> {
+        let count: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM snapshots WHERE status = ?1",
+            [SnapshotStatus::Interrupted.as_str()],
+            |row| row.get(0),
+        )?;
+        Ok(count as usize)
     }
 
     pub fn begin_snapshot(
@@ -304,18 +326,20 @@ impl Journal {
         seq: usize,
         tweak_id: &str,
         target: &RegTarget,
+        device: Option<&str>,
         before: &Option<RegValue>,
         after: &Option<RegValue>,
         status: ChangeStatus,
     ) -> AppResult<i64> {
         self.conn.execute(
-            "INSERT INTO changes (snapshot_id, seq, tweak_id, target, before_value, after_value, status, updated_at_ms)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            "INSERT INTO changes (snapshot_id, seq, tweak_id, target, device, before_value, after_value, status, updated_at_ms)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             params![
                 snapshot_id,
                 seq as i64,
                 tweak_id,
                 to_json(target)?,
+                device,
                 to_json(before)?,
                 to_json(after)?,
                 status.as_str(),
@@ -415,6 +439,7 @@ impl Journal {
                 r.get::<_, String>(7)?,
                 r.get::<_, Option<String>>(8)?,
                 r.get::<_, i64>(9)?,
+                r.get::<_, Option<String>>(10)?,
             ))
         })?;
         rows.map(|row| {
@@ -429,6 +454,7 @@ impl Journal {
                 status,
                 error,
                 updated_at_ms,
+                device,
             ) = row?;
             let target: RegTarget = from_json(&target)?;
             let before = from_json(&before)?;
@@ -440,6 +466,7 @@ impl Journal {
                 tweak_id,
                 target_label: target.to_string(),
                 target,
+                device,
                 before_label: describe(&before),
                 before,
                 after_label: describe(&after),
@@ -461,7 +488,7 @@ impl Journal {
     }
 }
 
-const CHANGE_SELECT: &str = "SELECT id, snapshot_id, seq, tweak_id, target, before_value, after_value, status, error, updated_at_ms FROM changes";
+const CHANGE_SELECT: &str = "SELECT id, snapshot_id, seq, tweak_id, target, before_value, after_value, status, error, updated_at_ms, device FROM changes";
 
 /// Rows of finished or interrupted apply snapshots that may still be in effect: the same
 /// filter `Engine::revert` uses for a whole snapshot.
@@ -541,6 +568,7 @@ mod tests {
                 0,
                 "gaming.test",
                 &target(),
+                None,
                 &None,
                 &Some(RegValue::Dword(1)),
                 ChangeStatus::Intent,
@@ -577,6 +605,7 @@ mod tests {
                 0,
                 "t",
                 &target(),
+                None,
                 &None,
                 &Some(RegValue::Dword(1)),
                 ChangeStatus::Intent,
@@ -591,6 +620,111 @@ mod tests {
         assert_eq!(j.changes(snap.id).unwrap()[0].status, ChangeStatus::Intent);
         // Idempotent.
         assert_eq!(j.recover_interrupted().unwrap(), 0);
+        assert_eq!(j.interrupted_count().unwrap(), 1);
+    }
+
+    /// A journal as 0.3 wrote it: schema 1, with a `Gpu` row that says nothing about its device.
+    fn version_1_journal(path: &Path) -> RegTarget {
+        let gpu = RegTarget::new(Hive::Gpu, "Nvidia", "RmTest");
+        let conn = Connection::open(path).unwrap();
+        conn.execute_batch(MIGRATION_1).unwrap();
+        conn.pragma_update(None, "user_version", 1).unwrap();
+        conn.execute(
+            "INSERT INTO snapshots (id, kind, tweak_ids, status, app_version, created_at_ms)
+             VALUES (1, 'apply', '[\"gpu.test\"]', 'completed', '0.3.0', 0)",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO changes (snapshot_id, seq, tweak_id, target, before_value, after_value, status, updated_at_ms)
+             VALUES (1, 0, 'gpu.test', ?1, 'null', '{\"type\":\"dword\",\"data\":0}', 'verified', 0)",
+            [to_json(&gpu).unwrap()],
+        )
+        .unwrap();
+        gpu
+    }
+
+    #[test]
+    fn a_version_1_journal_opens_and_keeps_its_rows() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("journal.db");
+        let gpu = version_1_journal(&path);
+
+        let mut j = Journal::open(&path).unwrap();
+        let version: i64 = j
+            .conn
+            .query_row("PRAGMA user_version", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(version, SCHEMA_VERSION);
+
+        let old = &j.undoable_changes("gpu.test").unwrap()[0];
+        assert!(old.target.same_as(&gpu));
+        assert_eq!(old.device, None, "a legacy row has no device");
+        assert_eq!(old.status, ChangeStatus::Verified);
+        assert_eq!(old.after, Some(RegValue::Dword(0)));
+        assert!(j.undoable_tweaks().unwrap().contains("gpu.test"));
+
+        // New rows carry their device beside it.
+        let s = j
+            .begin_snapshot(SnapshotKind::Apply, &["gpu.test".into()], None)
+            .unwrap();
+        j.record_change(
+            s,
+            0,
+            "gpu.test",
+            &gpu,
+            Some("0001"),
+            &None,
+            &Some(RegValue::Dword(0)),
+            ChangeStatus::Verified,
+        )
+        .unwrap();
+        j.finish_snapshot(s, SnapshotStatus::Completed, None)
+            .unwrap();
+        assert_eq!(j.changes(s).unwrap()[0].device.as_deref(), Some("0001"));
+        drop(j);
+
+        // Opening again doesn't try to add the column a second time.
+        let reopened = Journal::open(&path).unwrap();
+        assert_eq!(reopened.undoable_changes("gpu.test").unwrap().len(), 2);
+    }
+
+    #[test]
+    fn a_failed_migration_leaves_the_version_alone() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("journal.db");
+        version_1_journal(&path);
+        // With the column already there, the migration fails.
+        Connection::open(&path)
+            .unwrap()
+            .execute_batch(MIGRATION_2)
+            .unwrap();
+
+        assert!(matches!(Journal::open(&path), Err(AppError::Storage(_))));
+        let version: i64 = Connection::open(&path)
+            .unwrap()
+            .query_row("PRAGMA user_version", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(version, 1, "nothing half-done is recorded as done");
+    }
+
+    #[test]
+    fn a_rows_device_never_reaches_the_ui() {
+        let mut j = Journal::open_in_memory().unwrap();
+        let s = j.begin_snapshot(SnapshotKind::Apply, &[], None).unwrap();
+        j.record_change(
+            s,
+            0,
+            "t",
+            &target(),
+            Some("0008"),
+            &None,
+            &None,
+            ChangeStatus::Intent,
+        )
+        .unwrap();
+        let json = serde_json::to_value(&j.changes(s).unwrap()[0]).unwrap();
+        assert!(json.get("device").is_none());
     }
 
     #[test]

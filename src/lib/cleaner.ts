@@ -26,14 +26,25 @@ export interface CleanupSummary {
   freed: number;
   /** Files something still had open. */
   skipped: number;
-  /** Why locations weren't cleared at all, one reason each. */
-  failures: string[];
+  /** Locations that ran to the end. */
+  cleared: number;
+  /** Locations whose administrator prompt was declined: nothing ran there. */
+  declined: string[];
+  /** Locations that failed, with the reason each gave. */
+  failures: { id: string; reason: string }[];
 }
 
 export function summariseCleanup(results: CleanupResult[]): CleanupSummary {
   return {
     freed: results.reduce((n, r) => n + r.freedBytes, 0),
     skipped: results.reduce((n, r) => n + r.skippedFiles, 0),
-    failures: [...new Set(results.flatMap((r) => (r.error ? [r.error] : [])))],
+    cleared: results.filter((r) => r.status === "cleared").length,
+    declined: results.filter((r) => r.status === "elevationDeclined").map((r) => r.id),
+    failures: results
+      .filter((r) => r.status === "failed")
+      .map((r) => ({ id: r.id, reason: r.error ?? "Couldn't be cleared" })),
   };
 }
+
+/** Only a run that cleared something counts as a run: a declined prompt changed nothing. */
+export const didClean = (summary: CleanupSummary): boolean => summary.cleared > 0;

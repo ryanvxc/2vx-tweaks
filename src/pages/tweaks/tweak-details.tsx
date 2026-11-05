@@ -1,7 +1,6 @@
 import { createElement, useState } from "react";
 import { AlertTriangle, ArrowRight, ExternalLink } from "lucide-react";
 import { StatusLabel } from "@/components/common/notice";
-import { RiskBadge } from "@/components/common/risk-badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,15 +10,44 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { COMPATIBILITY, EVIDENCE, isBlocked, RESTART_HINT, TWEAK_STATE } from "@/lib/engine-text";
+import {
+  COMPATIBILITY,
+  EVIDENCE,
+  HARDWARE_LABEL,
+  isBlocked,
+  RESTART_HINT,
+  TWEAK_STATE,
+} from "@/lib/engine-text";
 import { CATEGORY_LABEL, tweakIcon } from "@/lib/tweak-presentation";
-import type { Impact, TweakStatus } from "@/types/engine";
+import type { Impact, RiskLevel, TweakMeta, TweakStatus } from "@/types/engine";
 
 const IMPACT_LABEL: Record<Impact, string> = {
-  low: "Small effect (estimate)",
-  medium: "Noticeable effect (estimate)",
-  high: "Large effect (estimate)",
+  low: "Small (estimate)",
+  medium: "Noticeable (estimate)",
+  high: "Large (estimate)",
 };
+
+const RISK_LABEL: Record<RiskLevel, string> = {
+  low: "Low",
+  moderate: "Medium",
+  high: "High",
+};
+
+/** Windows 10's first build: the default range, so it needs no line of its own. */
+const FIRST_SUPPORTED_BUILD = 10240;
+
+/** How a tweak would come back off, in the journal's terms. */
+function undoLabel({ state, undoable }: TweakStatus): string {
+  if (undoable) return "Restores the recorded values";
+  if (state === "applied") return "Set outside 2VX, so nothing to restore";
+  return "Saves the current values first";
+}
+
+/** The Windows builds it runs on, when they're narrower than every supported build. */
+function buildsLabel({ supportedBuilds: { minBuild, maxBuild } }: TweakMeta): string | null {
+  if (maxBuild !== null) return `Builds ${minBuild} to ${maxBuild}`;
+  return minBuild > FIRST_SUPPORTED_BUILD ? `Build ${minBuild} or later` : null;
+}
 
 /** The full explanation of one tweak: what changes, exact values, sources. */
 export function TweakDetails({
@@ -42,9 +70,20 @@ export function TweakDetails({
   if (!shown) return null;
   const { meta, state, compatibility } = shown;
   const stateInfo = TWEAK_STATE[state];
-  // The administrator pill below already says this.
-  const note = compatibility === "needsElevation" ? null : COMPATIBILITY[compatibility];
   const restart = RESTART_HINT[meta.restart];
+  const builds = buildsLabel(meta);
+  const facts: [string, string][] = [
+    ["Expected effect", IMPACT_LABEL[meta.impact]],
+    ["Risk", RISK_LABEL[meta.risk]],
+    ["Runs as", meta.permission === "administrator" ? "Administrator" : "Your account"],
+    ["Takes effect", restart ?? "Straight away"],
+    ["Undo", undoLabel(shown)],
+    ["Evidence", EVIDENCE[meta.evidence].label],
+    ...(meta.hardware === "any"
+      ? []
+      : [["Hardware", `${HARDWARE_LABEL[meta.hardware]} only`] as [string, string]]),
+    ...(builds ? [["Windows", builds] as [string, string]] : []),
+  ];
   const blocked = isBlocked(compatibility);
   const onPowerPlan = shown.settings.some((s) => s.target.hive === "powerPlan");
 
@@ -67,19 +106,23 @@ export function TweakDetails({
         </DialogHeader>
 
         <div className="-mx-6 flex min-h-0 flex-col gap-4 overflow-y-auto px-6">
-          <div className="flex flex-wrap gap-1.5">
-            <StatusLabel tone={stateInfo.tone}>{stateInfo.label}</StatusLabel>
-            <RiskBadge risk={meta.risk} />
-            <StatusLabel tone="neutral">{IMPACT_LABEL[meta.impact]}</StatusLabel>
-            {meta.permission === "administrator" && <StatusLabel tone="info">Admin</StatusLabel>}
-            {restart && <StatusLabel tone="neutral">{restart}</StatusLabel>}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <StatusLabel tone={stateInfo.tone}>
+              {state === "applied" && !shown.undoable ? "Already set" : stateInfo.label}
+            </StatusLabel>
             {meta.recommended && <StatusLabel tone="success">Recommended</StatusLabel>}
-            {meta.section && (
-              <StatusLabel tone="neutral">{EVIDENCE[meta.evidence].label}</StatusLabel>
-            )}
+            {blocked && <StatusLabel tone="warning">{COMPATIBILITY[compatibility]}</StatusLabel>}
           </div>
-          {note && <p className="text-[12.5px] text-muted-foreground">{note}</p>}
-          {meta.section && meta.evidence !== "documented" && (
+
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg border px-3 py-2.5 text-[12.5px]">
+            {facts.map(([label, value]) => (
+              <div key={label} className="min-w-0">
+                <dt className="text-muted-foreground">{label}</dt>
+                <dd className="font-medium">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          {meta.evidence !== "documented" && (
             <p className="text-[12.5px] text-muted-foreground">{EVIDENCE[meta.evidence].note}</p>
           )}
           {onPowerPlan && (
@@ -96,13 +139,16 @@ export function TweakDetails({
           )}
 
           {meta.details !== meta.description && (
-            <p data-selectable className="text-[13px] leading-relaxed text-muted-foreground">
-              {meta.details}
-            </p>
+            <section>
+              <h3 className="mb-1 text-[12.5px] font-semibold">Why</h3>
+              <p data-selectable className="text-[13px] leading-relaxed text-muted-foreground">
+                {meta.details}
+              </p>
+            </section>
           )}
 
           <section>
-            <h3 className="mb-1.5 text-[12.5px] font-semibold">Values on this PC</h3>
+            <h3 className="mb-1.5 text-[12.5px] font-semibold">What it changes</h3>
             <ul className="divide-y rounded-lg border">
               {shown.settings.map((s) => (
                 <li key={s.targetLabel} className="flex flex-col gap-1 px-3 py-2">
@@ -133,12 +179,6 @@ export function TweakDetails({
               ))}
             </ul>
           </section>
-
-          {state === "applied" && !shown.undoable && (
-            <p className="text-[12.5px] text-muted-foreground">
-              Set outside 2VX, so there's nothing to undo.
-            </p>
-          )}
         </div>
 
         <DialogFooter>

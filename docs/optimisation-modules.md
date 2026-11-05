@@ -137,19 +137,19 @@ that depend on the PC.
 | `windows.rdp-com-redirect-off` | `HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\fDisableCcm` = `1` | Pro+ | ADMX_TerminalServer |
 | `windows.rdp-pnp-redirect-off` | same key, `fDisablePNPRedir` = `1` | Pro+ | ADMX_TerminalServer |
 
-## The Library
+## The long lists
 
-`engine/tweaks/library/` holds 1,221 more tweaks, placed on `/library` by their `section`. They come from the audit in
+`engine/tweaks/library/` holds 1,221 more tweaks, placed on their topic's page by `category` and `section`. They come from the audit in
 [OPTIMISATION_LIBRARY_AUDIT.md](OPTIMISATION_LIBRARY_AUDIT.md), and [OPTIMISATION_CATEGORIES.md](OPTIMISATION_CATEGORIES.md)
 says how they're organised. They pass the same gate as everything else, with one difference: `evidence` records how well
 each one is established, so not all of them have a Microsoft page. Values no Windows or driver file contains were left out.
 
-Left out of the first set (the Library has since added some of these, labelled with their evidence):
+Left out of the first set (the long lists have since added some of these, labelled with their evidence):
 
 - **Security switches.** BottomUp and HighEntropy ASLR, Memory integrity, kernel stack randomization and SmartScreen are
   security features; Advanced shows their state and never changes them. Fault Tolerant Heap is a reliability feature, so
   it stays.
-- **`TdrDelay` and friends.** Microsoft: "End users shouldn't manipulate these registry keys." Now in the Library with a warning.
+- **`TdrDelay` and friends.** Microsoft: "End users shouldn't manipulate these registry keys." Now on Hardware with a warning.
 - **No official page.** `HwSchMode`, `NetworkThrottlingIndex`, `EnablePrefetcher`, `SvcHostSplitThresholdInKB`,
   `HibernateEnabled`, `GlobalTimerResolutionRequests`.
 - **`GPU Priority`.** Microsoft: "This priority is not yet used."

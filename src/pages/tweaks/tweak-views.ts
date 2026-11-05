@@ -1,16 +1,16 @@
 import type { ReactNode } from "react";
 import {
   ADVANCED_TABS,
+  CLEANER_TABS,
   HARDWARE_TABS,
-  LIBRARY_TABS,
   NETWORK_TABS,
   TWEAK_TABS,
   type NavTab,
 } from "@/app/navigation";
 import type { TweakStatus } from "@/types/engine";
 
-/** `check` marks what's in effect; `letter` is a tile with the first letter, for game lists. */
-export type RowStyle = "check" | "letter";
+/** `icon` shows the tweak's own icon; `letter` is a tile with the first letter, for game lists. */
+export type RowStyle = "icon" | "letter";
 
 /** What a tab's own content can reach: the catalogue and the page's review. */
 export interface TweakViewContext {
@@ -38,29 +38,15 @@ export interface TweakView {
   intro?: (tab: string) => ReactNode;
   /** A tab's own content, in place of the search row and tweaks. */
   body?: (tab: string, context: TweakViewContext) => ReactNode;
-  /**
-   * For a page too long for cards: rows in collapsed sections, a search across every tweak in the
-   * app, and the extra filters.
-   */
-  library?: boolean;
 }
 
 export const TWEAKS_VIEW: TweakView = {
   route: "/tweaks",
   title: "Tweaks",
-  subtitle: "Documented settings, each with an undo.",
+  subtitle: "Windows, privacy, gaming, apps, tasks and power.",
   tabs: TWEAK_TABS,
   defaultTab: "core",
   headings: "always",
-};
-
-export const LIBRARY_VIEW: TweakView = {
-  route: "/library",
-  title: "Library",
-  subtitle: "Every setting is backed up and can be undone.",
-  tabs: LIBRARY_TABS,
-  defaultTab: "presets",
-  library: true,
 };
 
 export const HARDWARE_VIEW: TweakView = {
@@ -74,7 +60,7 @@ export const HARDWARE_VIEW: TweakView = {
 export const NETWORK_VIEW: TweakView = {
   route: "/network",
   title: "Network",
-  subtitle: "Documented network settings and game priority.",
+  subtitle: "Network settings, game priority and your adapters.",
   tabs: NETWORK_TABS,
   defaultTab: "tweaks",
   rows: { priority: "letter" },
@@ -87,5 +73,13 @@ export const ADVANCED_VIEW: TweakView = {
   subtitle: "Security status, interrupts, devices and the system timer.",
   tabs: ADVANCED_TABS,
   defaultTab: "security",
-  rows: { security: "check", devices: "check" },
+  rows: { security: "icon", devices: "icon" },
+};
+
+export const CLEANER_VIEW: TweakView = {
+  route: "/cleaner",
+  title: "PC Cleaner",
+  subtitle: "Free up space and choose what stays on this PC.",
+  tabs: CLEANER_TABS,
+  defaultTab: "system",
 };

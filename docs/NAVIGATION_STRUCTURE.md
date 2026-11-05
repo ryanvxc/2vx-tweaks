@@ -6,7 +6,6 @@ Poppins; everything else uses Geist.
 ```
 General
   Home             /
-  Monitoring       /monitoring          ?tab=cpu | memory | gpu | network
   Restore Centre   /restore
   Resources        /tools
 
@@ -14,9 +13,7 @@ Tools
   2VX Game Mode    /gaming              ?view=configure (brand colour)
 
 Optimisations
-  Tweaks           /tweaks              ?tab=core | privacy | apps | services
-  Library          /library             ?tab=presets | windows | privacy | services | tasks | gaming | cpu | gpu |
-                                             memory | network | apps | storage | power
+  Tweaks           /tweaks              ?tab=core | privacy | gaming | apps | tasks | power | presets
   Hardware         /hardware            ?tab=gpu | cpu | ram | peripherals | storage
   PC Cleaner       /cleaner             ?tab=system | services | uninstall | autoruns
   Network          /network             ?tab=tweaks | priority | adapters | bufferbloat
@@ -25,31 +22,33 @@ Optimisations
 [Account card]     opens the account menu
 ```
 
-Ten rows in three groups. Rows and groups share out the sidebar's height, so the list ends a little above the account
-card at any window size. A row stops growing at 64 px; on a taller window the spare height goes between the groups.
+Nine rows in three groups, named as EXM names them. Rows and groups share out the sidebar's height, so the list ends a
+little above the account card at any window size. A row stops growing at 46 px; on a taller window the spare height goes
+between the groups.
 Settings has no sidebar row: it's in the account menu, Search and the title of its
 own page. Search is in the account menu, and Ctrl K opens it from anywhere. The title bar holds only minimise and close.
 
 ## Account menu
 
 The card at the bottom of the sidebar shows the account's name and the Windows privilege level. Its menu holds the email
-and version, Search, Settings, System detection (Hardware), Check for updates and Log out. The card shows a dot when an update
-is waiting on the user, because the update row is hidden until the menu opens.
+and version, Search, Settings, Hardware, Check for updates and Remove account. The card shows a dot when an update is
+waiting on the user, because the update row is hidden until the menu opens.
 
-The account is an email saved on this PC (see `security.md`). With none saved, the menu offers Set up account instead of
-Log out.
+The account is an email saved on this PC (see `security.md`). Remove account deletes that file and nothing else, after
+a confirmation. With none saved, the menu offers Set up account instead.
 
 ## Why this shape
 
 - **Game Mode stands alone** in the brand colour: a person who wants games to run better shouldn't have to read a list.
-  Everything else that changes the PC or reports on it is under Optimisations; service switches are a Tweaks tab, not
-  their own page.
-- **Tweaks has three rows**, not one: they're real sections and the most used part of the app. A row is always a real
-  destination, never padding to fill the sidebar.
-- **Monitoring and Hardware are separate**: one answers "right now", the other "what is this PC". The tiles on
-  Monitoring are its selector, so it needs no second tab row.
-- **Network, Power and Applications are not top-level**: nothing exists for them yet. An empty page would be navigation
-  noise. The same goes for Support, BIOS and Debloat rows.
+  Everything else that changes the PC or reports on it is under Optimisations.
+- **One Tweaks page.** The Library was a second page with the same cards, so its tweaks moved to where their topic
+  already was: Core, Privacy, Gaming, Apps, Tasks and Power on Tweaks; CPU, GPU, memory and storage on Hardware; network
+  on Network; services on PC Cleaner. Search covers every tab of a page, so nothing needs a page of its own to be found.
+- **Services have one home**, PC Cleaner, whether a service is switched by hand or through a preset.
+- **Monitoring folded into Home.** Home already had the chart; CPU, GPU, RAM and Network views with a one or five minute
+  range cover what the page did. `/monitoring` lands on Home.
+- **A row is always a real destination**, never padding to fill the sidebar. That's why there are no Support, BIOS or
+  Debloat rows.
 - **History became Restore Centre**: it says what the page is for.
 - **Resources stays small** but stays in the sidebar: the report and Windows tools have no better home. Its URL is still
   `/tools`.
@@ -61,14 +60,15 @@ Log out.
 | Sidebar | Top-level places |
 | Tabs (`PageTabs`) | Sections of one page; URL-backed |
 | Search (Ctrl K) | Jump to any page, tab or tweak |
-| Page title | In the title bar, where the sidebar's active item already says the same; no breadcrumb |
-| Contextual links | Hardware → Monitoring, Home → primary locations |
+| Page title | In the page (`PageHero`), with the window controls alone in a thin bar above; no breadcrumb |
+| Contextual links | Home → primary locations |
 
 ## Search
 
-Solves one real problem: 37 tweaks across five tabs. It searches pages, tabs and tweak names and descriptions.
+Solves one real problem: 1,300 tweaks across many tabs. It searches pages, tabs and tweak names and descriptions.
 Selecting a tweak opens its details in the right tab. Recent items and quick actions weren't added: with this few
-pages they'd solve nothing.
+pages they'd solve nothing. Each tweak page also has its own search, which looks through every tab of that page and
+matches the registry or service names a tweak touches.
 
 ## Collapsed sidebar
 
@@ -81,4 +81,7 @@ the same menu to the right. Settings › Appearance › Compact sidebar turns it
 | --- | --- |
 | `/system`, `/system?tweak=…` | `/tweaks`, keeping the query |
 | `/history` | `/restore` |
+| `/monitoring` | `/` |
+| `/library`, `/library?tweak=…` | `/tweaks`, keeping the query |
+| `/startup` | `/cleaner?tab=autoruns` |
 | `/settings#updates`, `/settings?tab=…` | `/settings` (one page) |

@@ -1,12 +1,15 @@
-//! What starts with Windows: the Run and RunOnce keys and the Startup folders, and switching
-//! those entries off and back on.
+//! What starts with Windows: the Run and RunOnce keys, the Startup folders and scheduled tasks, and
+//! switching the first two off and back on. Tasks are listed only, because a task isn't one setting
+//! 2VX could put back exactly.
 //!
 //! Switching off moves an entry out of the place Windows reads into a holding place of 2VX's
 //! own, with its data and type intact, so switching on restores it exactly. Task Manager's
 //! `StartupApproved` values are only ever read (docs/security.md, decision P0-8a). An entry can
 //! only be named by the ID a fresh scan gives it.
+//!
+//! This is also where the app's own sign-in entry lives: one Run value, off by default.
 
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use windows::Win32::System::Environment::ExpandEnvironmentStringsW;
@@ -15,6 +18,7 @@ use windows_registry::{CURRENT_USER, Key, LOCAL_MACHINE};
 
 use crate::engine::Hive;
 use crate::engine::broker::BrokerSession;
+use crate::engine::system_store;
 use crate::error::{AppError, AppResult};
 use crate::system::file_info;
 use crate::system::folders::{self, Folder};
@@ -28,6 +32,19 @@ pub enum StartupSource {
     /// `...\CurrentVersion\RunOnce`: runs at the next sign-in, then Windows removes it.
     RunOnceKey,
     StartupFolder,
+    /// A scheduled task with a sign-in or start-up trigger.
+    Task,
+}
+
+impl StartupSource {
+    fn label(self) -> &'static str {
+        match self {
+            StartupSource::RunKey => "Run key",
+            StartupSource::RunOnceKey => "RunOnce key",
+            StartupSource::StartupFolder => "Startup folder",
+            StartupSource::Task => "Task",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -43,7 +60,7 @@ pub enum StartupScope {
 pub enum StartupOrigin {
     Microsoft,
     ThirdParty,
-    /// Nothing to read: a shortcut, or a program that's no longer there.
+    /// Nothing to read: a program that's no longer there, or one with no version information.
     Unknown,
 }
 
@@ -105,11 +122,13 @@ pub struct StartupItem {
     /// Stable across switching: source location plus entry name.
     pub id: String,
     pub name: String,
-    /// The command line or file path Windows starts.
+    /// The command line or file path Windows starts. For a shortcut, the `.lnk` itself.
     pub command: String,
-    /// The program itself, with environment variables expanded.
+    /// The program itself, with environment variables expanded. For a shortcut, what it points at.
     pub path: String,
     pub source: StartupSource,
+    /// `source` in words, so every screen says the same thing.
+    pub source_label: &'static str,
     pub scope: StartupScope,
     /// Where the entry lives, for display (`HKCU\...\Run`, a folder path).
     pub location: String,
@@ -135,6 +154,16 @@ pub struct StartupInventory {
     pub unreadable: Vec<String>,
 }
 
+/// The app's own sign-in entry. `OffInTaskManager` is the user's choice and stays theirs: Task
+/// Manager is where it's undone, and `StartupApproved` is only ever read (decision P0-8a).
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum AutoLaunch {
+    Off,
+    On,
+    OffInTaskManager,
+}
+
 const RUN: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
 const RUN_ONCE: &str = r"Software\Microsoft\Windows\CurrentVersion\RunOnce";
 const RUN_WOW64: &str = r"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Run";
@@ -142,6 +171,8 @@ const APPROVED: &str = r"Software\Microsoft\Windows\CurrentVersion\Explorer\Star
 const ERROR_FILE_NOT_FOUND: u32 = 0x8007_0002;
 /// The registry's own limit on a value name.
 const MAX_VALUE_NAME: usize = 16_383;
+/// The one value behind "open 2VX at sign-in". There is no service and no scheduled task.
+const AUTO_LAUNCH_VALUE: &str = "2VX Tweaks";
 
 const KEYS: &[(Hive, RunKey)] = &[
     (Hive::CurrentUser, RunKey::Run),
@@ -184,8 +215,55 @@ pub fn inventory() -> StartupInventory {
     if let Some(dir) = folders::known(Folder::CommonStartup) {
         read_folder(&mut out, &dir, &dir, StartupScope::AllUsers, false);
     }
+    read_tasks(&mut out);
     out.items.sort_by_key(|i| i.name.to_lowercase());
     out
+}
+
+fn read_tasks(out: &mut StartupInventory) {
+    let found = match system_store::start_tasks() {
+        Ok(found) => found,
+        Err(e) => {
+            out.unreadable
+                .push(format!("Task Scheduler: {}", e.message()));
+            return;
+        }
+    };
+    out.unreadable.extend(found.unreadable);
+    for task in found.tasks {
+        let path = task_executable(&task.program);
+        let (origin, description, publisher) = describe(Path::new(&path));
+        let folder = task.path.rsplit_once('\\').map_or("", |(folder, _)| folder);
+        out.items.push(StartupItem {
+            id: format!("Task Scheduler{}", task.path),
+            command: task_command(&task.program, &task.arguments),
+            path,
+            source: StartupSource::Task,
+            source_label: StartupSource::Task.label(),
+            scope: if task.for_one_user {
+                StartupScope::CurrentUser
+            } else {
+                StartupScope::AllUsers
+            },
+            location: format!("Task Scheduler{folder}"),
+            enabled: Some(task.enabled),
+            off_in_task_manager: false,
+            changeable: false,
+            origin,
+            description,
+            publisher,
+            name: task.name,
+            place: Place::ReadOnly,
+        });
+    }
+}
+
+fn task_command(program: &str, arguments: &str) -> String {
+    if arguments.is_empty() {
+        program.to_owned()
+    } else {
+        format!("{program} {arguments}")
+    }
 }
 
 fn read_key(out: &mut StartupInventory, hive: Hive, run_key: RunKey, held: bool) {
@@ -229,6 +307,7 @@ fn read_key(out: &mut StartupInventory, hive: Hive, run_key: RunKey, held: bool)
             command,
             path,
             source: run_key.source(),
+            source_label: run_key.source().label(),
             scope: scope_of(hive),
             location: location.clone(),
             origin,
@@ -266,16 +345,18 @@ fn read_folder(
         if file.eq_ignore_ascii_case("desktop.ini") {
             continue;
         }
-        let path = entry.path().to_string_lossy().into_owned();
         let approved = approved_state(approved_root, "StartupFolder", &file);
         let off_in_task_manager = !held && approved == Some(false);
-        let (origin, description, publisher) = describe(&entry.path());
+        // A shortcut has no publisher of its own. The program it opens does.
+        let program = program_behind(&entry.path());
+        let (origin, description, publisher) = describe(&program);
         out.items.push(StartupItem {
             id: home.join(&file).to_string_lossy().into_owned(),
             name: display_name(&file),
-            command: path.clone(),
-            path,
+            command: entry.path().to_string_lossy().into_owned(),
+            path: program.to_string_lossy().into_owned(),
             source: StartupSource::StartupFolder,
+            source_label: StartupSource::StartupFolder.label(),
             scope,
             location: home.to_string_lossy().into_owned(),
             enabled: if held { Some(false) } else { approved },
@@ -292,6 +373,20 @@ fn read_folder(
             },
         });
     }
+}
+
+fn is_shortcut(path: &Path) -> bool {
+    path.extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("lnk"))
+}
+
+/// What a Startup-folder file opens. Anything that isn't a shortcut opens itself, and so does a
+/// shortcut with no plain target.
+fn program_behind(path: &Path) -> PathBuf {
+    is_shortcut(path)
+        .then(|| file_info::shortcut_target(path))
+        .flatten()
+        .unwrap_or_else(|| path.to_path_buf())
 }
 
 /// Task Manager records its Startup-tab choice as a binary value whose first byte is even
@@ -326,8 +421,20 @@ fn program_in(command: &str) -> &str {
 }
 
 fn executable_of(command: &str) -> String {
-    let program = expand(program_in(command));
-    if Path::new(&program).is_absolute() {
+    resolved(program_in(command))
+}
+
+/// A task keeps its program apart from its arguments, so spaces in it are part of the path and
+/// there's no command line to take it out of.
+fn task_executable(program: &str) -> String {
+    resolved(program.trim().trim_matches('"'))
+}
+
+fn resolved(program: &str) -> String {
+    let program = expand(program);
+    // Only a bare name is looked for, and in one place. `X:app.exe` would join to where it says
+    // and the check below would go there, which can be a network drive.
+    if !is_bare_name(Path::new(&program)) {
         return program;
     }
     // A bare name is usually a Windows program, found through PATH when it runs.
@@ -335,6 +442,14 @@ fn executable_of(command: &str) -> String {
         .map(|w| w.join("System32").join(&program))
         .filter(|p| p.exists())
         .map_or(program, |p| p.to_string_lossy().into_owned())
+}
+
+fn is_bare_name(path: &Path) -> bool {
+    let mut parts = path.components();
+    matches!(
+        (parts.next(), parts.next()),
+        (Some(Component::Normal(_)), None)
+    )
 }
 
 fn expand(text: &str) -> String {
@@ -348,7 +463,30 @@ fn expand(text: &str) -> String {
     String::from_utf16_lossy(&buffer[..written - 1])
 }
 
+/// Programs that only start something else. Their publisher says who made the launcher, not the
+/// entry: a script run through a Windows shell isn't Microsoft's, and Discord isn't GitHub's. The
+/// names are only ever compared with a program's name, never started (`is_launcher`).
+const LAUNCHERS: [&str; 8] = [
+    "cmd.exe",
+    "cscript.exe",
+    "mshta.exe",
+    "powershell.exe",
+    "pwsh.exe",
+    "rundll32.exe",
+    "update.exe",
+    "wscript.exe",
+];
+
+fn is_launcher(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| LAUNCHERS.iter().any(|l| name.eq_ignore_ascii_case(l)))
+}
+
 fn describe(path: &Path) -> (StartupOrigin, Option<String>, Option<String>) {
+    if is_launcher(path) {
+        return (StartupOrigin::Unknown, None, None);
+    }
     let info = file_info::read(path).unwrap_or_default();
     let origin = match &info.company {
         Some(c) if c.starts_with("Microsoft") => StartupOrigin::Microsoft,
@@ -434,6 +572,69 @@ fn held_folder() -> Option<PathBuf> {
         .map(|base| base.join("com.twovx.tweaks").join("disabled-startup"))
 }
 
+/// Whether 2VX opens at sign-in. The value existing is half the answer: the path in it may be from
+/// an older install, and turning this on again rewrites it. The other half is Task Manager's, since
+/// Windows skips a value that's off there.
+pub fn auto_launch() -> AutoLaunch {
+    let present = CURRENT_USER
+        .open(RUN)
+        .and_then(|key| key.get_value(AUTO_LAUNCH_VALUE))
+        .is_ok();
+    auto_launch_state(
+        present,
+        approved_state(CURRENT_USER, "Run", AUTO_LAUNCH_VALUE),
+    )
+}
+
+fn auto_launch_state(present: bool, approved: Option<bool>) -> AutoLaunch {
+    match (present, approved) {
+        (false, _) => AutoLaunch::Off,
+        (true, Some(false)) => AutoLaunch::OffInTaskManager,
+        (true, _) => AutoLaunch::On,
+    }
+}
+
+/// Quoted, with no arguments: a path with a space must not be split into a program and a rest.
+fn auto_launch_command(exe: &Path) -> String {
+    format!("\"{}\"", exe.display())
+}
+
+/// Adds or removes the Run value. Either way a copy switched off in Autoruns goes too, or it could
+/// come back beside the new one.
+pub fn set_auto_launch(enabled: bool) -> AppResult<()> {
+    let failed = |e: windows_result::Error| AppError::System(e.message());
+    // Writing the value again wouldn't change what Windows does, and removing it would lose the
+    // entry the user switched off.
+    if auto_launch() == AutoLaunch::OffInTaskManager {
+        return Err(AppError::Conflict(
+            "this is off in Task Manager, so turn it back on there".into(),
+        ));
+    }
+    remove_auto_launch(RunKey::Run.held()).map_err(failed)?;
+    if enabled {
+        let command = auto_launch_command(&std::env::current_exe()?);
+        CURRENT_USER
+            .create(RUN)
+            .and_then(|key| key.set_string(AUTO_LAUNCH_VALUE, command))
+            .map_err(failed)
+    } else {
+        remove_auto_launch(RUN).map_err(failed)
+    }
+}
+
+/// Removing what isn't there is fine.
+fn remove_auto_launch(path: &str) -> windows_result::Result<()> {
+    let key = match CURRENT_USER.options().read().write().open(path) {
+        Ok(key) => key,
+        Err(e) if e.code().0 as u32 == ERROR_FILE_NOT_FOUND => return Ok(()),
+        Err(e) => return Err(e),
+    };
+    match key.remove_value(AUTO_LAUNCH_VALUE) {
+        Err(e) if e.code().0 as u32 != ERROR_FILE_NOT_FOUND => Err(e),
+        _ => Ok(()),
+    }
+}
+
 fn move_shortcut(file: &str, enabled: bool) -> AppResult<()> {
     let unavailable = || AppError::System("the Startup folder isn't available".into());
     let home = folders::known(Folder::Startup).ok_or_else(unavailable)?;
@@ -461,11 +662,81 @@ mod tests {
     use super::*;
 
     #[test]
+    fn a_launcher_says_nothing_about_who_made_the_entry() {
+        for path in [
+            r"C:\Windows\System32\cmd.exe",
+            r"C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.EXE",
+            r"C:\Users\me\AppData\Local\Discord\Update.exe",
+        ] {
+            let (origin, publisher, description) = describe(Path::new(path));
+            assert_eq!(origin, StartupOrigin::Unknown);
+            assert_eq!(publisher, None);
+            assert_eq!(description, None);
+        }
+        assert!(!is_launcher(Path::new(
+            "C:/Program Files/Example/example.exe"
+        )));
+    }
+
+    #[test]
     fn approved_flag_parity() {
         assert_eq!(parse_approved(&[0x02, 0, 0]), Some(true));
         assert_eq!(parse_approved(&[0x06]), Some(true));
         assert_eq!(parse_approved(&[0x03, 1]), Some(false));
         assert_eq!(parse_approved(&[]), None);
+    }
+
+    #[test]
+    fn the_sign_in_entry_quotes_its_path_and_takes_no_arguments() {
+        assert_eq!(
+            auto_launch_command(Path::new(r"C:\Program Files\2VX Tweaks\2vx-tweaks.exe")),
+            r#""C:\Program Files\2VX Tweaks\2vx-tweaks.exe""#
+        );
+    }
+
+    #[test]
+    fn the_sign_in_entry_counts_as_on_only_if_windows_will_run_it() {
+        assert_eq!(auto_launch_state(false, None), AutoLaunch::Off);
+        assert_eq!(auto_launch_state(false, Some(false)), AutoLaunch::Off);
+        assert_eq!(auto_launch_state(true, None), AutoLaunch::On);
+        assert_eq!(auto_launch_state(true, Some(true)), AutoLaunch::On);
+        assert_eq!(
+            auto_launch_state(true, Some(false)),
+            AutoLaunch::OffInTaskManager
+        );
+        assert_eq!(
+            serde_json::to_value(AutoLaunch::OffInTaskManager).unwrap(),
+            "offInTaskManager"
+        );
+    }
+
+    #[test]
+    fn every_source_has_a_label() {
+        for (source, label) in [
+            (StartupSource::RunKey, "Run key"),
+            (StartupSource::RunOnceKey, "RunOnce key"),
+            (StartupSource::StartupFolder, "Startup folder"),
+            (StartupSource::Task, "Task"),
+        ] {
+            assert_eq!(source.label(), label);
+        }
+    }
+
+    #[test]
+    fn only_shortcuts_are_resolved() {
+        assert!(is_shortcut(Path::new(r"C:\x\App.LNK")));
+        assert!(!is_shortcut(Path::new(r"C:\x\app.exe")));
+        // A file that isn't really a shortcut stands for itself rather than failing the scan.
+        let dir = tempfile::tempdir().unwrap();
+        let broken = dir.path().join("Broken.lnk");
+        std::fs::write(&broken, b"not a shortcut").unwrap();
+        assert_eq!(program_behind(&broken), broken);
+    }
+
+    #[test]
+    fn task_commands_read_like_a_command_line() {
+        assert_eq!(task_command(r"C:\x\up.exe", ""), r"C:\x\up.exe");
+        assert_eq!(task_command(r"C:\x\up.exe", "/ua"), r"C:\x\up.exe /ua");
     }
 
     #[test]
@@ -486,6 +757,43 @@ mod tests {
         );
         assert_eq!(program_in(r"C:\tools\run.bat now"), r"C:\tools\run.bat");
         assert_eq!(program_in("  "), "");
+    }
+
+    #[test]
+    fn a_task_program_keeps_its_spaces() {
+        assert_eq!(
+            task_executable(r"C:\My Tools\run job.bat"),
+            r"C:\My Tools\run job.bat"
+        );
+        assert_eq!(
+            task_executable(r#""C:\My Tools\run job.bat""#),
+            r"C:\My Tools\run job.bat"
+        );
+        let windir = std::env::var("SystemRoot").unwrap();
+        assert_eq!(
+            task_executable(r"%SystemRoot%\My Tools\job.exe"),
+            format!(r"{windir}\My Tools\job.exe")
+        );
+    }
+
+    #[test]
+    fn only_a_bare_name_is_looked_for() {
+        assert!(is_bare_name(Path::new("notepad.exe")));
+        for path in [
+            r"X:app.exe",
+            "X:",
+            r"\\host\share\app.exe",
+            r"\app.exe",
+            r"..\app.exe",
+            r"tools\app.exe",
+            r"C:\app.exe",
+            "",
+        ] {
+            assert!(!is_bare_name(Path::new(path)), "{path}");
+        }
+        // Left as written, not joined to a folder and checked.
+        assert_eq!(resolved(r"X:app.exe"), r"X:app.exe");
+        assert_eq!(resolved(r"\\host\share\app.exe"), r"\\host\share\app.exe");
     }
 
     #[test]

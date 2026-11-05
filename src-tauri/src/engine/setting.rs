@@ -27,6 +27,10 @@ pub enum Hive {
     /// can be any index, and a PC with two GPUs has one per adapter. `key` is `Nvidia`, `Amd` or
     /// `Intel`, optionally followed by `\<subkey>`.
     Gpu,
+    /// A physical network adapter's driver key under `Control\Class`, whose index differs per PC.
+    /// `key` is `Ethernet` or `Wifi`, resolved to that kind's primary adapter, and `value` is one of
+    /// the documented NDIS keywords in `policy`. Only a `requires` check reads below it.
+    Adapter,
 }
 
 impl Hive {
@@ -37,6 +41,7 @@ impl Hive {
             Hive::ScheduledTask => "TASK",
             Hive::PowerPlan => "POWER",
             Hive::Gpu => "GPU",
+            Hive::Adapter => "ADAPTER",
         }
     }
 

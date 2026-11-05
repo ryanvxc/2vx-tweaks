@@ -28,7 +28,7 @@ src/                         React frontend
   app/                       App root, routes, navigation config
   components/ui/             shadcn/ui primitives (generated, lightly adapted; keep shadcn style)
   components/common/         design-system components (SectionCard, DataSourceBadge, states, ConfirmDialog…)
-  components/layout/         shell: Sidebar, AccountMenu, TitleBar, WindowControls, PageHeader
+  components/layout/         shell: Sidebar, AccountMenu, TitleBar, WindowControls, PageHero
   pages/                     one folder/file per section
   hooks/                     data hooks (useSystemSnapshot, useLiveMetrics…)
   services/backend.ts        THE ONLY place that calls invoke(); typed wrappers per command
@@ -39,9 +39,12 @@ src/                         React frontend
   lib/                       pure helpers (format, health, profiles, tweak-presentation) with unit tests
 src-tauri/src/
   commands/                  Tauri command handlers: thin, validated
-  system/                    read-only system info (os, hardware, metrics sampler, privilege, file_info)
+  system/                    read-only system info (os, hardware, hardware_details, services, ping, metrics sampler,
+                             privilege, file_info)
   engine/                    declarative tweaks, policy, journal, plan/apply/revert, elevation broker,
                              and the PC Cleaner's fixed actions (cleanup, startup, apps)
+  links.rs                   fixed web links and the fixed list of Windows tools
+  report.rs                  system report export (save dialog, 2 MB cap)
   account.rs                 the local account: one email in a file, no server or sign-in
   logging.rs, error.rs
 scripts/                     release helpers for CI: next-version, release-notes, check-update-feed (+ tests)
@@ -85,13 +88,22 @@ Stages 1 (foundation) and 2 (safety engine) are done; **stage 3 (first real opti
 of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_BACKLOG.md` (P0–P3) and stages in
 `docs/DEVELOPMENT_ROADMAP.md`. Use those stage and task IDs, not the older "Phase N" labels.
 
-In short (0.3): `/library` holds 1,221 more tweaks (1,285 in the app), generated into `engine/tweaks/library/<tab>.rs` with
-handwritten helpers in `library/mod.rs`. Tabs and presets are in `src/app/navigation.ts` and `lib/library-presets.ts`. Besides
-the registry, a `Setting` can target `ScheduledTask` (only ever turned off), `PowerPlan` (the active plan) and `Gpu` (`Nvidia`,
-`Amd` or `Intel`, resolved to that vendor's display adapter key); all three are handled in `engine/system_store.rs` and
+In short (0.4): the app was redesigned to EXM's layout, and there is no Library or Monitoring page. A tweak's page, tab and folding
+section come from `category` and `section` (`CATEGORY_TAB`, `tweakPlacement` in `lib/tweak-presentation.ts`); a short hand-placed
+set shows as cards above the lists (`TWEAK_SECTIONS`). Every tweak page is `TweakGrid` with a `TweakView`: one search across the
+page's tabs, the same filters and sorts, Unavailable last. Every page title is `PageHero`; the title bar is only the window
+controls. The top-right action is only ever `RecommendedAction`. Presets, service presets and GPU profiles are all `PresetCard`, and
+their facts are counts of real tweaks, never ratings. Services have one home, PC Cleaner. `docs/MODEL_CONTRIBUTIONS.md` records
+which model built what.
+
+In short (0.3): 1,221 more tweaks (1,300 in the app with 0.4's 15 adapter tweaks), generated into `engine/tweaks/library/<tab>.rs`
+with handwritten helpers in `library/mod.rs`. Tabs and presets are in `src/app/navigation.ts` and `lib/tweak-presets.ts`. Besides
+the registry, a `Setting` can target `ScheduledTask` (only ever turned off), `PowerPlan` (the active plan), `Gpu` (`Nvidia`,
+`Amd` or `Intel`, resolved to that vendor's display adapter key) and `Adapter` (`Ethernet` or `Wifi`, resolved to the primary
+adapter's driver key, limited to the documented keywords in `policy.rs`); all are handled in `engine/system_store.rs` and
 `engine/store.rs`, with no process spawned. One target has one owner, even for the same value. `HardwareScope` keeps vendor tweaks
 on their hardware. What was found, and why anything was left out, is in `docs/OPTIMISATION_LIBRARY_AUDIT.md` (+ `.csv`);
-`docs/OPTIMISATION_IMPLEMENTATION_STATUS.md` lists every tweak. Library writes have not run on a real PC yet: they need a VM.
+`docs/OPTIMISATION_IMPLEMENTATION_STATUS.md` lists every tweak. Library and adapter writes have not run on a real PC yet: they need a VM.
 
 In short (0.2): the app was restructured (`docs/INFORMATION_ARCHITECTURE.md`, `docs/NAVIGATION_STRUCTURE.md`,
 `docs/DESIGN_SYSTEM.md`). Every feature has one primary location; pages and tabs live in `src/app/navigation.ts`, and
@@ -100,11 +112,11 @@ with per-tweak undo (`revert_tweak`), an impact rating, and a `warning` only whe
 needs an icon and a section in `lib/tweak-presentation.ts`; a test reads the Rust catalogue to enforce it. Gaming
 profiles (`lib/profiles.ts`) are named lists of existing tweaks: "active" is derived from detected state, never stored,
 and they make no FPS claims. Game Mode (`pages/gaming/`) applies a chosen list through the normal review and undoes that
-batch with `revert_snapshot`; the game list stays in the UI because commands never take process names. Home, Game Mode, PC Cleaner, Tweaks, Hardware, Network and Advanced keep their title in the page (`PageHero`), with a thin
-title bar; the window is a fixed 1280×820 with only minimise and close; Quickstart's ticks are derived where the PC can say (`lib/quickstart.ts`) and Patch Notes reads `CHANGELOG.md`, so write its
-newest section for users. Monitoring, the Restore Centre and Tools are real pages. Hardware, Network and Advanced are `TweakGrid` with a `TweakView` (`pages/tweaks/tweak-views.ts`); device facts come from `get_device_report` (`system/devices.rs`, read-only) and links only from the fixed list in `links.rs`. Advanced's Security tab is a read-out: it must never gain a switch for a security feature. PC Cleaner has four tabs (`pages/cleaner/`):
-System Cleaner, Services (two presets over existing tweaks), Uninstall (fixed app table) and Autoruns (which replaced
-Startup; `/startup` redirects).
+batch with `revert_snapshot`; the game list stays in the UI because commands never take process names.
+The window is a fixed 1280×820 with only minimise and close; Quickstart's ticks are derived where the PC can say (`lib/quickstart.ts`) and Patch Notes reads `CHANGELOG.md`, so write its
+newest section for users. The Restore Centre and Resources are real pages. Hardware, Network and Advanced are `TweakGrid` with a `TweakView` (`pages/tweaks/tweak-views.ts`); device facts come from `get_device_report` (`system/devices.rs`, read-only) and links only from the fixed list in `links.rs`. Advanced's Security tab is a read-out: it must never gain a switch for a security feature. PC Cleaner has four tabs (`pages/cleaner/`):
+System Cleaner, Services (two presets, a read-out of real service states, and the service tweaks), Uninstall (fixed app
+table) and Autoruns (which replaced Startup; `/startup` redirects).
 A signed Tauri updater with an Update Centre is built (`docs/UPDATE_SYSTEM.md`); the feed URL
 is in `tauri.conf.json`, so every release build can update, and only `.github/workflows/release.yml` signs and publishes.
 P0-8b (no updater) is superseded; P0-8a/c stand. The repo is public at `ryanvxc/2vx-tweaks`. Still open: the broker's real UAC path on a VM

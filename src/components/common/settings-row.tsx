@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Settings rows under a heading. Several share one `panel` on the Settings page. */
+/** Settings rows under a heading, split by hairlines. */
 export function SettingsGroup({
   title,
   description,
@@ -17,12 +17,12 @@ export function SettingsGroup({
   return (
     <section id={id}>
       {(title || description) && (
-        <div className="px-4 pt-3 pb-2">
-          {title && <h2 className="text-section-title">{title}</h2>}
+        <div className="pt-3 pb-1">
+          {title && <h2 className="text-[13px] font-medium text-muted-foreground">{title}</h2>}
           {description && <p className="mt-0.5 text-[13px] text-muted-foreground">{description}</p>}
         </div>
       )}
-      <div className="divide-y border-t">{children}</div>
+      <div className="divide-y border-b">{children}</div>
     </section>
   );
 }
@@ -51,15 +51,16 @@ export function SettingsRow({
   return (
     <div
       className={cn(
-        // Taller with the window, up to a point: a toggle in a 120 px row reads as a gap.
-        "flex min-h-[clamp(3.25rem,10.5vh,5rem)] gap-3 px-4 py-2.5",
+        "flex min-h-[4.25rem] gap-3.5 py-2.5",
         children ? "items-start" : "items-center",
         className,
       )}
     >
-      <Icon className="size-[18px] shrink-0 text-brand" aria-hidden />
+      <span className="flex size-10 shrink-0 items-center justify-center panel rounded-lg">
+        <Icon className="size-[18px] text-brand" strokeWidth={1.75} aria-hidden />
+      </span>
       <div className="min-w-0 flex-1">
-        <Title htmlFor={htmlFor} className="block text-card-title">
+        <Title htmlFor={htmlFor} className="block text-[14.5px] font-semibold">
           {title}
         </Title>
         {description && (

@@ -88,9 +88,36 @@ pub fn running_programs() -> Vec<RunningProgram> {
     }))
 }
 
+/// Whether Windows' compression store is running. `None` when the process list can't be read:
+/// this process has no other sign of itself, and its absence from an empty list would prove nothing.
+pub fn memory_compression_running() -> Option<bool> {
+    let mut system = System::new().ok()?;
+    system.refresh_processes_specifics(ProcessesToUpdate::All, true, ProcessRefreshKind::nothing());
+    let names = system.processes().values().map(|process| process.name());
+    is_compressing(names)
+}
+
+fn is_compressing<'a>(mut names: impl Iterator<Item = &'a std::ffi::OsStr>) -> Option<bool> {
+    let first = names.next()?;
+    let wanted = |name: &std::ffi::OsStr| name.eq_ignore_ascii_case("Memory Compression");
+    Some(wanted(first) || names.any(wanted))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn compression_shows_as_its_own_process() {
+        let names = |list: &'static [&'static str]| {
+            list.iter().map(std::ffi::OsStr::new).collect::<Vec<_>>()
+        };
+        let running = names(&["explorer.exe", "memory compression"]);
+        assert_eq!(is_compressing(running.into_iter()), Some(true));
+        let stopped = names(&["explorer.exe"]);
+        assert_eq!(is_compressing(stopped.into_iter()), Some(false));
+        assert_eq!(is_compressing(names(&[]).into_iter()), None);
+    }
 
     fn program(file_name: &str, running_seconds: u64) -> RunningProgram {
         RunningProgram {

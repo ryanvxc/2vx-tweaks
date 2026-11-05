@@ -3,6 +3,60 @@
 Main-channel builds are released automatically from `main` (see `docs/GITHUB_RELEASE_PIPELINE.md`); their
 notes come from commit subjects. This file records the larger milestones.
 
+## 0.4.0 (unreleased)
+
+### A simpler app
+- The Library and Monitoring pages are gone, and nothing was lost. Every tweak now lives with its topic: Tweaks has Core,
+  Privacy, Gaming, Apps, Tasks, Power and Presets; CPU, GPU, memory and storage tweaks are on Hardware; network tweaks are
+  on Network; services are on PC Cleaner.
+- Search looks through every tab of a page, and finds a tweak by the registry or service name it touches.
+- Every tweak page has the same search, filter and sort. Filter by state, what fits this PC, effect, risk, permission,
+  restart, evidence and hardware. Sort by name, effect, status, newest or what you used last.
+- A tweak's details now say what it does, why, what it changes, who can run it, how it undoes, and what it needs.
+- A tweak now shows when a restart is still to come, when its last change failed, and when its setting couldn't be read.
+
+### Home
+- The chart gained a Network view and a five minute range, with the current, average and peak beside it.
+
+### Hardware
+- GPU, CPU, RAM, Storage and Peripherals each show real details from your PC above their tweaks: driver version and
+  provider, core counts and caches, every memory module, every drive with its health, and your devices.
+- Two GPU profiles apply a safe set of graphics tweaks through the normal review. They appear only when they fit your PC.
+
+### PC Cleaner
+- System Cleaner shows each location's progress, and a summary that names anything that failed.
+- Saying no to the permission prompt no longer reports "Freed 0 B" as a success.
+- Services has a live list of what's running and how each service starts.
+- Autoruns is one line per entry, with publisher and source, and now lists scheduled startup tasks. Apps started through a
+  launcher no longer show the launcher's publisher, so Discord isn't labelled GitHub.
+- Uninstall puts what's installed first.
+
+### Network
+- Adapter Tuner changes real driver settings for Ethernet and Wi-Fi, and lists every adapter, not just the first of each kind.
+- Bufferbloat measures your latency while you load the connection yourself. It reports the numbers and gives no grade.
+
+### Advanced
+- Security fits on one screen with the tweaks below it. It stays a read-out: 2VX never turns these off.
+- MSI Mode shows what each device supports. Devices lists what's in your PC and flags problems. Timer Resolution tests on
+  open.
+
+### Resources and Settings
+- Resources opens ten Windows tools directly, and the system report can be exported to a file.
+- Settings is one list, with a new Open at sign-in option (off by default), Open folder for logs and Report an issue. If
+  Task Manager has turned 2VX off at sign-in, the setting says so.
+- The account menu's Log out is now Remove account, and it asks first.
+
+### Fixes
+- Presets larger than 64 tweaks no longer fail.
+- A setting that can't be read no longer stops a whole batch: it's skipped and named.
+- A removed GPU's tweaks no longer count as compatible.
+- Game Mode no longer sticks on after many other changes, and Home counts every backup.
+- A tweak that writes to a network adapter or GPU now remembers which one. Undo leaves a different device alone and keeps
+  the backup, rather than changing the wrong one.
+- A change that skips something now stays on screen and says what was skipped.
+- Startup entries on network drives are no longer opened to read their details, which could stall the list.
+- A failed report export no longer loses the file it was replacing.
+
 ## 0.3.0 (unreleased)
 
 ### Library

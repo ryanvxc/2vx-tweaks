@@ -1,6 +1,6 @@
 # Optimisation implementation status
 
-1,285 tweaks are implemented: 64 that already shipped, plus 1,221 in the Library added in 0.3.0. Where each one
+1,300 tweaks are implemented: 64 that already shipped, 1,221 added in 0.3.0, and 15 adapter tweaks added in 0.4.0. Where each one
 came from is in [OPTIMISATION_LIBRARY_AUDIT.md](OPTIMISATION_LIBRARY_AUDIT.md).
 
 Implemented means the tweak is in the Rust engine with detection, backup, apply, verify, rollback and revert, not just a

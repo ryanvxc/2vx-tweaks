@@ -1,11 +1,34 @@
 import { describe, expect, it } from "vitest";
-import type { DeviceReport, GpuInfo, SystemSnapshot } from "@/types/system";
-import { driverLink, driverOf, primaryGpu } from "./devices";
+import type { DeviceEntry, DeviceReport, GpuInfo, SystemSnapshot } from "@/types/system";
+import { collapseDevices, deviceName, driverLink, driverOf, primaryGpu } from "./devices";
 
 const gpu = (model: string, vendor: string, memory: number | null): GpuInfo => ({
   model,
   vendor,
   dedicatedMemoryBytes: memory,
+});
+
+const device = (name: string, problem = false): DeviceEntry => ({
+  name,
+  class: "mouse",
+  problem,
+});
+
+describe("collapseDevices", () => {
+  it("folds identical names into one line with a count", () => {
+    const lines = collapseDevices([device("HID mouse"), device("HID mouse"), device("Pad")]);
+    expect(lines.map(deviceName)).toEqual(["HID mouse ×2", "Pad"]);
+  });
+
+  it("keeps a problem on any of them", () => {
+    const [line] = collapseDevices([device("HID mouse"), device("HID mouse", true)]);
+    expect(line?.problem).toBe(true);
+  });
+
+  it("keeps the same name apart across device types", () => {
+    const lines = collapseDevices([device("Hub"), { ...device("Hub"), class: "usb" }]);
+    expect(lines).toHaveLength(2);
+  });
 });
 
 describe("primaryGpu", () => {

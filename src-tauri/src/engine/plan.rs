@@ -22,8 +22,13 @@ const MAX_PENDING_PLANS: usize = 16;
 pub struct PlannedChange {
     pub tweak_id: String,
     pub target: RegTarget,
-    /// Display form, e.g. `HKCU\System\GameConfigStore\GameDVR_Enabled`.
+    /// Display form, e.g. `HKCU\System\GameConfigStore\GameDVR_Enabled`. A change on a device
+    /// names it here, because the target alone says only what kind of device it is.
     pub target_label: String,
+    /// The driver instance this was planned against. Apply refuses if the target has moved off it.
+    /// Not sent to the UI: the label is what's shown.
+    #[serde(skip)]
+    pub device: Option<String>,
     pub from: Option<RegValue>,
     pub to: Option<RegValue>,
     pub from_label: String,
@@ -40,12 +45,20 @@ impl PlannedChange {
         PlannedChange {
             tweak_id: tweak_id.to_string(),
             target_label: target.to_string(),
+            device: None,
             from_label: describe(&from),
             to_label: describe(&to),
             target,
             from,
             to,
         }
+    }
+
+    /// For a target that resolves to a device: ties the change to it and names it in the label.
+    pub fn on_device(mut self, device: String, name: &str) -> Self {
+        self.target_label = format!("{} on {name}", self.target_label);
+        self.device = Some(device);
+        self
     }
 }
 
@@ -54,6 +67,8 @@ impl PlannedChange {
 pub struct SkippedTweak {
     pub tweak_id: String,
     pub reason: Compatibility,
+    /// The read error behind `Unreadable`, which names the target. `None` for the other reasons.
+    pub detail: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -146,6 +161,20 @@ mod tests {
             restart: RestartRequirement::None,
             needs_elevation: false,
         }
+    }
+
+    #[test]
+    fn a_change_on_a_device_names_it_and_keeps_the_index_to_itself() {
+        let target = RegTarget::new(crate::engine::Hive::Adapter, "Ethernet", "*EEE");
+        let change = PlannedChange::new("network.test", target, None, None)
+            .on_device("0008".into(), "Intel I219-V");
+        assert_eq!(
+            change.target_label,
+            r"ADAPTER\Ethernet\*EEE on Intel I219-V"
+        );
+        assert_eq!(change.device.as_deref(), Some("0008"));
+        let json = serde_json::to_value(&change).unwrap();
+        assert!(json.get("device").is_none());
     }
 
     #[test]

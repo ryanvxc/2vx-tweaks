@@ -1,11 +1,8 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router";
-import { Activity, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
@@ -27,8 +24,6 @@ interface Chip {
   /** Joined to the end of the chip, such as the driver version. */
   tag?: string;
   parts: Part[];
-  /** Monitoring tab with this part's live usage. */
-  live?: string;
 }
 
 function gpuChip(s: SystemSnapshot, devices: DeviceReport | undefined): Chip {
@@ -37,7 +32,6 @@ function gpuChip(s: SystemSnapshot, devices: DeviceReport | undefined): Chip {
   return {
     label: primary?.model ?? "No GPU reported",
     tag: version ? `Driver ${version}` : undefined,
-    live: "gpu",
     parts: s.gpus.map((g) => {
       const driver = driverOf(g, devices);
       return {
@@ -57,7 +51,6 @@ function cpuChip(s: SystemSnapshot): Chip {
   const board = s.motherboard;
   return {
     label: s.cpu.brand || "Unknown CPU",
-    live: "cpu",
     parts: [
       {
         title: s.cpu.brand || "CPU",
@@ -92,7 +85,6 @@ function cpuChip(s: SystemSnapshot): Chip {
 function ramChip(s: SystemSnapshot): Chip {
   return {
     label: formatBytes(s.memory.totalBytes, 0),
-    live: "memory",
     parts: [
       {
         title: "Memory",
@@ -177,7 +169,7 @@ export function DeviceChip({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex h-10 max-w-[26rem] min-w-0 items-center overflow-hidden rounded-lg border border-input bg-card text-[13.5px] outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex h-10 max-w-[24rem] min-w-0 items-center overflow-hidden rounded-lg border border-input bg-card text-[13.5px] outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="flex min-w-0 items-center gap-2 px-3.5">
             <span className="truncate font-medium">{chip.label}</span>
@@ -209,16 +201,6 @@ export function DeviceChip({
             </section>
           ))}
         </div>
-        {chip.live && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="text-[13px]">
-              <Link to={`/monitoring?tab=${chip.live}`}>
-                <Activity /> Live usage
-              </Link>
-            </DropdownMenuItem>
-          </>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

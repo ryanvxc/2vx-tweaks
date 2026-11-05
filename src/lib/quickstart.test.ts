@@ -46,6 +46,11 @@ describe("Quickstart", () => {
     expect(done({ opened: ["startup", "backups"] })).toEqual(["startup", "backups"]);
   });
 
+  it("ticks Resources once it has been opened", () => {
+    expect(done({ opened: ["resources"] })).toEqual(["resources"]);
+    expect(QUICKSTART_STEPS.find((s) => s.id === "resources")?.to).toBe("/tools");
+  });
+
   it("has a unique id and a page for every step", () => {
     expect(new Set(QUICKSTART_STEPS.map((s) => s.id)).size).toBe(QUICKSTART_STEPS.length);
     expect(QUICKSTART_STEPS.every((s) => s.to.startsWith("/"))).toBe(true);

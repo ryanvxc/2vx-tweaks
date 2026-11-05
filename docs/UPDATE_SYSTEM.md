@@ -95,6 +95,7 @@ then took it from v0.2.2 to v0.2.3, the first update from one CI build to the ne
 ## Privacy
 
 The update check is a normal HTTPS GET to github.com. It sends no identifiers,
-hardware data or usage data. It is the only network request 2VX makes, and the user can turn it off.
+hardware data or usage data, and the user can turn it off. The only other traffic 2VX creates is Bufferbloat's ICMP pings,
+which run only while that test does (`docs/security.md`).
 This supersedes decision P0-8b ("no in-app updater") at the owner's request for 0.2; see
 `docs/security.md`.

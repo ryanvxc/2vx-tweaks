@@ -10,7 +10,7 @@ const openMenu = async (user: ReturnType<typeof userEvent.setup>) => {
 };
 
 describe("AccountMenu", () => {
-  it("logs out, refuses a bad address and sets the account up again", async () => {
+  it("removes the account, refuses a bad address and sets the account up again", async () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter>
@@ -21,11 +21,12 @@ describe("AccountMenu", () => {
     expect(await screen.findByText("preview")).toBeInTheDocument();
     await openMenu(user);
     expect(await screen.findByText("preview@example.com")).toBeInTheDocument();
-    await user.click(screen.getByRole("menuitem", { name: "Log out" }));
+    await user.click(screen.getByRole("menuitem", { name: "Remove account" }));
+    await user.click(await screen.findByRole("button", { name: "Remove" }));
     expect(await screen.findByText("Set up account")).toBeInTheDocument();
 
     await openMenu(user);
-    expect(screen.queryByRole("menuitem", { name: "Log out" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Remove account" })).not.toBeInTheDocument();
     await user.click(await screen.findByRole("menuitem", { name: "Set up account" }));
 
     const email = await screen.findByRole("textbox", { name: "Email" });

@@ -5,11 +5,12 @@ use std::sync::Arc;
 
 use serde_json::json;
 use tauri::State;
+use tauri::ipc::Channel;
 
 use crate::engine::apps::{self, RemovableApp};
-use crate::engine::cleanup::{self, CleanupResult};
+use crate::engine::cleanup::{self, CleanupProgress, CleanupResult};
 use crate::engine::service::Engine;
-use crate::engine::startup;
+use crate::engine::startup::{self, AutoLaunch};
 use crate::error::{AppError, AppResult};
 
 async fn worker<T, F>(f: F) -> AppResult<T>
@@ -27,10 +28,31 @@ where
 pub async fn clean_locations(
     engine: State<'_, Arc<Engine>>,
     ids: Vec<String>,
+    on_progress: Channel<CleanupProgress>,
 ) -> AppResult<Vec<CleanupResult>> {
-    let results = worker(move || cleanup::clean(&ids)).await?;
+    let results = worker(move || {
+        cleanup::clean(&ids, &mut |progress| {
+            // A closed channel means nobody's watching. The run carries on and still returns.
+            let _ = on_progress.send(progress);
+        })
+    })
+    .await?;
     engine.audit("cleanup_finished", json!({ "results": results }));
     Ok(results)
+}
+
+/// Whether 2VX opens at sign-in. Off unless the user turned it on.
+#[tauri::command]
+pub async fn get_auto_launch() -> AppResult<AutoLaunch> {
+    worker(|| Ok(startup::auto_launch())).await
+}
+
+/// Adds or removes the one Run value that opens 2VX at sign-in.
+#[tauri::command]
+pub async fn set_auto_launch(engine: State<'_, Arc<Engine>>, enabled: bool) -> AppResult<()> {
+    worker(move || startup::set_auto_launch(enabled)).await?;
+    engine.audit("auto_launch_switched", json!({ "enabled": enabled }));
+    Ok(())
 }
 
 /// Switches one startup entry. May show one UAC prompt for an all-users entry.

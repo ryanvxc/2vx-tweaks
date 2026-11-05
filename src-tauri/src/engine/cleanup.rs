@@ -30,6 +30,8 @@ const SETTLED: Duration = Duration::from_secs(24 * 60 * 60);
 /// Per location. Caches with more files than this are reported as "at least".
 const MAX_ENTRIES: u64 = 250_000;
 const MAX_TIME: Duration = Duration::from_secs(8);
+/// Often enough for the UI to move, without a channel message per file.
+const TICK_FILES: u64 = 256;
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -377,6 +379,15 @@ fn recycle_bin() -> CleanupLocation {
     }
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum CleanupStatus {
+    Cleared,
+    /// The administrator prompt was refused, so nothing ran. Not a clean with 0 bytes to show.
+    ElevationDeclined,
+    Failed,
+}
+
 /// What clearing one location did.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -386,6 +397,7 @@ pub struct CleanupResult {
     pub removed_files: u64,
     /// Files left behind, nearly always because something has them open.
     pub skipped_files: u64,
+    pub status: CleanupStatus,
     /// Why this location wasn't cleared at all.
     pub error: Option<String>,
 }
@@ -397,15 +409,86 @@ impl CleanupResult {
             freed_bytes: 0,
             removed_files: 0,
             skipped_files: 0,
+            status: CleanupStatus::Cleared,
             error: None,
         }
     }
 
     fn failed(id: &str, error: &AppError) -> Self {
         CleanupResult {
+            status: match error {
+                AppError::ElevationRequired(_) => CleanupStatus::ElevationDeclined,
+                _ => CleanupStatus::Failed,
+            },
             error: Some(error.to_string()),
             ..Self::new(id)
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum CleanupPhase {
+    Started,
+    /// Still going. Only locations cleared in this process report this: the elevated helper
+    /// answers once, when it's done.
+    Clearing,
+    Finished,
+    Declined,
+    Failed,
+}
+
+/// One step of a run, sent to the UI as it happens.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct CleanupProgress {
+    pub id: String,
+    pub phase: CleanupPhase,
+    /// Freed from this location so far.
+    pub freed_bytes: u64,
+    /// Freed across the whole run so far.
+    pub total_freed_bytes: u64,
+}
+
+/// Keeps the run's total, which no single location knows.
+struct Reporter<'a> {
+    send: &'a mut dyn FnMut(CleanupProgress),
+    total: u64,
+}
+
+impl Reporter<'_> {
+    fn emit(&mut self, id: &str, phase: CleanupPhase, freed_bytes: u64) {
+        (self.send)(CleanupProgress {
+            id: id.into(),
+            phase,
+            freed_bytes,
+            total_freed_bytes: self.total + freed_bytes,
+        });
+    }
+
+    fn started(&mut self, id: &str) {
+        self.emit(id, CleanupPhase::Started, 0);
+    }
+
+    fn finished(&mut self, result: &CleanupResult) {
+        let phase = match result.status {
+            CleanupStatus::Cleared => CleanupPhase::Finished,
+            CleanupStatus::ElevationDeclined => CleanupPhase::Declined,
+            CleanupStatus::Failed => CleanupPhase::Failed,
+        };
+        self.emit(&result.id, phase, result.freed_bytes);
+        self.total += result.freed_bytes;
+    }
+}
+
+/// The elevated side of a run. A seam so tests can refuse the prompt without showing one.
+trait Helper {
+    fn clean(&mut self, id: &str) -> AppResult<CleanupResult>;
+}
+
+impl Helper for BrokerSession {
+    fn clean(&mut self, id: &str) -> AppResult<CleanupResult> {
+        BrokerSession::clean(self, id)
     }
 }
 
@@ -414,7 +497,24 @@ fn spec(id: &str) -> Option<&'static Spec> {
 }
 
 /// Clears the given locations. Every ID is checked before anything is deleted.
-pub fn clean(ids: &[String]) -> AppResult<Vec<CleanupResult>> {
+pub fn clean(
+    ids: &[String],
+    on_progress: &mut dyn FnMut(CleanupProgress),
+) -> AppResult<Vec<CleanupResult>> {
+    clean_with(
+        ids,
+        privilege::is_elevated(),
+        BrokerSession::launch,
+        on_progress,
+    )
+}
+
+fn clean_with<H: Helper>(
+    ids: &[String],
+    elevated: bool,
+    mut launch: impl FnMut() -> AppResult<H>,
+    on_progress: &mut dyn FnMut(CleanupProgress),
+) -> AppResult<Vec<CleanupResult>> {
     if ids.is_empty() {
         return Err(AppError::InvalidInput("choose a location to clear".into()));
     }
@@ -427,25 +527,42 @@ pub fn clean(ids: &[String]) -> AppResult<Vec<CleanupResult>> {
         )));
     }
 
-    let elevated = privilege::is_elevated();
+    let mut reporter = Reporter {
+        send: on_progress,
+        total: 0,
+    };
     let mut results = vec![];
     let mut for_helper = vec![];
     for id in ids {
-        match spec(id) {
-            None => results.push(empty_recycle_bin()),
-            Some(s) if s.admin && !elevated => for_helper.push(s.id),
-            Some(s) => results.push(clear(s)),
+        let spec = spec(id);
+        if let Some(s) = spec.filter(|s| s.admin && !elevated) {
+            for_helper.push(s.id);
+            continue;
         }
+        reporter.started(id);
+        let result = match spec {
+            None => empty_recycle_bin(),
+            Some(s) => clear(s, &mut |freed| {
+                reporter.emit(s.id, CleanupPhase::Clearing, freed);
+            }),
+        };
+        reporter.finished(&result);
+        results.push(result);
     }
-    if !for_helper.is_empty() {
-        match BrokerSession::launch() {
-            Ok(mut session) => results.extend(for_helper.iter().map(|id| {
-                session
-                    .clean(id)
-                    .unwrap_or_else(|e| CleanupResult::failed(id, &e))
-            })),
-            Err(e) => results.extend(for_helper.iter().map(|id| CleanupResult::failed(id, &e))),
-        }
+
+    // Launched on the first location that needs it, which is the one showing as started while the
+    // prompt is up. A refusal stays in `session`, so it covers the rest without asking again.
+    let mut session = None;
+    for id in for_helper {
+        reporter.started(id);
+        let result = match session.get_or_insert_with(&mut launch) {
+            Ok(session) => session
+                .clean(id)
+                .unwrap_or_else(|e| CleanupResult::failed(id, &e)),
+            Err(e) => CleanupResult::failed(id, e),
+        };
+        reporter.finished(&result);
+        results.push(result);
     }
     Ok(results)
 }
@@ -455,10 +572,10 @@ pub fn clean_elevated(id: &str) -> AppResult<CleanupResult> {
     let spec = spec(id).filter(|s| s.admin).ok_or_else(|| {
         AppError::Policy(format!("`{id}` is not an administrator cleanup location"))
     })?;
-    Ok(clear(spec))
+    Ok(clear(spec, &mut |_| {}))
 }
 
-fn clear(spec: &Spec) -> CleanupResult {
+fn clear(spec: &Spec, tick: &mut dyn FnMut(u64)) -> CleanupResult {
     let mut out = CleanupResult::new(spec.id);
     let now = SystemTime::now();
     for root in (spec.paths)() {
@@ -466,7 +583,7 @@ fn clear(spec: &Spec) -> CleanupResult {
         let plain = std::fs::symlink_metadata(&root)
             .is_ok_and(|m| m.is_dir() && m.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT == 0);
         if plain {
-            clear_tree(&root, spec.scope, now, &mut out);
+            clear_tree(&root, spec.scope, now, &mut out, tick);
         }
     }
     tracing::info!(
@@ -480,8 +597,15 @@ fn clear(spec: &Spec) -> CleanupResult {
 }
 
 /// Removes what `scope` takes below `root`, keeping `root` itself. A file that won't go is
-/// counted and left. Reparse points are left too: neither followed nor removed.
-fn clear_tree(root: &Path, scope: Scope, now: SystemTime, out: &mut CleanupResult) {
+/// counted and left. Reparse points are left too: neither followed nor removed. `tick` gets the
+/// bytes freed so far every [`TICK_FILES`] files, so a large cache doesn't look stuck.
+fn clear_tree(
+    root: &Path,
+    scope: Scope,
+    now: SystemTime,
+    out: &mut CleanupResult,
+    tick: &mut dyn FnMut(u64),
+) {
     let mut stack = vec![root.to_path_buf()];
     let mut seen = vec![];
     while let Some(dir) = stack.pop() {
@@ -507,6 +631,9 @@ fn clear_tree(root: &Path, scope: Scope, now: SystemTime, out: &mut CleanupResul
                     Ok(()) => {
                         out.freed_bytes += meta.len();
                         out.removed_files += 1;
+                        if out.removed_files.is_multiple_of(TICK_FILES) {
+                            tick(out.freed_bytes);
+                        }
                     }
                     Err(_) => out.skipped_files += 1,
                 }
@@ -536,7 +663,10 @@ fn empty_recycle_bin() -> CleanupResult {
             out.freed_bytes = before.bytes;
             out.removed_files = before.files;
         }
-        Err(e) => out.error = Some(format!("Couldn't empty the Recycle Bin: {}", e.message())),
+        Err(e) => {
+            out.status = CleanupStatus::Failed;
+            out.error = Some(format!("Couldn't empty the Recycle Bin: {}", e.message()));
+        }
     }
     out
 }
@@ -550,8 +680,90 @@ mod tests {
 
     fn cleared(root: &Path, scope: Scope) -> CleanupResult {
         let mut out = CleanupResult::new("test");
-        clear_tree(root, scope, SystemTime::now(), &mut out);
+        clear_tree(root, scope, SystemTime::now(), &mut out, &mut |_| {});
         out
+    }
+
+    /// These tests only ever name administrator locations with `elevated` false, so everything
+    /// goes to the fake helper and nothing on this PC is cleared.
+    const ADMIN_IDS: [&str; 2] = ["windows-temp", "prefetch"];
+
+    struct FakeHelper;
+
+    impl Helper for FakeHelper {
+        fn clean(&mut self, id: &str) -> AppResult<CleanupResult> {
+            Ok(CleanupResult {
+                freed_bytes: 100,
+                ..CleanupResult::new(id)
+            })
+        }
+    }
+
+    fn run(
+        launch: impl FnMut() -> AppResult<FakeHelper>,
+    ) -> (Vec<CleanupResult>, Vec<CleanupProgress>) {
+        let ids = ADMIN_IDS.map(String::from);
+        let mut events = vec![];
+        let results = clean_with(&ids, false, launch, &mut |p| events.push(p)).unwrap();
+        (results, events)
+    }
+
+    #[test]
+    fn refusing_the_prompt_is_not_a_success() {
+        let mut prompts = 0;
+        let (results, events) = run(|| {
+            prompts += 1;
+            Err(AppError::ElevationRequired("declined".into()))
+        });
+        assert_eq!(prompts, 1, "one refusal covers the whole run");
+        for result in &results {
+            assert_eq!(result.status, CleanupStatus::ElevationDeclined);
+            assert_eq!(result.freed_bytes, 0);
+            assert!(result.error.is_some());
+        }
+        let phases: Vec<_> = events.iter().map(|e| e.phase).collect();
+        assert_eq!(
+            phases,
+            [
+                CleanupPhase::Started,
+                CleanupPhase::Declined,
+                CleanupPhase::Started,
+                CleanupPhase::Declined
+            ]
+        );
+    }
+
+    #[test]
+    fn a_helper_that_fails_to_start_is_a_failure_not_a_refusal() {
+        let (results, _) = run(|| Err(AppError::System("no pipe".into())));
+        assert!(results.iter().all(|r| r.status == CleanupStatus::Failed));
+    }
+
+    #[test]
+    fn progress_carries_each_location_and_the_running_total() {
+        let (results, events) = run(|| Ok(FakeHelper));
+        assert!(results.iter().all(|r| r.status == CleanupStatus::Cleared));
+        let done: Vec<_> = events
+            .iter()
+            .filter(|e| e.phase == CleanupPhase::Finished)
+            .map(|e| (e.id.as_str(), e.freed_bytes, e.total_freed_bytes))
+            .collect();
+        assert_eq!(done, [("windows-temp", 100, 100), ("prefetch", 100, 200)]);
+    }
+
+    #[test]
+    fn large_locations_tick_while_they_clear() {
+        let dir = tempfile::tempdir().unwrap();
+        for i in 0..TICK_FILES * 2 {
+            std::fs::write(dir.path().join(format!("{i}.bin")), [0u8; 10]).unwrap();
+        }
+        let mut ticks = vec![];
+        let mut out = CleanupResult::new("test");
+        let now = SystemTime::now();
+        clear_tree(dir.path(), Scope::Everything, now, &mut out, &mut |freed| {
+            ticks.push(freed);
+        });
+        assert_eq!(ticks, [TICK_FILES * 10, TICK_FILES * 20]);
     }
 
     fn age(path: &Path, by: Duration) {
@@ -635,8 +847,15 @@ mod tests {
     #[test]
     fn an_unknown_id_stops_the_run_before_anything_is_deleted() {
         let ids = ["crash-dumps".to_string(), r"C:\Windows".to_string()];
-        assert!(matches!(clean(&ids), Err(AppError::InvalidInput(_))));
-        assert!(matches!(clean(&[]), Err(AppError::InvalidInput(_))));
+        let mut none = |_| panic!("nothing starts");
+        assert!(matches!(
+            clean(&ids, &mut none),
+            Err(AppError::InvalidInput(_))
+        ));
+        assert!(matches!(
+            clean(&[], &mut none),
+            Err(AppError::InvalidInput(_))
+        ));
     }
 
     #[test]

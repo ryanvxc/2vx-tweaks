@@ -11,7 +11,7 @@ import { AccountMenu } from "./account-menu";
 const GROUP_HEAD_PX = 24;
 const GROUP_LINE_PX = 9;
 /** Rows stop growing here. On a taller window the spare height goes between the groups. */
-const ROW_MAX_PX = 64;
+const ROW_MAX_PX = 46;
 
 export function Sidebar({ onSearch }: { onSearch: () => void }) {
   const collapsed = useUiStore((s) => s.sidebarCollapsed);

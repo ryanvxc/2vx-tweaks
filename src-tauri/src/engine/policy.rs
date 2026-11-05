@@ -252,6 +252,29 @@ const PROTECTED_SERVICES: &[&str] = &[
     "EFS",
 ];
 
+/// All the `Adapter` hive can reach: NDIS standardized keywords with a documented "0" that turns a
+/// feature off. These are checked with the target rather than the data because the elevated broker
+/// runs `check_target` on every write, and a driver key holds much more than these.
+pub const ETHERNET_KEYWORDS: &[&str] = &[
+    "*EEE",
+    "*FlowControl",
+    "*InterruptModeration",
+    "*WakeOnMagicPacket",
+    "*WakeOnPattern",
+    "*PMARPOffload",
+    "*PMNSOffload",
+    "*LsoV2IPv4",
+    "*LsoV2IPv6",
+    "*SelectiveSuspend",
+];
+pub const WIFI_KEYWORDS: &[&str] = &[
+    "*WakeOnMagicPacket",
+    "*WakeOnPattern",
+    "*PMARPOffload",
+    "*PMNSOffload",
+    "*PacketCoalescing",
+];
+
 /// Checks a target against the denylist and basic shape rules.
 pub fn check_target(target: &RegTarget) -> AppResult<()> {
     let key = target.key.as_ref();
@@ -267,6 +290,19 @@ pub fn check_target(target: &RegTarget) -> AppResult<()> {
         return Err(AppError::Policy(format!(
             "malformed registry target `{target}`"
         )));
+    }
+
+    if target.hive == Hive::Adapter {
+        let keywords = match key {
+            "Ethernet" => ETHERNET_KEYWORDS,
+            "Wifi" => WIFI_KEYWORDS,
+            _ => &[],
+        };
+        if !keywords.contains(&target.value.as_ref()) {
+            return Err(AppError::Policy(format!(
+                "`{target}` is not a documented adapter keyword"
+            )));
+        }
     }
 
     for (hive, prefix) in DENIED_KEYS {
@@ -311,6 +347,8 @@ pub fn check_value(setting: &Setting) -> AppResult<()> {
             let vendor = target.key.split('\\').next();
             matches!(vendor, Some("Nvidia" | "Amd" | "Intel"))
         }
+        (Hive::Adapter, Some(RegValue::String(data))) => matches!(data.as_ref(), "0" | "1"),
+        (Hive::Adapter, _) => false,
         _ => true,
     };
     if ok {
@@ -339,6 +377,51 @@ mod tests {
 
     fn t(hive: Hive, key: &'static str, value: &'static str) -> RegTarget {
         RegTarget::new(hive, key, value)
+    }
+
+    #[test]
+    fn the_adapter_hive_reaches_documented_keywords_and_nothing_else() {
+        for (key, value) in [
+            ("Ethernet", "*EEE"),
+            ("Ethernet", "*SelectiveSuspend"),
+            ("Wifi", "*PacketCoalescing"),
+        ] {
+            assert!(
+                check_target(&t(Hive::Adapter, key, value)).is_ok(),
+                "{value}"
+            );
+        }
+        for (key, value) in [
+            // A keyword belongs to its kind.
+            ("Wifi", "*EEE"),
+            ("Ethernet", "*PacketCoalescing"),
+            // A driver's own settings aren't documented, and could be anything.
+            ("Ethernet", "PowerSavingMode"),
+            ("Ethernet", "NetworkAddress"),
+            ("Ethernet", ""),
+            ("Ethernet", "*eee"),
+            // No other kind, and nothing below the adapter: `requires` only reads there.
+            ("Bluetooth", "*EEE"),
+            (r"Ethernet\Ndi\Params\*EEE", "default"),
+            (r"Ethernet\Ndi", "*EEE"),
+            (r"..\0001", "*EEE"),
+        ] {
+            assert!(
+                check_target(&t(Hive::Adapter, key, value)).is_err(),
+                "{key} {value}"
+            );
+        }
+    }
+
+    #[test]
+    fn adapter_keywords_only_hold_their_documented_strings() {
+        let keyword = |data| Setting::string(Hive::Adapter, "Ethernet", "*EEE", data);
+        assert!(check_value(&keyword("0")).is_ok());
+        assert!(check_value(&keyword("1")).is_ok());
+        assert!(check_value(&keyword("2")).is_err());
+        assert!(check_value(&keyword("")).is_err());
+        assert!(check_value(&Setting::dword(Hive::Adapter, "Ethernet", "*EEE", 0)).is_err());
+        assert!(check_value(&Setting::absent(Hive::Adapter, "Ethernet", "*EEE")).is_err());
     }
 
     #[test]

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { FilterBar } from "@/components/common/filter-bar";
+import { StatusLabel } from "@/components/common/notice";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
 import { useStaggerIn } from "@/hooks/use-motion";
@@ -34,7 +35,7 @@ export function UninstallTab() {
   const { data, error, loading, refetch } = useRemovableApps();
   const [search, setSearch] = useState("");
   const [state, setState] = useState<StateFilter[]>([]);
-  const [sort, setSort] = useState("name");
+  const [sort, setSort] = useState("installed");
   const [busy, setBusy] = useState<string | null>(null);
   const [removing, setRemoving] = useState<RemovableApp | null>(null);
   const list = useStaggerIn<HTMLUListElement>(data ? "apps" : null);
@@ -80,12 +81,19 @@ export function UninstallTab() {
           value: sort,
           onChange: setSort,
           options: [
+            { value: "installed", label: "Installed first" },
             { value: "name", label: "Name, A to Z" },
             { value: "nameDesc", label: "Name, Z to A" },
-            { value: "installed", label: "Installed first" },
           ],
         }}
-        end={<DataSourceBadge source="live" />}
+        end={
+          data && (
+            <DataSourceBadge
+              source="live"
+              label={`${data.filter((a) => a.installed).length} of ${data.length} installed`}
+            />
+          )
+        }
       />
 
       {error ? (
@@ -107,6 +115,9 @@ export function UninstallTab() {
               <span className="truncate text-right text-[12.5px] text-muted-foreground">
                 {app.description}
               </span>
+              <StatusLabel tone={app.installed ? "success" : "neutral"} className="w-24 shrink-0">
+                {app.installed ? "Installed" : "Not installed"}
+              </StatusLabel>
               {app.installed ? (
                 <Button
                   size="sm"
@@ -119,7 +130,7 @@ export function UninstallTab() {
               ) : (
                 <Button
                   size="sm"
-                  variant="secondary"
+                  variant="ghost"
                   className="w-28 shrink-0"
                   disabled={busy !== null}
                   onClick={() => void run(app, backend.reinstallApp, "is back")}

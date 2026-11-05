@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { ArrowRight, Scale, Zap, type LucideIcon } from "lucide-react";
+import { ArrowRight, ChevronRight, Scale, Zap, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
-import { DataSourceBadge } from "@/components/common/data-source-badge";
-import { EngineBanner } from "@/components/common/engine-banner";
-import { Notice, StatusLabel } from "@/components/common/notice";
+import { StatusLabel } from "@/components/common/notice";
+import { PresetCard } from "@/components/common/preset-card";
 import { ErrorState, LoadingRows } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
+import { useBackendQuery } from "@/hooks/use-backend-query";
 import { refreshEngineState, useTweakStatuses } from "@/hooks/use-system";
 import { profileProgress } from "@/lib/profiles";
 import {
@@ -14,52 +14,37 @@ import {
   undoableIn,
   type ServicePreset,
 } from "@/lib/service-presets";
-import { tweakIcon } from "@/lib/tweak-presentation";
+import { presetStatus } from "@/lib/tweak-presets";
 import { cn } from "@/lib/utils";
 import { backend, toBackendError } from "@/services/backend";
 import type { TweakStatus } from "@/types/engine";
+import type { ServiceStartType } from "@/types/system";
 import { ChangeInspector } from "../tweaks/change-inspector";
 
 const ICONS: Record<string, LucideIcon> = { basic: Scale, advanced: Zap };
 
-function serviceName(tweakName: string): string {
-  const name = tweakName.replace(/^Disable /, "");
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
-export function ServicesTab() {
-  const { data, error, loading, refetch } = useTweakStatuses();
+/** Above the list of services: two named lists of the same tweaks. */
+export function ServicePresets() {
+  const { data } = useTweakStatuses();
+  if (!data) return null;
   return (
-    <div className="flex flex-1 flex-col gap-3">
-      <EngineBanner />
-      <Notice tone="info" title="Fewer processes doesn't mean a faster PC.">
-        These presets only turn off services with a documented reason, and every change can be
-        undone.
-      </Notice>
-      {error ? (
-        <ErrorState message={error.message} onRetry={refetch} />
-      ) : loading && !data ? (
-        <LoadingRows rows={5} />
-      ) : (
-        <div className="grid flex-1 grid-cols-2 gap-3">
-          {SERVICE_PRESETS.map((preset) => (
-            <PresetCard key={preset.id} preset={preset} statuses={data ?? []} />
-          ))}
-        </div>
-      )}
+    <div className="grid grid-cols-2 gap-3">
+      {SERVICE_PRESETS.map((preset) => (
+        <Preset key={preset.id} preset={preset} statuses={data} />
+      ))}
     </div>
   );
 }
 
-function PresetCard({ preset, statuses }: { preset: ServicePreset; statuses: TweakStatus[] }) {
+function Preset({ preset, statuses }: { preset: ServicePreset; statuses: TweakStatus[] }) {
   const [reviewing, setReviewing] = useState(false);
   const [reverting, setReverting] = useState(false);
-  const Icon = ICONS[preset.id] ?? Scale;
   const progress = profileProgress(preset, statuses);
   const active = activePreset(statuses)?.id === preset.id;
   // Advanced holds everything in Basic, so Basic isn't off while Advanced is on.
   const included = !active && progress.active;
   const undoable = undoableIn(progress);
+  const canRevert = active || (progress.inEffect > 0 && undoable.length > 0 && !included);
 
   const revert = async () => {
     setReverting(true);
@@ -76,96 +61,29 @@ function PresetCard({ preset, statuses }: { preset: ServicePreset; statuses: Twe
   };
 
   return (
-    <article className="flex flex-col gap-5 panel p-6">
-      <header className="flex items-center gap-3">
-        <span className="flex size-10 items-center justify-center rounded-lg bg-brand/12 text-brand">
-          <Icon className="size-5" aria-hidden />
-        </span>
-        <h2 className="flex-1 text-[17px] font-semibold">{preset.name}</h2>
-        <StatusLabel tone={active || included ? "success" : "neutral"}>
-          {active ? "Active" : included ? "Included" : "Inactive"}
-        </StatusLabel>
-      </header>
-
-      <p data-selectable className="text-[13.5px] leading-relaxed text-muted-foreground">
-        {preset.summary}
-      </p>
-
-      <ul
-        aria-label={`What ${preset.name} turns off`}
-        className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12.5px]"
+    <>
+      <PresetCard
+        icon={ICONS[preset.id] ?? Scale}
+        title={preset.name}
+        summary={preset.summary}
+        status={presetStatus(progress.inEffect, progress.usable.length)}
+        facts={[{ label: "In effect", value: `${progress.inEffect} of ${progress.usable.length}` }]}
       >
-        {progress.tweaks.map((t) => {
-          const ItemIcon = tweakIcon(t.meta);
-          return (
-            <li
-              key={t.meta.id}
-              className="flex min-w-0 items-center gap-2"
-              title={t.meta.warning ?? ""}
-            >
-              <ItemIcon
-                className={cn(
-                  "size-3.5 shrink-0",
-                  t.state === "applied" ? "text-brand" : "text-muted-foreground",
-                )}
-                aria-hidden
-              />
-              <span className="truncate text-muted-foreground">{serviceName(t.meta.name)}</span>
-            </li>
-          );
-        })}
-      </ul>
-
-      <dl className="mt-auto flex flex-col gap-3 text-[13px]">
-        <div className="flex items-center justify-between">
-          <dt className="text-muted-foreground">Functionality</dt>
-          <dd
-            className="flex gap-1.5"
-            role="img"
-            aria-label={`${preset.functionality} out of 5`}
-            title="Our rating of how much of Windows keeps working"
+        {canRevert ? (
+          <Button
+            variant="secondary"
+            disabled={undoable.length === 0 || reverting}
+            title={undoable.length === 0 ? "Changed outside 2VX, so there's no record to undo" : ""}
+            onClick={() => void revert()}
           >
-            {[1, 2, 3, 4, 5].map((n) => (
-              <span
-                key={n}
-                className={cn(
-                  "size-2.5 rounded-full",
-                  n <= preset.functionality ? "bg-brand" : "bg-muted",
-                )}
-              />
-            ))}
-          </dd>
-        </div>
-        <div className="flex items-center justify-between">
-          <dt className="text-muted-foreground">Background services</dt>
-          <dd className="font-medium" title="Compared with the other preset. Not measured.">
-            {preset.background}
-          </dd>
-        </div>
-        <div className="flex items-center justify-between">
-          <dt className="text-muted-foreground">In effect</dt>
-          <dd className="flex items-center gap-3 tabular">
-            {progress.inEffect} of {progress.usable.length}
-            <DataSourceBadge source="live" />
-          </dd>
-        </div>
-      </dl>
-
-      {active || (progress.inEffect > 0 && undoable.length > 0 && !included) ? (
-        <Button
-          variant="secondary"
-          className="h-11"
-          disabled={undoable.length === 0 || reverting}
-          title={undoable.length === 0 ? "Changed outside 2VX, so there's no record to undo" : ""}
-          onClick={() => void revert()}
-        >
-          {reverting ? "Reverting…" : "Revert"}
-        </Button>
-      ) : (
-        <Button className="h-11" disabled={included} onClick={() => setReviewing(true)}>
-          Apply <ArrowRight />
-        </Button>
-      )}
+            {reverting ? "Reverting…" : "Revert"}
+          </Button>
+        ) : (
+          <Button disabled={included} onClick={() => setReviewing(true)}>
+            Apply <ArrowRight />
+          </Button>
+        )}
+      </PresetCard>
 
       <ChangeInspector
         open={reviewing}
@@ -174,6 +92,88 @@ function PresetCard({ preset, statuses }: { preset: ServicePreset; statuses: Twe
         names={Object.fromEntries(progress.tweaks.map((t) => [t.meta.id, t.meta.name]))}
         warnings={Object.fromEntries(progress.tweaks.map((t) => [t.meta.id, t.meta.warning]))}
       />
-    </article>
+    </>
+  );
+}
+
+const START_TYPE: Record<ServiceStartType, string> = {
+  automatic: "Automatic",
+  automaticDelayed: "Automatic (delayed)",
+  manual: "Manual",
+  disabled: "Disabled",
+  unknown: "Unknown",
+};
+
+/** The services the tweaks below act on, as Windows reports them right now. Read-only. */
+export function ServiceReadout() {
+  const [open, setOpen] = useState(false);
+  const { data, error, loading, refetch } = useBackendQuery(
+    "service-states",
+    backend.getServiceStates,
+  );
+  const rows = [...(data ?? [])].sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+  return (
+    <section className="flex flex-col gap-2">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex h-11 items-center gap-2.5 panel px-4 text-left text-[14.5px] font-semibold transition-colors outline-none hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <ChevronRight
+          className={cn(
+            "size-4 text-muted-foreground transition-transform duration-150",
+            open && "rotate-90",
+          )}
+          aria-hidden
+        />
+        <span className="flex-1 truncate">Services on this PC</span>
+        {data && (
+          <span className="text-[12.5px] font-normal text-muted-foreground tabular">
+            {rows.length}
+          </span>
+        )}
+      </button>
+      {open &&
+        (error ? (
+          <ErrorState message={error.message} onRetry={refetch} />
+        ) : loading && !data ? (
+          <LoadingRows rows={4} />
+        ) : (
+          <div className="max-h-64 overflow-y-auto panel">
+            <ul className="flex flex-col">
+              {rows.map((s) => (
+                <li
+                  key={s.name}
+                  className="flex h-9 items-center gap-4 px-4 text-[12.5px] not-last:border-b not-last:border-border"
+                >
+                  <span className="w-56 shrink-0 truncate font-medium" title={s.name}>
+                    {s.displayName}
+                  </span>
+                  <span className="w-20 shrink-0">
+                    {s.running === null ? (
+                      <StatusLabel tone="neutral">Unknown</StatusLabel>
+                    ) : s.running ? (
+                      <StatusLabel tone="success">Running</StatusLabel>
+                    ) : (
+                      <StatusLabel tone="neutral">Stopped</StatusLabel>
+                    )}
+                  </span>
+                  <span className="w-32 shrink-0 truncate text-muted-foreground">
+                    {START_TYPE[s.startType]}
+                  </span>
+                  <span
+                    className="min-w-0 flex-1 truncate text-muted-foreground"
+                    title={s.description ?? undefined}
+                  >
+                    {s.description ?? ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+    </section>
   );
 }

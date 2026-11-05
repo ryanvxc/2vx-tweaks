@@ -1,13 +1,21 @@
-use tauri::State;
+use std::sync::Arc;
+
+use tauri::{State, WebviewWindow};
 
 use crate::engine::cleanup::{self, CleanupLocation};
+use crate::engine::service::Engine;
 use crate::engine::startup::{self, StartupInventory};
 use crate::error::{AppError, AppResult};
-use crate::links::{self, Link};
+use crate::links::{self, Link, WindowsTool};
+use crate::logging::LogState;
+use crate::report;
 use crate::system::devices::{self, DeviceReport, SleepSample};
 use crate::system::hardware::{self, SystemSnapshot};
+use crate::system::hardware_details::{self, HardwareDetails};
 use crate::system::metrics::{MetricsSample, MetricsSampler};
+use crate::system::ping::{self, PingResult, PingTarget};
 use crate::system::processes::{self, RunningProgram};
+use crate::system::services::{self, ServiceState};
 
 #[tauri::command]
 pub async fn get_system_snapshot() -> AppResult<SystemSnapshot> {
@@ -24,6 +32,44 @@ pub async fn get_device_report() -> AppResult<DeviceReport> {
         .map_err(|e| AppError::Internal(format!("device report task failed: {e}")))
 }
 
+/// CPU layout, memory modules, drives, GPU drivers and devices. Read-only, needs no elevation.
+#[tauri::command]
+pub async fn get_hardware_details() -> AppResult<HardwareDetails> {
+    tauri::async_runtime::spawn_blocking(hardware_details::collect)
+        .await
+        .map_err(|e| AppError::Internal(format!("hardware details task failed: {e}")))
+}
+
+/// The services named by catalogue tweaks. Read-only: the list comes from the catalogue, not from
+/// the caller.
+#[tauri::command]
+pub async fn get_service_states(engine: State<'_, Arc<Engine>>) -> AppResult<Vec<ServiceState>> {
+    let names = engine.registry().service_names();
+    tauri::async_runtime::spawn_blocking(move || services::states(&names))
+        .await
+        .map_err(|e| AppError::Internal(format!("service list task failed: {e}")))
+}
+
+/// One ICMP echo to one of two fixed targets. Only ever started by the user. A bufferbloat test
+/// calls this once a second for each target for as long as it runs.
+#[tauri::command]
+pub async fn ping_target(target: PingTarget) -> AppResult<PingResult> {
+    tauri::async_runtime::spawn_blocking(move || ping::ping(target))
+        .await
+        .map_err(|e| AppError::Internal(format!("ping task failed: {e}")))?
+}
+
+/// Saves the report to wherever the user picks in the save dialog. Returns the file's name, or
+/// nothing if they cancel. Takes the text only: no path crosses this command.
+#[tauri::command]
+pub async fn export_report(window: WebviewWindow, text: String) -> AppResult<Option<String>> {
+    report::check_size(&text)?;
+    let owner = window.hwnd().ok().map(|hwnd| hwnd.0 as isize);
+    tauri::async_runtime::spawn_blocking(move || report::export(owner, &text))
+        .await
+        .map_err(|e| AppError::Internal(format!("report task failed: {e}")))?
+}
+
 /// How long a one-millisecond sleep really takes. Only sleeps; takes under a second.
 #[tauri::command]
 pub async fn measure_sleep() -> AppResult<Vec<SleepSample>> {
@@ -32,10 +78,31 @@ pub async fn measure_sleep() -> AppResult<Vec<SleepSample>> {
         .map_err(|e| AppError::Internal(format!("sleep test failed: {e}")))
 }
 
+/// Off the main thread, because a tool can bring up a UAC prompt and the call waits for it, which
+/// would freeze the window behind it.
+async fn opening(open: impl FnOnce() -> AppResult<()> + Send + 'static) -> AppResult<()> {
+    tauri::async_runtime::spawn_blocking(open)
+        .await
+        .map_err(|e| AppError::Internal(format!("open task failed: {e}")))?
+}
+
 /// Opens one page from the fixed list in `links.rs`.
 #[tauri::command]
-pub fn open_link(link: Link) -> AppResult<()> {
-    links::open(link)
+pub async fn open_link(link: Link) -> AppResult<()> {
+    opening(move || links::open(link)).await
+}
+
+/// Opens one Windows tool from the fixed list in `links.rs`.
+#[tauri::command]
+pub async fn open_tool(tool: WindowsTool) -> AppResult<()> {
+    opening(move || links::open_tool(tool)).await
+}
+
+/// Opens the app's own log folder. The folder comes from the backend, never from the caller.
+#[tauri::command]
+pub async fn open_log_folder(log: State<'_, LogState>) -> AppResult<()> {
+    let log_dir = log.log_dir.clone();
+    opening(move || links::open_log_folder(&log_dir)).await
 }
 
 /// Running programs, for Game Mode's detected game. Read-only, with no arguments.

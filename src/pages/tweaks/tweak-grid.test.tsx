@@ -20,6 +20,7 @@ import { TWEAKS_VIEW } from "./tweak-views";
 const mock = vi.hoisted(() => ({
   getEngineStatus: vi.fn(),
   getTweakStatuses: vi.fn(),
+  getSystemSnapshot: vi.fn(),
   getAppInfo: vi.fn(),
   planTweaks: vi.fn(),
   applyPlan: vi.fn(),
@@ -59,6 +60,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mock.getEngineStatus.mockResolvedValue(HEALTHY);
   mock.getTweakStatuses.mockResolvedValue(STATUSES);
+  mock.getSystemSnapshot.mockResolvedValue({ uptimeSecs: null });
   mock.getAppInfo.mockResolvedValue({
     name: "2VX Tweaks",
     version: "0.1.0",
@@ -100,7 +102,8 @@ describe("TweakGrid", () => {
     mock.getTweakStatuses.mockResolvedValue([warned, missing, ...STATUSES.slice(2)]);
     renderGrid();
     expect(await screen.findAllByLabelText("Can break features")).toHaveLength(1);
-    expect(screen.getByRole("switch", { name: `Turn on ${missing.meta.name}` })).toBeDisabled();
+    expect(screen.queryByRole("switch", { name: `Turn on ${missing.meta.name}` })).toBeNull();
+    expect(screen.getByText("Not installed")).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: `Turn on ${warned.meta.name}` })).toBeEnabled();
   });
 
@@ -177,14 +180,58 @@ describe("TweakGrid", () => {
     expect(mock.revertTweak).toHaveBeenCalledWith(APPLIED_TWEAK.id);
   });
 
-  it("locks the switch of a value set outside 2VX", async () => {
+  it("says a value is already set outside 2VX, with no switch that looks undoable", async () => {
     mock.getTweakStatuses.mockResolvedValue(
       STATUSES.map((s) => (s.meta.id === APPLIED_TWEAK.id ? { ...s, undoable: false } : s)),
     );
     renderGrid();
-    expect(
-      await screen.findByRole("switch", { name: `Undo ${APPLIED_TWEAK.name}` }),
-    ).toBeDisabled();
+    expect(await screen.findByText("Already set")).toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: `Undo ${APPLIED_TWEAK.name}` })).toBeNull();
+  });
+
+  it("never offers a setting it couldn't read", async () => {
+    const unread = { ...STATUSES[0]!, state: "unknown" as const };
+    mock.getTweakStatuses.mockResolvedValue([unread, ...STATUSES.slice(1)]);
+    renderGrid();
+    expect(await screen.findByLabelText("Couldn't read this setting")).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: `Turn on ${unread.meta.name}` })).toBeDisabled();
+  });
+
+  it("marks a restart still to come and a change that failed", async () => {
+    const reboot = { ...APPLIED_TWEAK, restart: "reboot" as const };
+    mock.getTweakStatuses.mockResolvedValue(
+      STATUSES.map((s) => (s.meta.id === APPLIED_TWEAK.id ? { ...s, meta: reboot } : s)),
+    );
+    mock.getSystemSnapshot.mockResolvedValue({ uptimeSecs: 60 });
+    mock.listSnapshots.mockResolvedValue([
+      {
+        id: 2,
+        kind: "apply",
+        tweakIds: [APPLIED_TWEAK.id],
+        reverts: null,
+        status: "completed",
+        error: null,
+        appVersion: "0.4.0",
+        createdAtMs: Date.now(),
+        finishedAtMs: Date.now(),
+        changeCount: 1,
+      },
+      {
+        id: 1,
+        kind: "apply",
+        tweakIds: [STATUSES.find((s) => s.state !== "applied")!.meta.id],
+        reverts: null,
+        status: "rolledBack",
+        error: "A policy put it back",
+        appVersion: "0.4.0",
+        createdAtMs: 1,
+        finishedAtMs: 2,
+        changeCount: 1,
+      },
+    ]);
+    renderGrid();
+    expect(await screen.findByLabelText("Restart to finish")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Last change failed")).toBeInTheDocument();
   });
 
   it("shows one topic at a time, and searches across all of them", async () => {
@@ -193,13 +240,13 @@ describe("TweakGrid", () => {
     expect(await screen.findByText(USER_TWEAK.name)).toBeInTheDocument();
     expect(screen.queryByText(ADMIN_TWEAK.name)).not.toBeInTheDocument();
 
-    await user.type(screen.getByRole("searchbox", { name: "Search tweaks" }), "admin");
+    await user.type(screen.getByRole("searchbox", { name: "Search" }), "admin");
     expect(screen.queryByText(USER_TWEAK.name)).not.toBeInTheDocument();
     expect(screen.getByText(ADMIN_TWEAK.name)).toBeInTheDocument();
 
-    await user.clear(screen.getByRole("searchbox", { name: "Search tweaks" }));
-    await user.click(screen.getByRole("tab", { name: /Services/ }));
-    expect(screen.getByText("No tweaks match")).toBeInTheDocument();
+    await user.clear(screen.getByRole("searchbox", { name: "Search" }));
+    await user.click(screen.getByRole("tab", { name: /Power/ }));
+    expect(await screen.findByText("No tweaks match")).toBeInTheDocument();
   });
 
   it("puts tweaks that can't run on this PC in a last section, whatever the sort", async () => {
@@ -210,12 +257,15 @@ describe("TweakGrid", () => {
     ]);
     renderGrid("/tweaks?tab=privacy", true);
 
-    const lastHeading = async () => (await screen.findAllByRole("heading", { level: 2 })).at(-1);
-    expect(await lastHeading()).toHaveTextContent("Unavailable");
+    const last = async () => {
+      await screen.findAllByRole("button", { expanded: false });
+      return [...document.querySelectorAll("section > [aria-expanded]")].at(-1);
+    };
+    expect(await last()).toHaveTextContent("Unavailable");
 
     await user.click(screen.getByRole("button", { name: /Sort/ }));
     await user.click(await screen.findByRole("menuitemradio", { name: "Name" }));
-    expect(await lastHeading()).toHaveTextContent("Unavailable");
+    expect(await last()).toHaveTextContent("Unavailable");
   });
 
   it("names what a selected tweak can break in the review", async () => {

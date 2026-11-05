@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isDesktop } from "@/services/backend";
 import { cn } from "@/lib/utils";
@@ -23,9 +24,15 @@ const CONFIG: Record<DataSource | "preview", { label: string; tip: string; tone:
 export function DataSourceBadge({
   source,
   pulse,
+  label,
+  spelled,
   className,
 }: {
   source: DataSource;
+  /** Words beside the dot, for a badge that stands on its own. */
+  label?: ReactNode;
+  /** Its own name beside the dot: a bare dot alone in a row looks like a stray pixel. */
+  spelled?: boolean;
   /** Breathing dot, for the one reading being watched. Too many of these are just noise. */
   pulse?: boolean;
   className?: string;
@@ -43,6 +50,8 @@ export function DataSourceBadge({
           aria-label={cfg.label}
           className={cn(
             "inline-flex h-4 min-w-4 cursor-default items-center justify-center",
+            (label || spelled) &&
+              "gap-1.5 text-[13px] whitespace-nowrap text-muted-foreground tabular",
             !dot && "text-[11px] font-medium",
             !dot && cfg.tone,
             className,
@@ -59,6 +68,7 @@ export function DataSourceBadge({
           ) : (
             cfg.label
           )}
+          {dot && (label ?? (spelled && cfg.label))}
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-60">

@@ -4,6 +4,8 @@ import { invalidateQueries, useBackendQuery } from "./use-backend-query";
 export const useSystemSnapshot = () =>
   useBackendQuery("system-snapshot", backend.getSystemSnapshot);
 export const useDeviceReport = () => useBackendQuery("device-report", backend.getDeviceReport);
+export const useHardwareDetails = () =>
+  useBackendQuery("hardware-details", backend.getHardwareDetails);
 export const useAppInfo = () => useBackendQuery("app-info", backend.getAppInfo);
 export const useAccount = () => useBackendQuery("account", backend.getAccount);
 export const useTweaks = () => useBackendQuery("tweaks", backend.listTweaks);
@@ -12,7 +14,8 @@ export const useTweakStatuses = () => useBackendQuery("tweak-statuses", backend.
 export const useStartupItems = () => useBackendQuery("startup-items", backend.listStartupItems);
 export const useCleanupScan = () => useBackendQuery("cleanup-scan", backend.scanCleanupLocations);
 export const useRemovableApps = () => useBackendQuery("removable-apps", backend.listRemovableApps);
-export const useSnapshots = () => useBackendQuery("snapshots", () => backend.listSnapshots(50));
+// The whole journal, not a recent page: Home counts it and Game Mode looks up an old batch in it.
+export const useSnapshots = () => useBackendQuery("snapshots", () => backend.listSnapshots(5_000));
 
 export const refreshAccount = () => invalidateQueries(["account"]);
 

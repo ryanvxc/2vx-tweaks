@@ -14,6 +14,7 @@ pub mod engine;
 pub mod error;
 pub mod links;
 pub mod logging;
+pub mod report;
 pub mod system;
 
 use std::sync::Arc;
@@ -39,8 +40,9 @@ fn tweak_context() -> TweakContext {
 
 pub fn run() {
     tauri::Builder::default()
-        // Update checks are the app's only network traffic (docs/UPDATE_SYSTEM.md). Downloads
-        // are verified against the bundled public key; installing needs the user's go-ahead.
+        // Update checks are the app's only automatic network traffic (docs/UPDATE_SYSTEM.md); the
+        // only other traffic is a ping the user starts (`system/ping.rs`). Downloads are verified
+        // against the bundled public key; installing needs the user's go-ahead.
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
@@ -75,13 +77,21 @@ pub fn run() {
             commands::account::clear_account,
             commands::system::get_system_snapshot,
             commands::system::get_device_report,
+            commands::system::get_hardware_details,
+            commands::system::get_service_states,
+            commands::system::ping_target,
+            commands::system::export_report,
             commands::system::measure_sleep,
             commands::system::open_link,
+            commands::system::open_tool,
+            commands::system::open_log_folder,
             commands::system::get_metrics,
             commands::system::get_running_programs,
             commands::system::list_startup_items,
             commands::system::scan_cleanup_locations,
             commands::maintenance::clean_locations,
+            commands::maintenance::get_auto_launch,
+            commands::maintenance::set_auto_launch,
             commands::maintenance::set_startup_enabled,
             commands::maintenance::list_removable_apps,
             commands::maintenance::uninstall_app,

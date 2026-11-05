@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MetricsSample } from "@/types/system";
-import { usagePoints } from "./usage-points";
+import { samplesIn, usagePoints } from "./usage-points";
 
 const sample = (seconds: number, cpu: number, gpu: number | null = 50): MetricsSample =>
   ({
@@ -8,6 +8,8 @@ const sample = (seconds: number, cpu: number, gpu: number | null = 50): MetricsS
     cpuPercent: cpu,
     memoryUsedBytes: 8,
     memoryTotalBytes: 32,
+    networkRxBytesPerSec: cpu * 100,
+    networkTxBytesPerSec: 10,
     gpus: [{ usagePercent: gpu }],
   }) as unknown as MetricsSample;
 
@@ -21,8 +23,8 @@ describe("usagePoints", () => {
       sample(106, 80),
     ]);
     expect(points).toEqual([
-      { ago: -2, cpu: 20, gpu: 50, ram: 25 },
-      { ago: 0, cpu: 70, gpu: 50, ram: 25 },
+      { ago: -2, cpu: 20, gpu: 50, ram: 25, rx: 2000, tx: 10 },
+      { ago: 0, cpu: 70, gpu: 50, ram: 25, rx: 7000, tx: 10 },
     ]);
   });
 
@@ -45,5 +47,28 @@ describe("usagePoints", () => {
 
   it("has nothing to plot without samples", () => {
     expect(usagePoints([])).toEqual([]);
+  });
+
+  it("keeps five minutes in the long range, in fifteen-second averages", () => {
+    const samples = Array.from({ length: 301 }, (_, i) => sample(i, 10));
+    expect(usagePoints(samples, "1m").length).toBeLessThanOrEqual(13);
+    const long = usagePoints(samples, "5m");
+    expect(long.length).toBeGreaterThan(18);
+    expect(long.length).toBeLessThanOrEqual(21);
+    expect(long[0]?.ago).toBeLessThan(-280);
+  });
+
+  it("averages download and upload on their own", () => {
+    const [point] = usagePoints([sample(100, 10), sample(101, 30)]);
+    expect(point).toMatchObject({ rx: 2000, tx: 10 });
+  });
+});
+
+describe("samplesIn", () => {
+  it("returns only what the range covers", () => {
+    const samples = [sample(0, 1), sample(200, 2), sample(290, 3), sample(300, 4)];
+    expect(samplesIn(samples, "1m").map((s) => s.cpuPercent)).toEqual([3, 4]);
+    expect(samplesIn(samples, "5m")).toHaveLength(4);
+    expect(samplesIn([], "1m")).toEqual([]);
   });
 });

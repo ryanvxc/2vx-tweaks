@@ -3,6 +3,7 @@
 //! Each tweak must pass the checklist in `docs/optimisation-modules.md` before it is added
 //! here; [`register_all`] runs every one through the metadata gate.
 
+mod adapter;
 mod gaming;
 mod library;
 mod network;
@@ -83,7 +84,10 @@ const ALL: &[SettingsTweak] = &[
 ];
 
 pub fn register_all(registry: &mut TweakRegistry) -> AppResult<()> {
-    for tweak in ALL.iter().chain(library::ALL.iter().copied().flatten()) {
+    let tables = [ALL, adapter::ALL]
+        .into_iter()
+        .chain(library::ALL.iter().copied());
+    for tweak in tables.flatten() {
         registry.register(Box::new(SettingsTweak {
             meta: tweak.meta.clone(),
             settings: tweak.settings,
@@ -212,6 +216,45 @@ mod tests {
     }
 
     #[test]
+    fn adapter_tweaks_stay_hidden_until_the_driver_lists_them_then_restore_what_it_had() {
+        let store = Arc::new(MemoryStore::default());
+        let e = Engine::new(
+            TweakRegistry::with_builtin_tweaks(),
+            Box::new(Shared(store.clone())),
+            Box::new(InProcess),
+            Journal::open_in_memory(),
+            Box::new(|| ctx(26_100, true)),
+        );
+        let flow_control = "network.adapter-eth-flow-control";
+        let compatibility = || {
+            let all = e.tweak_statuses();
+            let status = all.into_iter().find(|s| s.meta.id == flow_control);
+            status.unwrap().compatibility
+        };
+        assert_eq!(compatibility(), Compatibility::NotInstalled);
+
+        let keyword = RegTarget::new(Hive::Adapter, "Ethernet", "*FlowControl");
+        let listed = RegTarget::new(
+            Hive::Adapter,
+            r"Ethernet\Ndi\Params\*FlowControl",
+            "default",
+        );
+        // 3 is both directions on, the documented client default, which no tweak writes.
+        let had = RegValue::String("3".into());
+        store.write(&listed, Some(&had)).unwrap();
+        store.write(&keyword, Some(&had)).unwrap();
+        assert_eq!(compatibility(), Compatibility::Compatible);
+
+        let plan = e.plan(&[flow_control.to_string()]).unwrap();
+        assert_eq!(e.apply(&plan.id).unwrap().status, SnapshotStatus::Completed);
+        let off = RegValue::String("0".into());
+        assert_eq!(store.read(&keyword).unwrap(), Some(off));
+        let out = e.revert_tweak(flow_control).unwrap();
+        assert_eq!(out.status, SnapshotStatus::Completed);
+        assert_eq!(store.read(&keyword).unwrap(), Some(had));
+    }
+
+    #[test]
     fn library_tweaks_read_well_in_a_row() {
         for t in library() {
             let m = &t.meta;
@@ -278,7 +321,7 @@ mod tests {
     fn catalogue_registers_with_user_and_admin_tweaks() {
         let registry = TweakRegistry::with_builtin_tweaks();
         let library: usize = library::ALL.iter().map(|t| t.len()).sum();
-        assert_eq!(registry.len(), ALL.len() + library);
+        assert_eq!(registry.len(), ALL.len() + adapter::ALL.len() + library);
         let perms: Vec<_> = registry.list().map(|m| m.permission).collect();
         assert!(perms.contains(&Permission::User));
         assert!(perms.contains(&Permission::Administrator));

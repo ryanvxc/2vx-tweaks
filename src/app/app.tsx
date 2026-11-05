@@ -10,11 +10,9 @@ import { GamingPage } from "@/pages/gaming/gaming-page";
 import { HardwarePage } from "@/pages/hardware/hardware-page";
 import { NetworkPage } from "@/pages/network/network-page";
 import { AdvancedPage } from "@/pages/advanced/advanced-page";
-import { MonitoringPage } from "@/pages/monitoring/monitoring-page";
 import { RestorePage } from "@/pages/restore/restore-page";
 import { SettingsPage } from "@/pages/settings/settings-page";
 import { ToolsPage } from "@/pages/tools/tools-page";
-import { LibraryPage } from "@/pages/library/library-page";
 import { TweaksPage } from "@/pages/tweaks/tweaks-page";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -43,12 +41,12 @@ export function App() {
           <Routes>
             <Route element={<AppShell />}>
               <Route index element={<DashboardPage />} />
-              <Route path="monitoring" element={<MonitoringPage />} />
+              <Route path="monitoring" element={<Navigate to="/" replace />} />
               <Route path="hardware" element={<HardwarePage />} />
               <Route path="network" element={<NetworkPage />} />
               <Route path="advanced" element={<AdvancedPage />} />
               <Route path="tweaks" element={<TweaksPage />} />
-              <Route path="library" element={<LibraryPage />} />
+              <Route path="library" element={<Moved to="/tweaks" />} />
               <Route path="system" element={<Moved to="/tweaks" />} />
               <Route path="gaming" element={<GamingPage />} />
               <Route path="startup" element={<Navigate to="/cleaner?tab=autoruns" replace />} />

@@ -1,20 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router";
-import {
-  AppWindow,
-  Cpu,
-  Gamepad2,
-  History,
-  HatGlasses,
-  Layers,
-  type LucideIcon,
-} from "lucide-react";
+import { AppWindow, Cpu, Gamepad2, HatGlasses, Layers, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
-import { OptimisationRow } from "@/components/common/optimisation-card";
+import { PresetCard } from "@/components/common/preset-card";
 import { Button } from "@/components/ui/button";
 import { refreshEngineState } from "@/hooks/use-system";
-import { LIBRARY_PRESETS, presetProgress, type LibraryPreset } from "@/lib/library-presets";
+import { restartNote } from "@/lib/engine-text";
+import { presetProgress, presetStatus, TWEAK_PRESETS, type TweakPreset } from "@/lib/tweak-presets";
 import { backend, toBackendError } from "@/services/backend";
 import type { TweakStatus } from "@/types/engine";
 
@@ -26,12 +18,8 @@ const ICONS: Record<string, LucideIcon> = {
   apps: AppWindow,
 };
 
-const rowIcon = (Icon: LucideIcon) => (
-  <Icon className="size-[22px] text-brand" strokeWidth={1.75} aria-hidden />
-);
-
-/** The Library's first tab: presets select for the normal review, and undo restores in bulk. */
-export function LibraryPresets({
+/** Presets select for the normal review, and undo restores in bulk. */
+export function PresetsTab({
   statuses,
   select,
   disabled,
@@ -41,9 +29,9 @@ export function LibraryPresets({
   disabled: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      {LIBRARY_PRESETS.map((preset) => (
-        <PresetRow
+    <div className="grid grid-cols-2 gap-3">
+      {TWEAK_PRESETS.map((preset) => (
+        <Preset
           key={preset.id}
           preset={preset}
           statuses={statuses}
@@ -51,27 +39,17 @@ export function LibraryPresets({
           disabled={disabled}
         />
       ))}
-      <OptimisationRow
-        leading={rowIcon(History)}
-        title="History"
-        description="Every change 2VX made, with undo"
-        control={
-          <Button asChild size="sm" variant="outline">
-            <Link to="/restore">Restore Centre</Link>
-          </Button>
-        }
-      />
     </div>
   );
 }
 
-function PresetRow({
+function Preset({
   preset,
   statuses,
   select,
   disabled,
 }: {
-  preset: LibraryPreset;
+  preset: TweakPreset;
   statuses: TweakStatus[];
   select: (ids: string[]) => void;
   disabled: boolean;
@@ -79,13 +57,19 @@ function PresetRow({
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const { tweaks, open, undoable } = presetProgress(preset, statuses);
+  const inEffect = tweaks.filter((t) => t.state === "applied").length;
+  const restarts = tweaks.filter((t) => t.meta.restart !== "none").length;
 
   const undo = async () => {
     setBusy(true);
     try {
       const outcome = await backend.revertTweaks(undoable.map((t) => t.meta.id));
       if (outcome.error) toast.error(outcome.error);
-      else toast.success(`${preset.name} restored`);
+      else {
+        toast.success(`${preset.name} restored`, {
+          description: restartNote(outcome.restart) ?? undefined,
+        });
+      }
     } catch (err) {
       toast.error(toBackendError(err).message);
     } finally {
@@ -96,37 +80,31 @@ function PresetRow({
 
   return (
     <>
-      <OptimisationRow
-        leading={rowIcon(ICONS[preset.id] ?? Layers)}
+      <PresetCard
+        icon={ICONS[preset.id] ?? Layers}
         title={preset.name}
-        description={preset.summary}
-        indicators={
-          <span className="text-[13px] text-muted-foreground tabular">
-            {tweaks.length - open.length} of {tweaks.length} in effect
-          </span>
-        }
-        control={
-          <div className="flex items-center gap-2">
-            {undoable.length > 0 && (
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={disabled || busy}
-                onClick={() => setConfirming(true)}
-              >
-                Undo {undoable.length}
-              </Button>
-            )}
-            <Button
-              size="sm"
-              disabled={disabled || open.length === 0}
-              onClick={() => select(open.map((t) => t.meta.id))}
-            >
-              Select {open.length}
-            </Button>
-          </div>
-        }
-      />
+        summary={preset.summary}
+        status={presetStatus(inEffect, tweaks.length)}
+        facts={[
+          { label: "In effect", value: `${inEffect} of ${tweaks.length}` },
+          { label: "Need a restart or sign-out", value: restarts },
+        ]}
+      >
+        {open.length > 0 && (
+          <Button disabled={disabled} onClick={() => select(open.map((t) => t.meta.id))}>
+            Select {open.length}
+          </Button>
+        )}
+        {undoable.length > 0 && (
+          <Button
+            variant="secondary"
+            disabled={disabled || busy}
+            onClick={() => setConfirming(true)}
+          >
+            Undo {undoable.length}
+          </Button>
+        )}
+      </PresetCard>
       {confirming && (
         <ConfirmDialog
           open

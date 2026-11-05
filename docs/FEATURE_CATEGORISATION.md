@@ -55,10 +55,10 @@ Core keeps its six tweaks: moving any to Hardware would leave Core empty on PCs 
 | Xbox | `services.xbox-auth-off`, `services.xbox-save-off` |
 | Other | `services.maps-broker-off`, `services.wap-push-off`, `services.compat-assistant-off`, `services.sync-host-off` |
 
-## Library
+## The long lists
 
-1,221 tweaks in 12 tabs, listed in [OPTIMISATION_CATEGORIES.md](OPTIMISATION_CATEGORIES.md). A tweak's tab and section come from
-its `category` and `section`. Tweaks with no `section` stay on Tweaks, Hardware, Network or Advanced.
+1,221 more tweaks, listed in [OPTIMISATION_CATEGORIES.md](OPTIMISATION_CATEGORIES.md), joined the pages above by topic in
+0.4. A tweak's tab comes from its `category` (`CATEGORY_TAB`) and its folding section from `section`.
 
 ## Game Mode presets
 
@@ -78,23 +78,25 @@ on Home a profile marks them unavailable and still works with the rest.
 
 | Feature | Primary location |
 | --- | --- |
-| Live usage, per-thread load, 5 min history | Monitoring |
-| Specifications, drive capacity | Hardware |
-| Startup entries | Startup |
-| Folder sizes | PC Cleaner |
+| Live usage, one and five minute history | Home |
+| Specifications, drive capacity, driver version | Hardware |
+| Startup entries | PC Cleaner › Autoruns |
+| Folder sizes | PC Cleaner › System Cleaner |
 | Journal, undo | Restore Centre |
-| System report, Windows tools | Tools |
+| System report, Windows tools | Resources |
 | Update Centre, automatic check, Home notice preference | Settings › Updates |
-| Version, licences | Settings › About |
-| Privileges, log folder, journal state | Settings › General |
-| Compact sidebar, reduce motion, theme | Settings › Appearance |
+| Version, log folder, licences | Settings › About and diagnostics |
+| Privileges, auto launch | Settings › General |
+| Compact sidebar, loading screen, reduce motion | Settings › Appearance |
 
 ## Merged, moved, removed
 
 | Change | Reason |
 | --- | --- |
-| Hardware's live charts moved to Monitoring | One purpose per page |
-| Home's stat tiles moved to Monitoring | Duplicated Home's chart |
+| Library removed; its tweaks moved to Tweaks, Hardware, Network and PC Cleaner by topic | Two pages of the same cards; one home per tweak |
+| Monitoring folded into Home | Home's chart already said this; it gained Network and a five minute range |
+| Services moved from Tweaks to PC Cleaner | One home |
+| Per-thread CPU load removed | Only the Monitoring page used it |
 | Home's full hardware card reduced to four lines | Detail lives on Hardware |
 | Home's health tile replaced by active profile | Health already has a panel |
 | Home's hardware card removed | The chart names the device; detail lives on Hardware |

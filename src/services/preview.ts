@@ -5,8 +5,12 @@ import type {
   BackendError,
   CleanupLocation,
   DeviceReport,
+  HardwareDetails,
+  PingResult,
+  PingTarget,
   RemovableApp,
   MetricsSample,
+  ServiceState,
   SleepSample,
   StartupInventory,
   SystemSnapshot,
@@ -494,6 +498,7 @@ function startup(): StartupInventory {
     command,
     path: command.replace(/^"|".*$| [-/].*$/g, ""),
     source,
+    sourceLabel: source === "startupFolder" ? "Startup folder" : "Run key",
     scope: location.startsWith("HKLM") ? "allUsers" : "currentUser",
     location,
     enabled,
@@ -565,19 +570,144 @@ function refuse(): Promise<never> {
   return Promise.reject(err);
 }
 
+const PREVIEW_GPU_DRIVERS: DeviceReport["gpus"] = [
+  {
+    name: "Preview GPU",
+    version: "000.00",
+    date: "2026-01-01",
+    provider: "Preview",
+    isBasicDriver: false,
+  },
+];
+
+function hardwareDetails(): HardwareDetails {
+  const module = (slot: string): HardwareDetails["memory"]["modules"][number] => ({
+    slot,
+    capacityBytes: 16 * GiB,
+    speedMts: 6000,
+    ratedSpeedMts: 6000,
+    memoryType: "DDR5",
+    manufacturer: "Preview",
+    partNumber: "PREVIEW-16G",
+  });
+  return {
+    cpu: {
+      performanceCores: 8,
+      efficientCores: 0,
+      logicalProcessors: 16,
+      l2CacheBytes: 8 * 1024 ** 2,
+      l3CacheBytes: 32 * 1024 ** 2,
+    },
+    memory: {
+      slotsUsed: 2,
+      slotsTotal: 4,
+      modules: [module("DIMM_A2"), module("DIMM_B2")],
+      compressionActive: true,
+    },
+    drives: [
+      {
+        model: "Preview SSD 1TB",
+        bus: "NVMe",
+        media: "ssd",
+        sizeBytes: 1000 * GiB,
+        trimSupported: true,
+        health: "Healthy",
+      },
+      {
+        model: "Preview HDD 2TB",
+        bus: "SATA",
+        media: "hdd",
+        sizeBytes: 2000 * GiB,
+        trimSupported: false,
+        health: null,
+      },
+    ],
+    trimEnabled: true,
+    gpuDrivers: PREVIEW_GPU_DRIVERS,
+    devices: [
+      { name: "Preview GPU", class: "display", problem: false },
+      { name: "Preview Ethernet adapter", class: "net", problem: false },
+      { name: "Preview audio device", class: "media", problem: true },
+      { name: "Preview USB controller", class: "usb", problem: false },
+      { name: "Preview mouse", class: "mouse", problem: false },
+      { name: "Preview keyboard", class: "keyboard", problem: false },
+      { name: "Preview SSD 1TB", class: "diskDrive", problem: false },
+    ],
+  };
+}
+
+const serviceStates = (): ServiceState[] => [
+  {
+    name: "Spooler",
+    displayName: "Preview sample: Print Spooler",
+    description: "Preview sample. The desktop app reads this from Windows.",
+    running: true,
+    startType: "automatic",
+  },
+  {
+    name: "Fax",
+    displayName: "Preview sample: Fax",
+    description: null,
+    running: false,
+    startType: "manual",
+  },
+  {
+    name: "XblGameSave",
+    displayName: "Preview sample: Xbox Live Game Save",
+    description: null,
+    running: null,
+    startType: "disabled",
+  },
+];
+
+const ping = (target: PingTarget): PingResult =>
+  target === "gateway" ? { address: "192.0.2.1", rttMs: 1 } : { address: "1.1.1.1", rttMs: 14 };
+
 function deviceReport(): DeviceReport {
   return {
-    gpus: [{ name: "Preview GPU", version: "000.00", date: "2026-01-01" }],
+    gpus: PREVIEW_GPU_DRIVERS,
     drives: ["Preview SSD 1TB"],
     adapters: [
-      { name: "Preview Ethernet adapter", kind: "ethernet", driverVersion: "1.0.0.0" },
-      { name: "Preview Wi-Fi adapter", kind: "wifi", driverVersion: "1.0.0.0" },
+      {
+        name: "Preview Ethernet adapter",
+        kind: "ethernet",
+        driverVersion: "1.0.0.0",
+        connected: true,
+        linkSpeedBps: 1_000_000_000,
+      },
+      {
+        name: "Preview Wi-Fi adapter",
+        kind: "wifi",
+        driverVersion: "1.0.0.0",
+        connected: false,
+        linkSpeedBps: null,
+      },
     ],
     msi: [
-      { group: "gpu", name: "Preview GPU", enabled: true },
-      { group: "audio", name: "Preview audio controller", enabled: false },
-      { group: "nvme", name: "Preview NVMe controller", enabled: true },
-      { group: "usb", name: "Preview USB controller", enabled: true },
+      {
+        group: "gpu",
+        name: "Preview GPU",
+        enabled: true,
+        interruptSupport: { lineBased: true, msi: true, msiX: true },
+      },
+      {
+        group: "audio",
+        name: "Preview audio controller",
+        enabled: false,
+        interruptSupport: { lineBased: true, msi: true, msiX: false },
+      },
+      {
+        group: "nvme",
+        name: "Preview NVMe controller",
+        enabled: true,
+        interruptSupport: { lineBased: true, msi: true, msiX: true },
+      },
+      {
+        group: "usb",
+        name: "Preview USB controller",
+        enabled: true,
+        interruptSupport: null,
+      },
     ],
     protections: [
       { id: "memoryIntegrity", state: "on" },
@@ -600,6 +730,9 @@ function sleepSamples(): SleepSample[] {
 
 export const preview = {
   deviceReport,
+  hardwareDetails,
+  serviceStates,
+  ping,
   sleepSamples,
   appInfo,
   runningPrograms,

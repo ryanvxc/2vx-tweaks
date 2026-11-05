@@ -22,7 +22,7 @@ export function UpdateCentre({ currentVersion }: { currentVersion: string | unde
   const { state } = updater;
 
   return (
-    <div className="flex flex-col gap-3 px-4 py-3" aria-live="polite">
+    <div className="flex flex-col gap-3 py-3" aria-live="polite">
       <StatusLine state={state} currentVersion={currentVersion} lastChecked={updater.lastCheckedAt}>
         <Action state={state} updater={updater} />
       </StatusLine>

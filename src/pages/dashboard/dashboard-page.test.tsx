@@ -67,21 +67,22 @@ describe("DashboardPage", () => {
     expect(await within(card).findByText("1")).toBeInTheDocument();
   });
 
-  it("offers what's left to apply, then Game Mode", async () => {
+  it("offers what is left to apply, at the tab that holds the first one", async () => {
     vi.mocked(backend.getTweakStatuses).mockResolvedValue([OPEN]);
     renderPage();
     expect(await screen.findByRole("link", { name: "1 recommended tweak" })).toHaveAttribute(
       "href",
-      "/tweaks",
+      expect.stringMatching(/^\/tweaks\?tab=/),
     );
   });
 
-  it("goes to Game Mode when nothing is left to apply", async () => {
+  it("shows no action when nothing is left to apply", async () => {
     renderPage();
-    expect(await screen.findByRole("link", { name: "Open Game Mode" })).toHaveAttribute(
-      "href",
-      "/gaming",
-    );
+    await screen.findByRole("heading", { name: /Welcome back/ });
+    expect(
+      screen.queryByRole("link", { name: /^d+ recommended tweaks?$/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Open Game Mode" })).not.toBeInTheDocument();
   });
 
   it("ticks a Quickstart step that was opened, and keeps it", async () => {
@@ -114,6 +115,30 @@ describe("DashboardPage", () => {
     expect(
       await within(await screen.findByRole("dialog")).findByText("System drive space"),
     ).toBeInTheDocument();
+  });
+
+  it("shows the health score on a card and opens the list from it", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const card = await screen.findByRole("button", { name: /System health/ });
+    expect(await within(card).findByText(/of \d+/)).toBeInTheDocument();
+    expect(screen.queryByText(/Need help/)).not.toBeInTheDocument();
+    await user.click(card);
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("says how 2VX is running, and links to where updating stands", async () => {
+    vi.spyOn(backend, "getAppInfo").mockResolvedValue({
+      ...(await backend.getAppInfo()),
+      isElevated: true,
+    });
+    renderPage();
+    expect(await screen.findByText(/· Administrator$/)).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: /Update Centre/ })).toHaveAttribute(
+      "href",
+      "/settings?tab=updates",
+    );
   });
 
   it("opens the patch notes from the changelog and the health checks", async () => {

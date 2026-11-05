@@ -38,7 +38,7 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 
 | Utility | Size / weight | Use |
 | --- | --- | --- |
-| `text-page-title` | 22 px / 600 | One per page (`PageHeader`), in the title bar |
+| `text-page-title` | 22 px / 600 | One per page, in the page (`PageHero`) |
 | `text-section-title` | 14 px / 600 | Card and group headings |
 | `text-card-title` | 13.5 px / 600 | Optimisation card titles, rows |
 | `text-body` | 13 px / 1.45 | Descriptions |
@@ -50,18 +50,31 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 - A surface is the `panel` utility: `--card` fill with a faint `--hairline` edge. Separation comes from the fill, not a
   visible outline, and panels are never nested.
 - Page padding 20 px, panel padding 16 px, every gap 12 px.
-- Sidebar 240 px (`--sidebar-width`), 64 px when compact. Its rows share out the height from 34 to 64 px, with the
+- Sidebar 240 px (`--sidebar-width`), 64 px when compact. Its rows share out the height from 34 to 46 px, with the
   highlight capped at 40 px, and past that the spare height goes between the groups. Content uses the full window width; `CardGrid` fits as many
   19rem columns as there's room for.
 - The window is one size, 1280×820 (`tauri.conf.json`), and can only be minimised or closed. On a screen too small for
   it, `preventOverflow` shrinks it to fit and pages scroll. Check layouts at 1280×820.
-- Page anatomy: title in the title bar (`PageHeader` portals into it through `HeaderSlot`, which is about 60 px saved on
-  every page); tabs with search, filter and sort on their right; content.
+- Page anatomy, on every page: a thin title bar with the window controls, the title in the page (`PageHero`) with the
+  page's one action on its right, full-width tabs, then search, filter and sort on one row, then content.
+- The top-right action is only ever the recommended tweaks still open (`RecommendedAction`). With none left, the slot is
+  empty: it isn't a place to advertise anything else.
 - Pages fill the window: the page root is `flex flex-1 flex-col`, and something on it takes the spare height, usually a
   chart or one full-height table panel. Rows in such a panel may share the height (`flex-1`) so a short list still
   reaches the bottom.
 - Lists are tables, not stacks of cards: one panel, an `h-9` header row, single-line rows, columns shared through a
   `COLUMNS` constant.
+- Tweaks come in two shapes. A hand-placed tweak is an EXM card. A long list is folding sections: a 44 px bar (chevron,
+  one violet icon, title, "N of M in effect") over `h-14` flat rows in one shared panel, split by hairlines. EXM uses
+  separate 68 px row panels; flat rows are a deliberate departure, because 1,300 tweaks in those would be five screens
+  of chrome per topic. Unavailable tweaks are always the last section, muted, with the reason where the switch would be.
+- A card section is never a lone card in an empty row: `groupTweaks` tops it up to a full row from the tab's lists, and with
+  one row of cards or fewer the first list starts open, so the page fills.
+- A row's control sits in a fixed slot, so a word in one row doesn't push its indicators out of line with the next.
+- A tweak has one home. Search looks through every tab of its page, and matches names, descriptions and the registry
+  or service names a tweak touches.
+- A preset, a service preset and a GPU profile are the same thing, a named list of tweaks, so all three are `PresetCard`.
+  Its facts are counts of real tweaks. No scores, stars or ratings: nothing in 2VX measures them.
 - No pill boxes. State is a dot and a word (`StatusLabel`); a label with nothing to report isn't shown at all. The one
   exception is `NewBadge`, whose box matches EXM's card.
 - Copy: a row is an icon, a title and at most one short line, and that line stays only if something could confuse.
@@ -69,8 +82,8 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
   the detail goes in `details`.
 - Game Mode keeps its title in the page too (`PageHero`), and its layout follows EXM's: promises, then a panel holding
   the ring, the stats and Configure.
-- Home is the one page taller than the window, and it keeps its title in the page: the title bar shrinks to
-  the window controls, and Updates sits below the fold with its heading showing at the bottom of the default window.
+- Home is taller than the window, with Updates below the fold and its heading showing at the bottom of the default
+  window. Live usage lives there: there is no separate monitoring page.
   Each Updates card has an original image in `src/assets/home/`, painted from seeded noise for 2VX. No third-party art.
 
 ## Motion
@@ -116,13 +129,13 @@ skips. Moving the cursor holds it for up to 7 s. Settings › Appearance turns i
 | Component | Purpose |
 | --- | --- |
 | `OptimisationCard`, `CardGrid`, `NewBadge` | The fixed-height card used by Tweaks: icon, one-line title, two-line description, a dashed line, then boxed indicators and one control |
-| `Indicator`, `ImpactMeter` | Bare 24 px icons with tooltips (warning, restart, blocked, partial) and the 3-bar impact estimate |
-| `FilterBar` | Search box, filter and sort menus on one row |
-| `PageTabs` | Accessible tab list (`role="tablist"`) used by Monitoring, Tweaks and PC Cleaner; `dense` drops icons so the Library's 13 tabs fit (`filled` is a full-width bar with a raised active tab and a white underline), with an `end` slot for that page's filters; `useTabParam` keeps the tab in the URL |
-| `OptimisationRow` | The `h-[68px]` full-width row used where EXM lists rather than cards: a leading tick or letter tile, title, one line, indicators, one control |
+| `Indicator`, `ImpactMeter` | Bare icons with tooltips (risk, hardware, community, warning, restart, failed, partial, unread) and the 3-bar impact estimate. Each stands for a real state; the indicators shown must match what's true of the tweak |
+| `FilterBar` | Search box, filter and sort menus on one row. The filter menu is two columns, so every group fits without its own scrollbar. The active count is plain text, not a chip |
+| `PageTabs` | Accessible tab list (`role="tablist"`) on every page with tabs (`filled` is a full-width bar with a raised active tab and a white underline); `useTabParam` keeps the tab in the URL |
+| `OptimisationRow` | The full-width row: an icon or letter tile, title, one line, indicators, one control. `h-[68px]` on its own, or `flat` (`h-14`, no panel of its own) inside a shared panel for long lists |
+| `PresetCard` | A named list of tweaks: icon, title, state top-right, one line, counts, then the buttons along the bottom |
 | `InfoPanel`, `ActionCard` | "How it works" panel with an optional link, and a card for something 2VX reads or sends you to: icon, title, status, rows, one action. Links only come from the fixed list in `links.rs` |
 | `SettingsGroup`, `SettingsRow` | Rows under a heading for Settings: icon, title, optional line, control on the right. Groups sit inside a shared `panel` |
-| `MetricChart` | Recharts area chart for live metrics with a fixed time window |
 | `CommandPalette` (`components/layout/`) | Ctrl K search over pages, tabs and tweaks. It only navigates |
 | `UpdateNotice` | Dismissible Home banner when an update is available |
 | `DotField` | Canvas of small squares that rises from a card's bottom edge. The colour is the element's `color` |
@@ -145,5 +158,3 @@ status lines.
 - Switches carry an action label ("Turn on X", "Undo X"); indicators have `aria-label`s matching their tooltips.
 - Live regions (`aria-live="polite"`) announce updater and selection changes.
 - Text contrast: foreground ≥ 12:1, muted ≥ 4.5:1 on cards.
-- The Monitoring tiles are tabs with a selected state, so the keyboard
-  and screen readers see them as choices.

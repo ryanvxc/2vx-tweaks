@@ -1,13 +1,14 @@
 # Optimisation categories
 
-How the 1,221 Library tweaks are organised. Every tweak has one primary location, and the 64 tweaks that shipped earlier
-keep theirs on Tweaks, Hardware, Network and Advanced.
+How the 1,221 generated tweaks are organised. Every tweak has one primary location, and the 64 tweaks that shipped earlier
+keep theirs.
 
 ## Structure
 
-`/library` has a Presets tab and one tab per category, each split into collapsible sections. Search covers the whole
-library from any tab. Tabs come from `LIBRARY_TABS` in `src/app/navigation.ts`, and a tweak's tab and section come from its
-`category` and `section` fields.
+There's no separate page for these. A tweak's `category` picks its page and tab (`CATEGORY_TAB` in
+`src/lib/tweak-presentation.ts`) and its `section` picks the folding list on that tab. The categories below map to: Windows
+and Performance → Tweaks › Core; Privacy, Gaming, Apps, Tasks and Power → the Tweaks tab of that name; CPU, GPU, Memory and
+Storage → Hardware; Network → Network › Tweaks; Services → PC Cleaner › Services. Search covers every tab of its page.
 
 | Tab | Tweaks | Sections |
 | --- | --- | --- |
@@ -170,7 +171,7 @@ library from any tab. Tabs come from `LIBRARY_TABS` in `src/app/navigation.ts`, 
 
 ## Presets
 
-Presets are named filters over the catalogue, defined in `src/lib/library-presets.ts`. A preset only includes tweaks that
+Presets are named filters over the catalogue, defined in `src/lib/tweak-presets.ts`, on Tweaks › Presets. A preset only includes tweaks that
 are Low risk, carry no warning, and aren't Community tier. Each one selects its tweaks into the normal review, and nothing
 applies without that review.
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CleanupLocation, CleanupResult } from "@/types/system";
-import { cleanableLocations, recommendedLocations, summariseCleanup } from "./cleaner";
+import { cleanableLocations, didClean, recommendedLocations, summariseCleanup } from "./cleaner";
 
 const location = (
   id: string,
@@ -13,6 +13,7 @@ const result = (patch: Partial<CleanupResult>): CleanupResult => ({
   freedBytes: 0,
   removedFiles: 0,
   skippedFiles: 0,
+  status: "cleared",
   error: null,
   ...patch,
 });
@@ -41,15 +42,43 @@ describe("recommendedLocations", () => {
 });
 
 describe("summariseCleanup", () => {
-  it("adds up what was freed and keeps each reason once", () => {
-    const denied = "the administrator prompt was declined";
-    expect(
-      summariseCleanup([
-        result({ freedBytes: 100, skippedFiles: 2 }),
-        result({ freedBytes: 50 }),
-        result({ error: denied }),
-        result({ error: denied }),
-      ]),
-    ).toEqual({ freed: 150, skipped: 2, failures: [denied] });
+  it("adds up what was freed and keeps each failure with its location", () => {
+    const summary = summariseCleanup([
+      result({ id: "a", freedBytes: 100, skippedFiles: 2 }),
+      result({ id: "b", freedBytes: 50 }),
+      result({ id: "c", status: "failed", error: "access denied" }),
+      result({ id: "d", status: "failed", error: null }),
+    ]);
+    expect(summary).toEqual({
+      freed: 150,
+      skipped: 2,
+      cleared: 2,
+      declined: [],
+      failures: [
+        { id: "c", reason: "access denied" },
+        { id: "d", reason: "Couldn't be cleared" },
+      ],
+    });
+    expect(didClean(summary)).toBe(true);
+  });
+
+  it("doesn't count a declined prompt as a success", () => {
+    const summary = summariseCleanup([
+      result({ id: "a", status: "elevationDeclined" }),
+      result({ id: "b", status: "elevationDeclined" }),
+    ]);
+    expect(summary.cleared).toBe(0);
+    expect(summary.declined).toEqual(["a", "b"]);
+    expect(summary.failures).toEqual([]);
+    expect(didClean(summary)).toBe(false);
+  });
+
+  it("reports both sides of a partial run", () => {
+    const summary = summariseCleanup([
+      result({ id: "a", freedBytes: 10 }),
+      result({ id: "b", status: "elevationDeclined" }),
+    ]);
+    expect(summary).toMatchObject({ freed: 10, cleared: 1, declined: ["b"] });
+    expect(didClean(summary)).toBe(true);
   });
 });

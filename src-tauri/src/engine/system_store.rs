@@ -15,9 +15,12 @@ use windows::Win32::System::Power::{
     PowerGetActiveScheme, PowerReadACValueIndex, PowerReadDCValueIndex, PowerSetActiveScheme,
     PowerWriteACValueIndex, PowerWriteDCValueIndex,
 };
-use windows::Win32::System::TaskScheduler::{IRegisteredTask, ITaskService, TaskScheduler};
+use windows::Win32::System::TaskScheduler::{
+    IExecAction, ILogonTrigger, IRegisteredTask, ITaskFolder, ITaskService, TASK_ACTION_EXEC,
+    TASK_ENUM_HIDDEN, TASK_TRIGGER_BOOT, TASK_TRIGGER_LOGON, TASK_TRIGGER_TYPE2, TaskScheduler,
+};
 use windows::Win32::System::Variant::VARIANT;
-use windows::core::{BSTR, GUID};
+use windows::core::{BSTR, GUID, Interface};
 
 use crate::engine::setting::{RegTarget, RegValue};
 use crate::error::{AppError, AppResult};
@@ -101,6 +104,168 @@ pub fn write_task(target: &RegTarget, value: Option<&RegValue>) -> AppResult<()>
     };
     // SAFETY: `task` is a live interface.
     unsafe { task.SetEnabled(VARIANT_BOOL::from(*data != 0)) }.map_err(|e| map_err(target, e))
+}
+
+/// A task that runs at sign-in or start-up, for the Autoruns list. Read only.
+pub struct StartTask {
+    pub name: String,
+    /// `\Folder\Name`.
+    pub path: String,
+    pub enabled: bool,
+    /// The program, as the task stores it.
+    pub program: String,
+    pub arguments: String,
+    /// It runs for one account, rather than for whoever signs in.
+    pub for_one_user: bool,
+}
+
+/// What a walk of the task folders found, and the folders it couldn't read.
+#[derive(Default)]
+pub struct StartTasks {
+    pub tasks: Vec<StartTask>,
+    pub unreadable: Vec<String>,
+}
+
+impl StartTasks {
+    fn note<F: TaskFolder>(&mut self, folder: &F, e: &windows::core::Error) {
+        let path = folder.path();
+        let path = path.trim_end_matches('\\');
+        self.unreadable
+            .push(format!("Task Scheduler{path}: {}", e.message()));
+    }
+}
+
+/// Every task outside `\Microsoft` that starts with Windows or at sign-in. Windows' own tasks stay
+/// out: there are hundreds, and they aren't what someone looking at autoruns is after. Tasks this
+/// account can't read aren't returned by Task Scheduler at all, but a folder can fail outright, and
+/// that costs only what's in it.
+pub fn start_tasks() -> windows::core::Result<StartTasks> {
+    let service = task_service()?;
+    // SAFETY: `service` is a live, connected interface.
+    let root = unsafe { service.GetFolder(&BSTR::from(r"\")) }?;
+    let mut found = StartTasks::default();
+    collect_start_tasks(&root, true, &mut found);
+    Ok(found)
+}
+
+/// The little the walk asks of a folder, so that tests can hand it a tree with bad folders in it.
+trait TaskFolder: Sized {
+    fn path(&self) -> String;
+    fn name(&self) -> windows::core::Result<String>;
+    fn start_tasks(&self) -> windows::core::Result<Vec<StartTask>>;
+    fn children(&self) -> windows::core::Result<Vec<windows::core::Result<Self>>>;
+}
+
+impl TaskFolder for ITaskFolder {
+    fn path(&self) -> String {
+        // SAFETY: a live interface.
+        unsafe { self.Path() }.map_or_else(|_| String::new(), |path| path.to_string())
+    }
+
+    fn name(&self) -> windows::core::Result<String> {
+        // SAFETY: a live interface.
+        Ok(unsafe { self.Name() }?.to_string())
+    }
+
+    fn start_tasks(&self) -> windows::core::Result<Vec<StartTask>> {
+        // SAFETY: live interfaces. Task Scheduler's collections are numbered from 1.
+        unsafe {
+            let tasks = self.GetTasks(TASK_ENUM_HIDDEN.0)?;
+            let mut found = vec![];
+            for index in 1..=tasks.Count()? {
+                if let Ok(task) = tasks.get_Item(&VARIANT::from(index)) {
+                    found.extend(start_task(&task));
+                }
+            }
+            Ok(found)
+        }
+    }
+
+    fn children(&self) -> windows::core::Result<Vec<windows::core::Result<Self>>> {
+        // SAFETY: live interfaces. Task Scheduler's collections are numbered from 1.
+        unsafe {
+            let folders = self.GetFolders(0)?;
+            Ok((1..=folders.Count()?)
+                .map(|index| folders.get_Item(&VARIANT::from(index)))
+                .collect())
+        }
+    }
+}
+
+fn collect_start_tasks<F: TaskFolder>(folder: &F, root: bool, found: &mut StartTasks) {
+    match folder.start_tasks() {
+        Ok(tasks) => found.tasks.extend(tasks),
+        Err(e) => found.note(folder, &e),
+    }
+    let children = match folder.children() {
+        Ok(children) => children,
+        Err(e) => {
+            found.note(folder, &e);
+            return;
+        }
+    };
+    for child in children {
+        match child.and_then(|child| Ok((child.name()?, child))) {
+            Ok((name, _)) if root && name.eq_ignore_ascii_case("Microsoft") => {}
+            Ok((_, child)) => collect_start_tasks(&child, false, found),
+            Err(e) => found.note(folder, &e),
+        }
+    }
+}
+
+/// `None` for a task with no start trigger or nothing to run, or one this account can't read.
+fn start_task(task: &IRegisteredTask) -> Option<StartTask> {
+    // SAFETY: live interfaces, valid out pointers, and collections numbered from 1.
+    unsafe {
+        let definition = task.Definition().ok()?;
+        let triggers = definition.Triggers().ok()?;
+        let mut count = 0;
+        triggers.Count(&mut count).ok()?;
+        let mut starts = false;
+        let mut for_one_user = false;
+        for index in 1..=count {
+            let trigger = triggers.get_Item(index).ok()?;
+            let mut kind = TASK_TRIGGER_TYPE2::default();
+            trigger.Type(&mut kind).ok()?;
+            if kind == TASK_TRIGGER_BOOT {
+                starts = true;
+            } else if kind == TASK_TRIGGER_LOGON {
+                starts = true;
+                let mut user = BSTR::new();
+                if let Ok(logon) = trigger.cast::<ILogonTrigger>() {
+                    let _ = logon.UserId(&mut user);
+                }
+                for_one_user |= !user.is_empty();
+            }
+        }
+        if !starts {
+            return None;
+        }
+        let actions = definition.Actions().ok()?;
+        actions.Count(&mut count).ok()?;
+        let mut program = None;
+        for index in 1..=count {
+            let action = actions.get_Item(index).ok()?;
+            let mut kind = Default::default();
+            action.Type(&mut kind).ok()?;
+            if kind == TASK_ACTION_EXEC {
+                program = action.cast::<IExecAction>().ok();
+                break;
+            }
+        }
+        let program = program?;
+        let (mut path, mut arguments) = (BSTR::new(), BSTR::new());
+        program.Path(&mut path).ok()?;
+        let _ = program.Arguments(&mut arguments);
+        Some(StartTask {
+            name: task.Name().ok()?.to_string(),
+            path: task.Path().ok()?.to_string(),
+            enabled: task.Enabled().ok()?.as_bool(),
+            program: path.to_string(),
+            arguments: arguments.to_string(),
+            for_one_user,
+        })
+    }
 }
 
 fn power_ids(target: &RegTarget) -> AppResult<(GUID, GUID)> {
@@ -204,6 +369,104 @@ mod tests {
     fn a_missing_task_is_none() {
         let gone = RegTarget::new(Hive::ScheduledTask, r"\2VX\Not A Task", "Enabled");
         assert_eq!(read_task(&gone).unwrap(), None);
+    }
+
+    /// A folder as the walk sees it. `None` stands for a call that fails.
+    #[derive(Clone)]
+    struct Fake {
+        path: &'static str,
+        tasks: Option<Vec<&'static str>>,
+        children: Option<Vec<Option<Fake>>>,
+    }
+
+    impl Fake {
+        fn new(path: &'static str, tasks: &[&'static str], children: Vec<Option<Fake>>) -> Self {
+            Fake {
+                path,
+                tasks: Some(tasks.to_vec()),
+                children: Some(children),
+            }
+        }
+    }
+
+    fn denied() -> windows::core::Error {
+        windows::Win32::Foundation::E_ACCESSDENIED.into()
+    }
+
+    impl TaskFolder for Fake {
+        fn path(&self) -> String {
+            self.path.to_owned()
+        }
+        fn name(&self) -> windows::core::Result<String> {
+            Ok(self.path.rsplit('\\').next().unwrap_or("").to_owned())
+        }
+        fn start_tasks(&self) -> windows::core::Result<Vec<StartTask>> {
+            let names = self.tasks.as_ref().ok_or_else(denied)?;
+            Ok(names
+                .iter()
+                .map(|name| StartTask {
+                    name: (*name).to_owned(),
+                    path: format!(r"{}\{name}", self.path),
+                    enabled: true,
+                    program: r"C:\x\run.exe".to_owned(),
+                    arguments: String::new(),
+                    for_one_user: false,
+                })
+                .collect())
+        }
+        fn children(&self) -> windows::core::Result<Vec<windows::core::Result<Self>>> {
+            let children = self.children.as_ref().ok_or_else(denied)?;
+            Ok(children
+                .iter()
+                .map(|child| child.clone().ok_or_else(denied))
+                .collect())
+        }
+    }
+
+    #[test]
+    fn a_bad_task_folder_costs_only_itself() {
+        let kept = Fake::new(r"\NoTasks\Kept", &["below"], vec![]);
+        let no_tasks = Fake {
+            tasks: None,
+            ..Fake::new(r"\NoTasks", &[], vec![Some(kept)])
+        };
+        let no_folders = Fake {
+            children: None,
+            ..Fake::new(r"\NoFolders", &["beside"], vec![])
+        };
+        let root = Fake::new(
+            r"\",
+            &["top"],
+            vec![
+                Some(Fake::new(r"\Good", &["good"], vec![])),
+                Some(no_tasks),
+                Some(no_folders),
+                None,
+                Some(Fake::new(r"\Microsoft", &["windows"], vec![])),
+                Some(Fake::new(r"\After", &["after"], vec![])),
+            ],
+        );
+
+        let mut found = StartTasks::default();
+        collect_start_tasks(&root, true, &mut found);
+
+        let names: Vec<_> = found.tasks.iter().map(|t| t.name.as_str()).collect();
+        assert_eq!(names, ["top", "good", "below", "beside", "after"]);
+        assert_eq!(found.unreadable.len(), 3, "{:?}", found.unreadable);
+        assert!(found.unreadable[0].starts_with(r"Task Scheduler\NoTasks: "));
+        assert!(found.unreadable[1].starts_with(r"Task Scheduler\NoFolders: "));
+        // A child that can't be fetched has no name of its own, so its parent stands in.
+        assert!(found.unreadable[2].starts_with("Task Scheduler: "));
+    }
+
+    #[test]
+    fn only_the_top_microsoft_folder_is_left_out() {
+        let theirs = Fake::new(r"\Vendor\Microsoft", &["theirs"], vec![]);
+        let vendor = Fake::new(r"\Vendor", &[], vec![Some(theirs)]);
+        let root = Fake::new(r"\", &[], vec![Some(vendor)]);
+        let mut found = StartTasks::default();
+        collect_start_tasks(&root, true, &mut found);
+        assert_eq!(found.tasks.len(), 1);
     }
 
     #[test]

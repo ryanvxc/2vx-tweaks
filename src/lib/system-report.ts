@@ -1,14 +1,22 @@
 import type { TweakStatus } from "@/types/engine";
 import type { AppInfo, SystemSnapshot } from "@/types/system";
+import { HEALTH_HEADLINE, evaluateHealth, summariseHealth } from "./health";
 import { formatBytes, formatFrequency, formatUptime } from "./format";
 
-/** Plain-text report for support requests. Only data the app already shows. */
+/**
+ * Plain-text report for support requests. Only data the app already shows. It lists the tweaks
+ * in effect; `full` adds every other one with its state.
+ */
 export function buildSystemReport(
   app: AppInfo,
   s: SystemSnapshot,
   tweaks: TweakStatus[],
   now = new Date(),
+  full = false,
 ): string {
+  const applied = tweaks.filter((t) => t.state === "applied");
+  const checks = evaluateHealth(s);
+  const health = summariseHealth(checks);
   const os = s.os;
   const lines = [
     `2VX Tweaks ${app.version}${app.debugBuild ? " (development build)" : ""} system report`,
@@ -36,10 +44,23 @@ export function buildSystemReport(
         `Drive ${d.mountPoint} ${d.kind.toUpperCase()} ${d.fileSystem}: ${formatBytes(d.availableBytes)} free of ${formatBytes(d.totalBytes)}`,
     ),
     "",
-    "[Tweaks]",
-    ...(tweaks.length === 0
-      ? ["(none listed)"]
-      : tweaks.map((t) => `${t.state === "applied" ? "[x]" : "[ ]"} ${t.meta.id} (${t.state})`)),
+    "[Health]",
+    HEALTH_HEADLINE[health.status],
+    ...checks
+      .filter((c) => c.status !== "good")
+      .map((c) => `${c.label}: ${c.detail} (${c.status})`),
+    "",
+    `[Tweaks in effect: ${applied.length}]`,
+    ...(applied.length === 0 ? ["(none)"] : applied.map((t) => t.meta.id)),
+    ...(full
+      ? [
+          "",
+          "[All tweaks]",
+          ...tweaks.map(
+            (t) => `${t.state === "applied" ? "[x]" : "[ ]"} ${t.meta.id} (${t.state})`,
+          ),
+        ]
+      : []),
   ];
   return lines.join("\n");
 }

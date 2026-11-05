@@ -14,7 +14,7 @@ organised is in [OPTIMISATION_CATEGORIES.md](OPTIMISATION_CATEGORIES.md).
 | Distinct targets | 4,702 |
 | New tweaks in the Library | 1,221 |
 | Tweaks already shipped | 64 |
-| Tweaks in the app | 1,285 |
+| Tweaks in the app | 1,285 (1,300 from 0.4, with 15 adapter tweaks) |
 
 | Kind | Rows | Implemented | Duplicate | Blocked | Deferred | Excluded |
 | --- | --- | --- | --- | --- | --- | --- |

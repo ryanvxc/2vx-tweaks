@@ -17,7 +17,7 @@ export function GamingPage() {
       <PageHero
         title="2VX Game Mode"
         subtitle="Put your game first while you play."
-        action={<RecommendedAction otherwise={{ to: "/tweaks", label: "Browse tweaks" }} />}
+        action={<RecommendedAction />}
       />
       <EngineBanner />
       {error ? (

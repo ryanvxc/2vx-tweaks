@@ -15,8 +15,23 @@
 | Battery present | `GetSystemPowerStatus` | `windows` | No | `None` when unknown; drives `DeviceScope` |
 | Registry read/write (engine) | `windows-registry` | `windows-registry` | HKLM writes, and `HKCU\Software\Policies` (admin-only ACL) | Through `SettingStore`; HKLM via the broker; HKCU policy keys are not used |
 | Elevated helper | `ShellExecuteExW("runas")` self-relaunch + named pipe | `windows` | Prompts once per batch | See `security.md` § Privilege |
+| CPU layout, L2/L3 cache | `GetLogicalProcessorInformationEx` | `windows` | No | Top `EfficiencyClass` is the performance cores; one class means one kind of core |
+| Memory slots and modules | SMBIOS Type 16 and 17 from `GetSystemFirmwareTable('RSMB')` | `windows` | No | Parsed by offset, skipping the serial number and asset tag. Firmware placeholders read as empty |
+| Memory compression | A running "Memory Compression" process | `sysinfo` | No | An inference, and `null` if the process list can't be read |
+| Physical drives | `IOCTL_STORAGE_QUERY_PROPERTY` (device, seek penalty, TRIM), `IOCTL_DISK_GET_DRIVE_GEOMETRY_EX` on `\\.\PhysicalDriveN` | `windows` | No | Opened with zero access. USB bridges often report no media type or TRIM |
+| Drive health | `MSFT_PhysicalDisk.HealthStatus` over WMI COM, `ROOT\Microsoft\Windows\Storage` | `windows` | No | Empty when it can't be read. Status 5 ("Unknown") reads as empty. On its own thread with a 6 s limit, because WMI has none for connecting or starting a query. One stuck query keeps that thread, and later ones come back empty until it ends |
+| TRIM on or off | `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\DisableDeleteNotification` | `windows-registry` | No | System-wide, not per drive |
+| Devices, GPU drivers, adapters | `CM_Locate_DevNodeW`, `CM_Get_DevNode_Status`, class keys | `windows`, `windows-registry` | No | A leftover driver key is ignored: only a present device counts. Interrupt support is `DEVPKEY_PciDevice_InterruptSupport` |
+| Service states | `EnumServicesStatusExW`, `QueryServiceConfigW`, `QueryServiceConfig2W`, read-only handles | `windows` | No | Start type comes from the registry. A per-user template counts as running if a session copy does |
+| Shortcut targets | `IShellLinkW::GetPath` after `IPersistFile::Load(STGM_READ)` | `windows` | No | Never `Resolve`, which can search the disk and rewrite the shortcut |
+| Program details | `GetDriveTypeW`, then `GetFileVersionInfoW` | `windows` | No | Only on a fixed or removable drive. A share or mapped drive reads as Unknown, unopened. A local link that points at a share isn't caught |
+| Start-up tasks | `ITaskService`, every folder but `\Microsoft` | `windows` | No | Sign-in and start-up triggers only. Listed, never switched from Autoruns. A folder that can't be read is left out and named, and the rest still list |
+| Ping | `GetBestRoute2` for the gateway, then `GetIpForwardTable2` when that route is on-link, as under a full-tunnel VPN; `IcmpSendEcho2` | `windows` | No | One echo per call, 1 s timeout, ping's default 32 bytes, user-started. A bufferbloat test makes one call a second to each target for 40 s. See `security.md` |
+| Windows tools, log folder | `GetSystemDirectoryW` + `ShellExecuteW` | `windows` | No | Fixed list in `links.rs`. Off the main thread, on an STA of its own. A tool's own manifest can still make Windows prompt, and declining reads as `elevation_required` |
+| Report export | `IFileSaveDialog` on its own STA thread | `windows` | No | Cancelling returns nothing. Written beside the file and renamed over it, so a failed save keeps the old one |
+| Open at sign-in | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, value `2VX Tweaks`, and `...\Explorer\StartupApproved\Run`, read only | `windows-registry` | No | Off by default. If Task Manager has it off the value still exists, Settings says so, and only Task Manager can turn it back on |
 
-## Tasks, power plans and display adapters (`engine/system_store.rs`, `engine/store.rs`)
+## Tasks, power plans, display adapters and network adapters (`engine/system_store.rs`, `engine/store.rs`)
 
 Library tweaks can target more than the registry, without starting another program:
 
@@ -24,14 +39,15 @@ Library tweaks can target more than the registry, without starting another progr
 - **Power plans**: `PowerGetActiveScheme`, then `PowerReadACValueIndex`, `PowerReadDCValueIndex` and their write twins on the
   active plan.
 - **Display adapters**: the display class key of the matching vendor, found from each adapter's `MatchingDeviceId`.
+- **Network adapters**: the Net class key of the primary physical adapter of a kind: the connected one, or the first
+  listed. Virtual adapters don't count, and a keyword only shows if the driver lists it under `Ndi\Params`. A driver
+  reads these when it starts, and only Device Manager's Advanced page also restarts it, so these tweaks need a restart.
+  The primary adapter can change between two reads, so a change records which instance it reached (`security.md`,
+  rule 10). The same goes for a display adapter.
 
 ## Planned integrations (not implemented)
 
-- Power plans: `PowerGetActiveScheme` / `PowerSetActiveScheme` (powrprof), not `powercfg` text parsing.
 - Restore points: `SRSetRestorePointW` (srclient), which needs elevation and System Protection enabled.
-- Startup entries: Run/RunOnce keys (documented) and Startup folders. Disabling removes the Run value and journals
-  it (decision P0-8a); Task Manager's undocumented `StartupApproved` keys are not used.
-- Services: `QueryServiceConfigW`, `ChangeServiceConfigW`, for explained, individual start-type changes only.
 
 ## Windows 10 vs 11
 

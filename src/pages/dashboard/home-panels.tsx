@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import {
   ArchiveRestore,
   ChevronRight,
-  Headphones,
+  HeartPulse,
   SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
@@ -12,6 +12,7 @@ import { DataSourceBadge, type DataSource } from "@/components/common/data-sourc
 import { DotField } from "@/components/common/dot-field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSnapshots, useTweakStatuses } from "@/hooks/use-system";
+import { summariseHealth, type HealthCheck } from "@/lib/health";
 import { savedBackups } from "@/lib/quickstart";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,13 @@ const TONES = {
     dots: "text-chart-1",
     wash: "from-chart-1/30",
     edge: "hover:border-chart-1/55 focus-visible:border-chart-1/55",
+  },
+  amber: {
+    icon: "group-hover:text-warning group-focus-visible:text-warning",
+    chip: "border-warning/20 bg-warning/8 text-warning",
+    dots: "text-warning",
+    wash: "from-warning/30",
+    edge: "hover:border-warning/55 focus-visible:border-warning/55",
   },
   green: {
     icon: "group-hover:text-chart-3 group-focus-visible:text-chart-3",
@@ -41,12 +49,20 @@ const TONES = {
 };
 
 /** Three cards, each read from the engine or opening the page that holds the answer. */
-export function HomeCards() {
+export function HomeCards({
+  checks,
+  onOpenHealth,
+}: {
+  checks: HealthCheck[];
+  onOpenHealth: () => void;
+}) {
   const statuses = useTweakStatuses();
   const snapshots = useSnapshots();
   const applied = statuses.data?.filter((t) => t.state === "applied").length;
   const total = statuses.data?.length;
   const backups = snapshots.data && savedBackups(snapshots.data).length;
+  const health = summariseHealth(checks);
+  const passed = health.total - health.attention - health.warnings;
 
   return (
     <div className="grid grid-cols-3 gap-3">
@@ -68,12 +84,19 @@ export function HomeCards() {
         }
       />
       <HomeCard
-        to="/tools"
-        icon={Headphones}
-        tone="green"
-        action="Get help"
-        title="Need help?"
-        text="System report and Windows tools"
+        onOpen={onOpenHealth}
+        icon={HeartPulse}
+        tone={passed < health.total ? "amber" : "green"}
+        action="See details"
+        source="derived"
+        title={
+          checks.length > 0 ? (
+            <>
+              <AnimatedNumber value={passed} /> of {health.total}
+            </>
+          ) : undefined
+        }
+        text="System health"
       />
       <HomeCard
         to="/tweaks"
@@ -84,7 +107,7 @@ export function HomeCards() {
         title={
           applied !== undefined ? (
             <>
-              <AnimatedNumber value={applied} /> of {total}
+              <AnimatedNumber value={applied} /> of {(total ?? 0).toLocaleString()}
             </>
           ) : undefined
         }
@@ -96,6 +119,7 @@ export function HomeCards() {
 
 function HomeCard({
   to,
+  onOpen,
   icon: Icon,
   tone,
   action,
@@ -103,7 +127,9 @@ function HomeCard({
   text,
   source,
 }: {
-  to: string;
+  /** A card either opens a page or, with `onOpen`, a dialog on this one. */
+  to?: string;
+  onOpen?: () => void;
   icon: LucideIcon;
   tone: keyof typeof TONES;
   action: string;
@@ -114,19 +140,19 @@ function HomeCard({
   const [active, setActive] = useState(false);
   const t = TONES[tone];
 
-  return (
-    <Link
-      to={to}
-      data-stagger
-      onPointerEnter={() => setActive(true)}
-      onPointerLeave={() => setActive(false)}
-      onFocus={() => setActive(true)}
-      onBlur={() => setActive(false)}
-      className={cn(
-        "group relative isolate flex h-31 flex-col justify-between overflow-hidden panel p-3.5 transition-colors duration-300 outline-none",
-        t.edge,
-      )}
-    >
+  const props = {
+    "data-stagger": true,
+    onPointerEnter: () => setActive(true),
+    onPointerLeave: () => setActive(false),
+    onFocus: () => setActive(true),
+    onBlur: () => setActive(false),
+    className: cn(
+      "group relative isolate flex h-31 flex-col justify-between overflow-hidden panel p-3.5 text-left transition-colors duration-300 outline-none",
+      t.edge,
+    ),
+  };
+  const body = (
+    <>
       <span
         aria-hidden
         className={cn(
@@ -174,6 +200,16 @@ function HomeCard({
         </div>
         {source && <DataSourceBadge source={source} />}
       </div>
+    </>
+  );
+
+  return to ? (
+    <Link to={to} {...props}>
+      {body}
     </Link>
+  ) : (
+    <button type="button" onClick={onOpen} aria-haspopup="dialog" {...props}>
+      {body}
+    </button>
   );
 }

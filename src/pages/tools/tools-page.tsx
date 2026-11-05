@@ -1,21 +1,43 @@
-import { ClipboardCopy, Copy, MonitorCog } from "lucide-react";
+import {
+  Activity,
+  ClipboardCopy,
+  Cog,
+  Copy,
+  Cpu,
+  Download,
+  Eraser,
+  Info,
+  ListChecks,
+  MonitorCog,
+  Network,
+  ScrollText,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
+import { OptimisationRow } from "@/components/common/optimisation-card";
 import { SectionCard } from "@/components/common/section-card";
 import { LoadingRows } from "@/components/common/states";
-import { PageHeader } from "@/components/layout/page-header";
+import { RecommendedAction } from "@/components/common/recommended-action";
+import { PageHero } from "@/components/layout/page-hero";
 import { Button } from "@/components/ui/button";
 import { useAppInfo, useSystemSnapshot, useTweakStatuses } from "@/hooks/use-system";
 import { buildSystemReport } from "@/lib/system-report";
+import { backend, toBackendError } from "@/services/backend";
+import type { WindowsTool } from "@/types/system";
 
-// Built-in Windows tools the user can start from the Run dialog (Win+R). 2VX doesn't
-// launch them itself: the backend never starts processes (docs/security.md).
-const WINDOWS_TOOLS = [
-  { name: "Resource Monitor", run: "resmon" },
-  { name: "Reliability Monitor", run: "perfmon /rel" },
-  { name: "System Information", run: "msinfo32" },
-  { name: "DirectX Diagnostic Tool", run: "dxdiag" },
-  { name: "Disk Cleanup", run: "cleanmgr" },
-  { name: "Event Viewer", run: "eventvwr.msc" },
+// The backend opens these from its own fixed list: the frontend only names one.
+const WINDOWS_TOOLS: { id: WindowsTool; name: string; icon: LucideIcon }[] = [
+  { id: "resourceMonitor", name: "Resource Monitor", icon: Activity },
+  { id: "reliabilityMonitor", name: "Reliability Monitor", icon: ShieldCheck },
+  { id: "systemInformation", name: "System Information", icon: Info },
+  { id: "directxDiagnostic", name: "DirectX Diagnostic", icon: MonitorCog },
+  { id: "diskCleanup", name: "Disk Cleanup", icon: Eraser },
+  { id: "eventViewer", name: "Event Viewer", icon: ScrollText },
+  { id: "taskManager", name: "Task Manager", icon: ListChecks },
+  { id: "deviceManager", name: "Device Manager", icon: Cpu },
+  { id: "servicesConsole", name: "Services", icon: Cog },
+  { id: "networkConnections", name: "Network Connections", icon: Network },
 ];
 
 export function ToolsPage() {
@@ -25,6 +47,10 @@ export function ToolsPage() {
   const report =
     app.data && snapshot.data
       ? buildSystemReport(app.data, snapshot.data, tweaks.data ?? [])
+      : null;
+  const fullReport =
+    app.data && snapshot.data
+      ? buildSystemReport(app.data, snapshot.data, tweaks.data ?? [], new Date(), true)
       : null;
 
   const copy = async (text: string, what: string) => {
@@ -36,9 +62,25 @@ export function ToolsPage() {
     }
   };
 
+  const exportReport = () => {
+    if (!report) return;
+    backend.exportReport(report).then(
+      (file) => file && toast.success(`Saved ${file}`),
+      (err: unknown) => toast.error(toBackendError(err).message),
+    );
+  };
+
+  const open = (tool: WindowsTool) => {
+    backend.openTool(tool).catch((err: unknown) => toast.error(toBackendError(err).message));
+  };
+
   return (
-    <>
-      <PageHeader title="Resources" />
+    <div className="flex flex-1 flex-col gap-3 font-nav [--font-heading:var(--font-nav)]">
+      <PageHero
+        title="Resources"
+        subtitle="System report and Windows tools"
+        action={<RecommendedAction />}
+      />
       <div className="grid flex-1 grid-cols-12 gap-3">
         <SectionCard
           title="System report"
@@ -46,14 +88,27 @@ export function ToolsPage() {
           className="col-span-7"
           contentClassName="relative min-h-[280px]"
           actions={
-            <Button
-              size="xs"
-              variant="ghost"
-              disabled={!report}
-              onClick={() => report && copy(report, "Report")}
-            >
-              <ClipboardCopy /> Copy
-            </Button>
+            <>
+              <Button
+                size="xs"
+                variant="ghost"
+                disabled={!fullReport}
+                onClick={() => fullReport && copy(fullReport, "Full list")}
+              >
+                <Copy /> Copy full list
+              </Button>
+              <Button
+                size="xs"
+                variant="ghost"
+                disabled={!report}
+                onClick={() => report && copy(report, "Report")}
+              >
+                <ClipboardCopy /> Copy
+              </Button>
+              <Button size="xs" variant="ghost" disabled={!report} onClick={exportReport}>
+                <Download /> Export
+              </Button>
+            </>
           }
         >
           {!report ? (
@@ -68,35 +123,22 @@ export function ToolsPage() {
           )}
         </SectionCard>
 
-        <SectionCard
-          title="Windows tools"
-          description="Win+R, paste, Enter"
-          className="col-span-5"
-          contentClassName="flex flex-col"
-        >
-          {/* Rows share the height, so the list ends level with the report beside it. */}
-          <ul className="-mx-2 flex flex-1 flex-col">
-            {WINDOWS_TOOLS.map((t) => (
-              <li key={t.run} className="flex flex-1">
-                <button
-                  type="button"
-                  aria-label={`Copy ${t.run}`}
-                  onClick={() => copy(t.run, `"${t.run}"`)}
-                  className="group flex min-h-9 w-full items-center gap-3 rounded-md px-2 text-left transition-colors outline-none hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <MonitorCog className="size-4 shrink-0 text-brand" aria-hidden />
-                  <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{t.name}</span>
-                  <code className="font-mono text-[11.5px] text-muted-foreground">{t.run}</code>
-                  <Copy
-                    className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-                    aria-hidden
-                  />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
+        <div className="col-span-5 flex flex-col divide-y overflow-hidden panel [&>*]:h-auto [&>*]:flex-1">
+          {WINDOWS_TOOLS.map((t) => (
+            <OptimisationRow
+              key={t.id}
+              flat
+              leading={<t.icon className="size-[18px] text-brand" strokeWidth={1.75} aria-hidden />}
+              title={t.name}
+              control={
+                <Button size="xs" variant="ghost" onClick={() => open(t.id)}>
+                  Open
+                </Button>
+              }
+            />
+          ))}
+        </div>
       </div>
-    </>
+    </div>
   );
 }

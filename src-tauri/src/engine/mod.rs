@@ -25,7 +25,7 @@ pub mod store;
 mod system_store;
 mod tweaks;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Serialize;
 
@@ -241,6 +241,9 @@ pub enum Compatibility {
     WrongHardware,
     /// What the tweak configures isn't on this PC.
     NotInstalled,
+    /// A target can't be read, so it can't be backed up exactly. Set by plans only: a status reports
+    /// the read error on the setting instead.
+    Unreadable,
     /// Applicable, but applying will show a UAC prompt.
     NeedsElevation,
 }
@@ -314,6 +317,15 @@ fn target_key(target: &RegTarget) -> String {
     target.to_string().to_ascii_lowercase()
 }
 
+/// The service a key belongs to, when the key is exactly `Services\<name>`.
+fn service_of(key: &str) -> Option<&str> {
+    const SERVICES: &str = r"SYSTEM\CurrentControlSet\Services\";
+    let head = key.get(..SERVICES.len())?;
+    let name = key.get(SERVICES.len()..)?;
+    (head.eq_ignore_ascii_case(SERVICES) && !name.is_empty() && !name.contains('\\'))
+        .then_some(name)
+}
+
 impl TweakRegistry {
     /// The registry the app ships with.
     ///
@@ -362,6 +374,19 @@ impl TweakRegistry {
 
     pub fn list(&self) -> impl Iterator<Item = &TweakMeta> {
         self.iter().map(|t| t.meta())
+    }
+
+    /// The services tweaks set the start type of, sorted. Tweaks that only tune a driver's
+    /// `Parameters` key don't count, so this is what a Services page has switches for.
+    pub fn service_names(&self) -> Vec<String> {
+        let names: BTreeSet<&str> = self
+            .iter()
+            .flat_map(|tweak| tweak.settings())
+            .filter(|setting| setting.target.hive == Hive::LocalMachine)
+            .filter(|setting| setting.target.value.eq_ignore_ascii_case("Start"))
+            .filter_map(|setting| service_of(&setting.target.key))
+            .collect();
+        names.into_iter().map(str::to_owned).collect()
     }
 
     /// Whether some registered tweak declares this target. The elevated broker writes nothing else.
@@ -682,6 +707,38 @@ pub(crate) mod tests {
         assert_eq!(
             check_compatibility(&desktop, &laptop),
             Compatibility::Compatible
+        );
+    }
+
+    #[test]
+    fn a_service_is_a_key_directly_under_services() {
+        assert_eq!(
+            service_of(r"SYSTEM\CurrentControlSet\Services\DiagTrack"),
+            Some("DiagTrack")
+        );
+        assert_eq!(
+            service_of(r"system\currentcontrolset\services\Fax"),
+            Some("Fax")
+        );
+        // A driver's tuning key is that driver's, not a service switch.
+        assert_eq!(
+            service_of(r"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters"),
+            None
+        );
+        assert_eq!(service_of(r"SYSTEM\CurrentControlSet\Services\"), None);
+        assert_eq!(service_of(r"SYSTEM\CurrentControlSet\Control"), None);
+    }
+
+    #[test]
+    fn the_catalogue_names_its_services_once_each_in_order() {
+        let names = TweakRegistry::with_builtin_tweaks().service_names();
+        assert!(!names.is_empty());
+        assert!(names.is_sorted());
+        assert!(names.iter().all(|name| !name.contains('\\')));
+        assert!(
+            names
+                .iter()
+                .all(|name| name != "WinDefend" && name != "wuauserv")
         );
     }
 

@@ -2,33 +2,37 @@ import { Link } from "react-router";
 import { Sparkles } from "lucide-react";
 import { useTweakStatuses } from "@/hooks/use-system";
 import { openRecommended } from "@/lib/quickstart";
+import { tweakHref } from "@/lib/tweak-presentation";
 
 const ACTION =
   "glow-action flex h-11 items-center gap-2.5 rounded-lg px-5 text-[14px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
 
 /**
- * The one action a page pushes: what's left to apply, or `otherwise` once nothing is. It links
- * to Tweaks, unless the page is Tweaks: `onSelect` then selects them where they are.
+ * The one action a page pushes: the recommended tweaks still to apply. `select` is for a page that
+ * lists them, and picks them where they are; anywhere else it links to the first. With nothing left
+ * there's no button: this slot isn't a place to advertise something else.
  */
 export function RecommendedAction({
-  otherwise,
-  onSelect,
+  select,
   disabled,
 }: {
-  otherwise: { to: string; label: string };
-  onSelect?: () => void;
+  select?: { count: number; onSelect: () => void };
   disabled?: boolean;
 }) {
   const { data } = useTweakStatuses();
   if (!data) return null;
-  const open = openRecommended(data).length;
+  const open = openRecommended(data);
+  const count = select ? select.count : open.length;
+  if (count === 0) return null;
   const content = (
     <>
       <Sparkles
         className="size-4 text-brand transition-[rotate,scale] duration-300 group-hover:scale-110 group-hover:rotate-12"
         aria-hidden
       />
-      {open > 0 ? `${open} recommended tweak${open === 1 ? "" : "s"}` : otherwise.label}
+      {select
+        ? `Select ${count} recommended`
+        : `${count} recommended tweak${count === 1 ? "" : "s"}`}
     </>
   );
 
@@ -36,14 +40,14 @@ export function RecommendedAction({
     <div className="group relative isolate shrink-0">
       <span
         aria-hidden
-        className="absolute -inset-1 -z-10 rounded-xl bg-linear-to-r from-brand to-primary opacity-35 blur-md transition-opacity duration-300 group-hover:opacity-70"
+        className="absolute -inset-1 -z-10 rounded-xl bg-linear-to-r from-brand to-primary opacity-35 blur-md transition-opacity duration-300 group-hover:opacity-60"
       />
-      {open > 0 && onSelect ? (
-        <button type="button" disabled={disabled} onClick={onSelect} className={ACTION}>
+      {select ? (
+        <button type="button" disabled={disabled} onClick={select.onSelect} className={ACTION}>
           {content}
         </button>
       ) : (
-        <Link to={open > 0 ? "/tweaks" : otherwise.to} className={ACTION}>
+        <Link to={tweakHref(open[0]!.meta).split("&tweak=")[0]!} className={ACTION}>
           {content}
         </Link>
       )}

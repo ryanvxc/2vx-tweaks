@@ -4,7 +4,6 @@ import { DEFAULT_GAME_MODE_TWEAKS, GAME_MODE_TWEAKS, GAMING_PROFILES } from "./p
 import {
   capGroups,
   groupTweaks,
-  LIBRARY_ROUTE,
   searchRank,
   TWEAK_ICON,
   TWEAK_SECTIONS,
@@ -55,7 +54,7 @@ describe("tweak presentation", () => {
 
   it("links a tweak to its primary location", () => {
     expect(tweakHref({ id: "gaming.game-dvr-off", category: "gaming" })).toBe(
-      "/tweaks?tab=core&tweak=gaming.game-dvr-off",
+      "/tweaks?tab=gaming&tweak=gaming.game-dvr-off",
     );
     expect(tweakHref({ id: "privacy.edge-shopping-off", category: "privacy" })).toBe(
       "/tweaks?tab=apps&tweak=privacy.edge-shopping-off",
@@ -75,12 +74,16 @@ describe("tweak presentation", () => {
       const tweaks = [
         tweak("windows.storage-sense-off"),
         tweak("performance.last-access-off"),
-        tweak("gaming.game-dvr-off"),
+        tweak("performance.foreground-boost"),
       ];
       expect(ids(groupTweaks(tweaks, { ...options, tab: "core", catalogue: true }))).toEqual([
         [
           "Core",
-          ["performance.last-access-off", "gaming.game-dvr-off", "windows.storage-sense-off"],
+          [
+            "performance.foreground-boost",
+            "performance.last-access-off",
+            "windows.storage-sense-off",
+          ],
         ],
       ]);
     });
@@ -92,6 +95,29 @@ describe("tweak presentation", () => {
       ).toEqual([[TWEAK_SECTIONS.privacy[1]!.title, [id]]]);
     });
 
+    it("tops a section up to a full row of cards from the lists", () => {
+      const listed = (id: string, name: string, section: string) => ({
+        ...tweak(id),
+        meta: { ...tweak(id).meta, name, section },
+      });
+      const tweaks = [
+        tweak("gaming.mmcss-games-priority"),
+        listed("gaming.a", "A name far too long to fit on the card it would sit on", "Other"),
+        listed("gaming.b", "Short", "Other"),
+        listed("gaming.c", "Also short", "Other"),
+      ];
+      const groups = groupTweaks(tweaks, {
+        ...options,
+        tab: "gaming",
+        catalogue: true,
+        fillRows: true,
+      });
+      expect(ids(groups)).toEqual([
+        ["Essentials", ["gaming.mmcss-games-priority", "gaming.b", "gaming.c"]],
+        ["Other", ["gaming.a"]],
+      ]);
+    });
+
     it("keeps the user's sort inside a section", () => {
       const tweaks = [tweak("windows.storage-sense-off"), tweak("performance.last-access-off")];
       expect(ids(groupTweaks(tweaks, { ...options, tab: "core", catalogue: false }))).toEqual([
@@ -100,12 +126,15 @@ describe("tweak presentation", () => {
     });
 
     it("always puts what can't run last, even in a flat search", () => {
-      const tweaks = [tweak("gaming.game-dvr-off", true), tweak("windows.storage-sense-off")];
+      const tweaks = [
+        tweak("performance.foreground-boost", true),
+        tweak("windows.storage-sense-off"),
+      ];
       const last = (tab: "core" | null) =>
         groupTweaks(tweaks, { ...options, tab, catalogue: false }).at(-1);
       expect(last("core")?.title).toBe("Unavailable");
       expect(last(null)?.title).toBe("Unavailable");
-      expect(last(null)?.tweaks.map((t) => t.meta.id)).toEqual(["gaming.game-dvr-off"]);
+      expect(last(null)?.tweaks.map((t) => t.meta.id)).toEqual(["performance.foreground-boost"]);
     });
   });
 
@@ -113,29 +142,42 @@ describe("tweak presentation", () => {
     expect(tweakPlacement({ id: "services.new-one", category: "services" })).toEqual({
       tab: "services",
       section: "More",
-      route: "/tweaks",
+      route: "/cleaner",
+      listed: false,
     });
   });
 });
 
-describe("the Library", () => {
+describe("long lists", () => {
   const meta = (section: string | null, id = "privacy.a") => ({
     id,
     category: "privacy" as const,
     section,
   });
 
-  it("places a tweak with a section under its category", () => {
+  it("places a tweak with a section under its topic", () => {
     expect(tweakPlacement(meta("Telemetry"))).toEqual({
       tab: "privacy",
       section: "Telemetry",
-      route: LIBRARY_ROUTE,
+      route: "/tweaks",
+      listed: true,
     });
-    expect(tweakPlacement(meta(null)).route).not.toBe(LIBRARY_ROUTE);
+    expect(tweakPlacement({ id: "gpu.a", category: "gpu", section: "NVIDIA" }).route).toBe(
+      "/hardware",
+    );
+    expect(tweakPlacement({ id: "network.a", category: "network", section: "TCP" }).route).toBe(
+      "/network",
+    );
+    expect(tweakPlacement({ id: "services.a", category: "services", section: "VPN" }).route).toBe(
+      "/cleaner",
+    );
+    expect(tweakPlacement({ id: "memory.a", category: "memory", section: "Prefetch" }).tab).toBe(
+      "ram",
+    );
   });
 
   it("links a tweak to its one location", () => {
-    expect(tweakHref(meta("Telemetry"))).toBe("/library?tab=privacy&tweak=privacy.a");
+    expect(tweakHref(meta("Telemetry"))).toBe("/tweaks?tab=privacy&tweak=privacy.a");
   });
 
   it("groups by the tweaks' own sections, unavailable last", () => {
@@ -147,21 +189,42 @@ describe("the Library", () => {
     const groups = groupTweaks(tweaks, {
       tab: "privacy",
       catalogue: true,
-      library: true,
       unavailable: (t) => t.meta.id === "privacy.e",
     });
     expect(groups.map((g) => g.title)).toEqual(["Ads", "Speech", UNAVAILABLE_SECTION]);
+    expect(groups.every((g) => g.compact)).toBe(true);
+  });
+
+  it("puts hand-placed cards before the long lists, and keeps section names apart", () => {
+    const card = TWEAK_SECTIONS.privacy[1]!;
+    const groups = groupTweaks(
+      [
+        { meta: meta("App permissions", "privacy.z") },
+        { meta: { id: card.ids[0]!, category: "privacy" as const, section: null } },
+      ],
+      { tab: "privacy", catalogue: true, unavailable: () => false },
+    );
+    expect(groups.map((g) => [g.title, g.compact])).toEqual([
+      [card.title, false],
+      ["More app permissions", true],
+    ]);
+  });
+
+  it("searches what a tweak changes as well as what it's called", () => {
+    const m = { name: "Ads", description: "No ads", category: "privacy" as const };
+    expect(searchRank(m, "disabledbypolicy", ["HKLM\\Foo\\DisabledByPolicy"])).toBe(5);
+    expect(searchRank(m, "disabledbypolicy")).toBeNull();
   });
 
   it("caps a broad search across groups", () => {
     const groups = [
-      { title: "A", tweaks: [1, 2] },
-      { title: "B", tweaks: [3, 4] },
-      { title: "C", tweaks: [5] },
+      { title: "A", tweaks: [1, 2], compact: true },
+      { title: "B", tweaks: [3, 4], compact: true },
+      { title: "C", tweaks: [5], compact: true },
     ];
     expect(capGroups(groups, 3)).toEqual([
-      { title: "A", tweaks: [1, 2] },
-      { title: "B", tweaks: [3] },
+      { title: "A", tweaks: [1, 2], compact: true },
+      { title: "B", tweaks: [3], compact: true },
     ]);
     expect(capGroups(groups, Number.POSITIVE_INFINITY)).toEqual(groups);
   });
