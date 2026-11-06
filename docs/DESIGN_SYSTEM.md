@@ -66,11 +66,12 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 - A read-only table is one panel, an `h-9` header row and single-line rows, with columns shared through a `COLUMNS`
   constant.
 - Anything you can switch or act on is an EXM card, every time: every tweak on every tab, search results, Network
-  Priority, Protections, Uninstall and Autoruns. Never a row, and nothing folds. Sections are a plain heading and count over a
-  `CardGrid`, and Unavailable is always the last section, muted, with the reason where the switch would be. A long tab
-  draws 30 cards at a time as you scroll (`useReveal`), because each is a switch and several tooltips. A hand-placed section
-  is topped up to a full row from the library, so it's never a lone card in an empty row. Tables are for data you only
-  read, such as the service states, devices and backups.
+  Priority, Protections, Uninstall and Autoruns. Never a row, and nothing folds. A tab is one `CardGrid`, as on EXM, with the best-known
+  tweaks first (`KNOWN_FIRST` in `lib/tweak-order.ts`). Only the tabs in `TAB_HEADINGS` draw headings: Core splits into Core and
+  Power, and a heading is a plain title and count. Don't add one to sort a tab into topics. Unavailable is always the last
+  heading, muted, with the reason where the switch would be. A long tab draws 30 cards at a time as you scroll (`useReveal`),
+  because each is a switch and several tooltips. Tables are for data you only read, such as the service states, devices and
+  backups.
 - A row's control sits in a fixed slot, so a word in one row doesn't push its indicators out of line with the next.
 - A tweak has one home. Search looks through every tab of its page, and matches names, descriptions and the registry
   or service names a tweak touches.

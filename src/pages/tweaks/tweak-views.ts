@@ -24,8 +24,6 @@ export interface TweakView {
   subtitle: string;
   tabs: NavTab[];
   defaultTab: string;
-  /** Section headings on every tab, or only on tabs with more than one section. */
-  headings?: "always" | "several";
   /** Between the tabs and the search row. */
   banner?: ReactNode;
   /** The right end of the search row. */
@@ -42,7 +40,6 @@ export const TWEAKS_VIEW: TweakView = {
   subtitle: "Windows, privacy, gaming, apps and power.",
   tabs: TWEAK_TABS,
   defaultTab: "core",
-  headings: "always",
 };
 
 export const VISUALS_VIEW: TweakView = {
@@ -51,7 +48,6 @@ export const VISUALS_VIEW: TweakView = {
   subtitle: "How Windows looks: theme, taskbar, File Explorer and sign-in.",
   tabs: VISUALS_TABS,
   defaultTab: "appearance",
-  headings: "always",
 };
 
 export const HARDWARE_VIEW: TweakView = {
@@ -71,7 +67,6 @@ export const NETWORK_VIEW: TweakView = {
 };
 
 export const ADVANCED_VIEW: TweakView = {
-  headings: "always",
   route: "/advanced",
   title: "Advanced",
   subtitle: "Security status, interrupts, devices and the system timer.",

@@ -94,8 +94,9 @@ import type { CleanerTab, HardwareTab, TweakTab, VisualsTab } from "@/app/naviga
 import type { TweakCategory, TweakMeta } from "@/types/engine";
 
 // How tweaks look and where they sit in the UI. Kept apart from the engine metadata: icons
-// and grouping are presentation, the Rust catalogue stays about behaviour. Engine categories
-// say what a tweak touches; tabs are what someone goes looking for.
+// and placement are presentation, the Rust catalogue stays about behaviour. Engine categories
+// say what a tweak touches; tabs are what someone goes looking for. A tweak's section is its topic,
+// which picks its icon and its Visuals filter. Few sections are ever drawn (see `TAB_HEADINGS`).
 
 /** Every tab that lists tweaks, across the pages that have them. */
 export type PlacedTab =
@@ -281,7 +282,7 @@ export function sectionIcon(title: string, category: TweakCategory): LucideIcon 
 
 const visualSections = (...titles: string[]) => titles.map((title) => ({ title, ids: [] }));
 
-/** Sections per tab, in display order. */
+/** The topics on each tab, and the tweaks placed on it by hand. */
 export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[]> = {
   // Visuals are all library tweaks: the sections are listed with no ids only to fix their order,
   // which is the order people meet them in, not the alphabet.
@@ -332,7 +333,6 @@ export const TWEAK_SECTIONS: Record<PlacedTab, { title: string; ids: string[] }[
       ],
     },
   ],
-  power: [],
   services: [
     {
       title: "Background services",
@@ -415,7 +415,6 @@ const TAB_ROUTE: Record<PlacedTab, string> = {
   privacy: "/tweaks",
   gaming: "/tweaks",
   apps: "/tweaks",
-  power: "/tweaks",
   services: "/cleaner",
   gpu: "/hardware",
   cpu: "/hardware",
@@ -463,7 +462,7 @@ const PLACEMENT = new Map(
 const CATEGORY_TAB: Record<TweakCategory, PlacedTab> = {
   gaming: "gaming",
   performance: "core",
-  power: "power",
+  power: "core",
   network: "tweaks",
   windows: "core",
   privacy: "privacy",
@@ -490,8 +489,7 @@ export const VISUALS_SECTION_TAB: Record<string, PlacedTab> = Object.fromEntries
 const ADAPTER_SECTIONS = new Set(["Ethernet adapter", "Wi-Fi adapter"]);
 
 /** What placing a tweak needs to know. Fixtures for the older pages leave `section` out. */
-type Placeable = Pick<TweakMeta, "id" | "category"> &
-  Partial<Pick<TweakMeta, "section" | "name" | "evidence" | "recommended">>;
+type Placeable = Pick<TweakMeta, "id" | "category"> & Partial<Pick<TweakMeta, "section">>;
 
 /** Where a tweak lives: its one primary location. One not placed yet still shows, under its topic. */
 export function tweakPlacement(meta: Placeable) {
@@ -508,8 +506,6 @@ export function tweakPlacement(meta: Placeable) {
     tab: tab as string,
     section: placed?.section ?? meta.section ?? MORE_SECTION,
     route: TAB_ROUTE[tab],
-    /** Came from the library, rather than being hand-placed. */
-    listed: !placed && !!meta.section,
   };
 }
 
@@ -519,102 +515,62 @@ export interface TweakGroup<T> {
   tweaks: T[];
 }
 
-/** Cards sit three to a row, and a longer name is cut off on one. */
-const CARDS_PER_ROW = 3;
-const CARD_NAME_MAX = 33;
-
-/** On a card the section's heading names the product, so the name doesn't have to. */
+/** Clearer on a card than the name the details and change list use. */
 const CARD_TITLE: Record<string, string> = {
-  "performance.edge-background-mode-off": "Stop running in the background",
-  "performance.edge-startup-boost-off": "Turn off Startup boost",
-  "privacy.edge-shopping-off": "Turn off Shopping",
   "privacy.inking-typing-collection-off": "Stop learning from your typing",
   "privacy.language-list-opt-out": "Keep your language list private",
   "privacy.online-speech-off": "Stop online speech recognition",
-  "windows.edge-recommendations-off": "Stop feature suggestions",
-  "windows.edge-sidebar-off": "Hide the sidebar",
 };
 
 export function cardTitle(meta: Pick<TweakMeta, "id" | "name">) {
   return CARD_TITLE[meta.id] ?? meta.name;
 }
 
-/** Too specific to round out a row: a priority setting for one game is nobody's essential. */
-const NEVER_FILLS = new Set(["Per-game priority"]);
+/**
+ * A tab is one grid of cards, as EXM's are. Only these tabs draw headings, in this order: Core
+ * because Power shares it, and the others because what's under each heading would otherwise read
+ * the same or belong apart.
+ */
+const TAB_HEADINGS: Partial<Record<PlacedTab, string[]>> = {
+  core: ["Core", "Power"],
+  peripherals: ["Keyboard and mouse", "USB"],
+  adapters: ["Ethernet adapter", "Wi-Fi adapter"],
+  security: ["Settings"],
+  devices: ["Settings"],
+};
 
-/** How well a library tweak suits a hand-placed section called `title`: higher is better. */
-function cardFit(meta: Placeable, title: string) {
-  const family = tweakPlacement(meta).section.split(" ")[0] === title.split(" ")[0];
-  return (
-    Number(family) * 8 +
-    Number(meta.evidence !== "community") * 4 +
-    Number((meta.name?.length ?? 0) <= CARD_NAME_MAX) * 2 +
-    Number(meta.recommended === true)
-  );
-}
-
-/** The library's sections come from the tweaks themselves, in name order. */
-function bySection<T extends { meta: Placeable }>(tweaks: T[]): TweakGroup<T>[] {
-  const titles = [...new Set(tweaks.map((t) => tweakPlacement(t.meta).section))].sort((a, b) =>
-    a.localeCompare(b),
-  );
-  return titles.map((title) => ({
-    title,
-    tweaks: tweaks.filter((t) => tweakPlacement(t.meta).section === title),
-  }));
+function headingOf(meta: Placeable, tab: PlacedTab, headings: string[]) {
+  const title =
+    tab === "core" && meta.category === "power" ? "Power" : tweakPlacement(meta).section;
+  // Anything else on a tab belongs with its first heading, rather than going missing.
+  return headings.includes(title) ? title : headings[0];
 }
 
 /**
- * Splits tweaks into the sections of `tab`, or one flat list when `tab` is null: the hand-placed
- * sections first, then the library's. They keep the order they arrive in, unless `catalogue` asks
- * for each hand-placed section's written order, and tops it up to a full row of cards from the
- * library, because what's hand-placed can be Unavailable on this PC. A library section named like a
- * hand-placed one joins it. Whatever can't run on this PC goes in a section of its own, always last.
+ * Splits tweaks by the headings of `tab`, or into one flat list on a tab without any and for search
+ * results (`tab` is null). They keep the order they arrive in. Whatever can't run on this PC goes
+ * under a heading of its own, always last.
  */
 export function groupTweaks<T extends { meta: Placeable }>(
   tweaks: T[],
   {
     tab,
-    catalogue,
     unavailable,
   }: {
     tab: PlacedTab | null;
-    catalogue: boolean;
     unavailable: (tweak: T) => boolean;
   },
 ): TweakGroup<T>[] {
   const usable = tweaks.filter((t) => !unavailable(t));
   const blocked = tweaks.filter(unavailable);
-
-  const placed = (tab: PlacedTab): TweakGroup<T>[] => {
-    const sections = [...TWEAK_SECTIONS[tab], { title: MORE_SECTION, ids: [] as string[] }];
-    const hand = usable.filter((t) => !tweakPlacement(t.meta).listed);
-    const titles = new Set(sections.map((s) => s.title));
-    const inSection = (group: T[], title: string) =>
-      group.filter((t) => tweakPlacement(t.meta).section === title);
-    const library = usable.filter((t) => tweakPlacement(t.meta).listed);
-    let rest = library.filter((t) => !titles.has(tweakPlacement(t.meta).section));
-    const written = sections.map(({ title, ids }) => {
-      const own = inSection(hand, title);
-      const tweaks = [
-        ...(catalogue
-          ? own.toSorted((a, b) => ids.indexOf(a.meta.id) - ids.indexOf(b.meta.id))
-          : own),
-        ...inSection(library, title),
-      ];
-      const short = (CARDS_PER_ROW - (tweaks.length % CARDS_PER_ROW)) % CARDS_PER_ROW;
-      if (!catalogue || own.length === 0 || short === 0) return { title, tweaks };
-      const extra = rest
-        .filter((t) => !NEVER_FILLS.has(tweakPlacement(t.meta).section))
-        .toSorted((a, b) => cardFit(b.meta, title) - cardFit(a.meta, title))
-        .slice(0, short);
-      rest = rest.filter((t) => !extra.includes(t));
-      return { title, tweaks: [...tweaks, ...extra] };
-    });
-    return [...written, ...bySection(rest)];
-  };
-
-  const groups = tab ? placed(tab) : [{ title: null, tweaks: usable }];
+  const headings = tab ? TAB_HEADINGS[tab] : undefined;
+  const groups: TweakGroup<T>[] =
+    tab && headings
+      ? headings.map((title) => ({
+          title,
+          tweaks: usable.filter((t) => headingOf(t.meta, tab, headings) === title),
+        }))
+      : [{ title: null, tweaks: usable }];
   return [...groups, { title: UNAVAILABLE_SECTION, tweaks: blocked }].filter(
     (group) => group.tweaks.length > 0,
   );

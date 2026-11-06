@@ -129,19 +129,15 @@ describe("App shell", () => {
     ]);
   });
 
-  it("opens Visuals with its tabs and sections in the written order", async () => {
+  it("opens Visuals with its tabs, as grids with no headings", async () => {
     window.location.hash = "#/visuals";
     render(<App />);
     expect(await screen.findByRole("heading", { name: "Visuals" })).toBeInTheDocument();
     expect(
       screen.getAllByRole("tab").map((tab) => tab.textContent?.replace(/\d+$/, "").trim()),
     ).toEqual(["Appearance", "Taskbar and Start", "File Explorer", "Sign-in"]);
-    // Alphabetically "Effects and animation" would come first.
-    const sections = await screen.findAllByRole("heading", { level: 2 });
-    expect(sections.map((h) => h.textContent)).toEqual([
-      "Theme and colour",
-      "Effects and animation",
-    ]);
+    await screen.findByText("Preview sample: Visuals setting, Theme and colour");
+    expect(screen.queryByRole("heading", { level: 2 })).not.toBeInTheDocument();
   });
 
   it("finds a Visuals tweak with Ctrl K and links to its tab", async () => {

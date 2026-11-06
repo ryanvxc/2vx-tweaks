@@ -13,7 +13,7 @@ Tools
   2VX Game Mode    /gaming              ?view=configure (brand colour)
 
 Optimisations
-  Tweaks           /tweaks              ?tab=core | privacy | gaming | apps | tasks | power | presets
+  Tweaks           /tweaks              ?tab=core | privacy | gaming | apps | presets
   Visuals          /visuals             ?tab=appearance | taskbar | explorer | signin
   Hardware         /hardware            ?tab=gpu | cpu | ram | peripherals | storage
   PC Cleaner       /cleaner             ?tab=system | services | uninstall | autoruns
@@ -42,7 +42,7 @@ a confirmation. With none saved, the menu offers Set up account instead.
 - **Game Mode stands alone** in the brand colour: a person who wants games to run better shouldn't have to read a list.
   Everything else that changes the PC or reports on it is under Optimisations.
 - **One Tweaks page.** The Library was a second page with the same cards, so its tweaks moved to where their topic
-  already was: Core, Privacy, Gaming, Apps and Power on Tweaks; how Windows looks (theme, taskbar, File Explorer, sign-in) on
+  already was: Core (with Power), Privacy, Gaming and Apps on Tweaks; how Windows looks (theme, taskbar, File Explorer, sign-in) on
   Visuals, placed by section; CPU, GPU, memory and storage on Hardware; network
   on Network; services on PC Cleaner. Search covers every tab of a page, so nothing needs a page of its own to be found.
 - **Services have one home**, PC Cleaner, whether a service is switched by hand or through a preset.

@@ -26,10 +26,17 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 export const GpuProfiles = () => <ProfileCards presets={GPU_PROFILES} />;
-export const PowerProfiles = () => <ProfileCards presets={POWER_PROFILES} />;
+/** `contents`: these sit in the Presets tab's own grid, beside the presets. */
+export const PowerProfiles = () => <ProfileCards presets={POWER_PROFILES} className="contents" />;
 
 /** Named lists of existing tweaks, applied through the normal review. */
-function ProfileCards({ presets }: { presets: TweakPreset[] }) {
+function ProfileCards({
+  presets,
+  className = "grid grid-cols-2 gap-3",
+}: {
+  presets: TweakPreset[];
+  className?: string;
+}) {
   const { data } = useTweakStatuses();
   const engine = useEngineStatus();
   if (!data) return null;
@@ -37,7 +44,7 @@ function ProfileCards({ presets }: { presets: TweakPreset[] }) {
   const cards = presets.filter((p) => presetFits(p, data));
   if (cards.length === 0) return null;
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className={className}>
       {cards.map((preset) => (
         <Profile key={preset.id} preset={preset} statuses={data} disabled={disabled} />
       ))}

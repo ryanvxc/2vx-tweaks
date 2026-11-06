@@ -3,6 +3,13 @@
 Main-channel builds are released automatically from `main` (see `docs/GITHUB_RELEASE_PIPELINE.md`); their
 notes come from commit subjects. This file records the larger milestones.
 
+## 0.6.1
+
+### Tweaks are easier to scan
+- Tabs are now one clean grid instead of being split into lots of small sections.
+- The best-known tweaks come first on every tab, and the niche ones sit further down. Sort has a new Most useful option, which is the default.
+- Power is now part of the Core tab, under its own heading. Power profiles moved to Presets.
+
 ## 0.6.0
 
 ### Restore Centre

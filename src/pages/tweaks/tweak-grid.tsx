@@ -70,6 +70,7 @@ import {
   type PlacedTab,
   VISUALS_SETTINGS_PAGE,
 } from "@/lib/tweak-presentation";
+import { mostUsefulFirst } from "@/lib/tweak-order";
 import { play } from "@/lib/motion";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
 import type {
@@ -96,7 +97,7 @@ const VARYING_FILTERS: Record<string, (meta: TweakMeta) => string> = {
   evidence: (meta) => meta.evidence,
 };
 
-type Sort = "recommended" | "name" | "impact" | "status" | "newest" | "recent";
+type Sort = "useful" | "name" | "impact" | "status" | "newest" | "recent";
 
 const IMPACT_ORDER: Record<Impact, number> = { low: 0, medium: 1, high: 2 };
 const STATE_ORDER: Record<TweakState, number> = {
@@ -146,7 +147,7 @@ export function TweakGrid({
   const [evidenceFilter, setEvidenceFilter] = useState<Evidence[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [sectionFilter, setSectionFilter] = useState<string[]>([]);
-  const [sort, setSort] = useState<Sort>("recommended");
+  const [sort, setSort] = useState<Sort>("useful");
 
   const [staged, setStaged] = useState<string[]>([]);
   const [reviewing, setReviewing] = useState(false);
@@ -253,9 +254,7 @@ export function TweakGrid({
               (history.get(b.meta.id)?.lastUsedMs ?? 0) - (history.get(a.meta.id)?.lastUsedMs ?? 0)
             );
           default:
-            return (
-              (q ? rank(a) - rank(b) : 0) || Number(b.meta.recommended) - Number(a.meta.recommended)
-            );
+            return (q ? rank(a) - rank(b) : 0) || mostUsefulFirst(a.meta, b.meta);
         }
       });
   }, [
@@ -488,11 +487,8 @@ export function TweakGrid({
         });
   const groups = groupTweaks(body ? [] : shown, {
     tab: view && q === "" && !body ? (tab as PlacedTab) : null,
-    // Sections keep their written order unless the user asked for another.
-    catalogue: sort === "recommended",
     unavailable: (t) => isBlocked(t.compatibility),
   });
-  const headings = view?.headings === "always" || groups.length > 1;
   const { limit, end } = useReveal(CARD_BATCH, shown.length, listKey);
   const visible = capGroups(groups, limit);
   // A tab without its own search row has nothing to count.
@@ -533,7 +529,7 @@ export function TweakGrid({
                 value: sort,
                 onChange: (v) => setSort(v as Sort),
                 options: [
-                  { value: "recommended", label: q ? "Best match" : "Recommended" },
+                  { value: "useful", label: q ? "Best match" : "Most useful" },
                   { value: "name", label: "Name" },
                   { value: "impact", label: "Expected effect" },
                   { value: "status", label: "Status" },
@@ -575,7 +571,7 @@ export function TweakGrid({
             const whole = groups[i]!.tweaks;
             return (
               <section key={group.title ?? "all"} className="flex flex-col gap-2.5">
-                {group.title && headings && (
+                {group.title && (
                   <div className="mt-1 flex items-baseline justify-between gap-3 pr-1">
                     <h2 className="text-[19px] leading-tight">{group.title}</h2>
                     <span className="text-[12.5px] text-muted-foreground tabular">

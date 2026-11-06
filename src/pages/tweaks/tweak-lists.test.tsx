@@ -44,6 +44,11 @@ function tweak(
 }
 
 const LISTED = [
+  tweak("power.hibernate", "Never hibernate", "power", "Sleep and buttons", {
+    state: "applied",
+    undoable: true,
+  }),
+  tweak("power.sleep", "Never sleep", "power", "Sleep and buttons"),
   tweak("privacy.ceip", "Commercial pipeline", "privacy", "Telemetry"),
   tweak("privacy.tipc", "Lock screen camera", "privacy", "Speech"),
   tweak("windows.a", "Taskbar search box", "windows", "Taskbar and Start"),
@@ -89,10 +94,20 @@ describe("Long lists", () => {
     expect(document.querySelector("section [aria-expanded]")).toBeNull();
   });
 
-  it("counts what's in effect on each section", async () => {
+  it("draws most tabs as one grid, with no headings to read past", async () => {
     renderTweaks("/tweaks?tab=privacy");
-    const heading = await screen.findByRole("heading", { name: "Telemetry" });
+    expect(await screen.findByText("Commercial pipeline")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 2 })).not.toBeInTheDocument();
+  });
+
+  it("splits Core into Core and Power, and counts what's in effect on each", async () => {
+    renderTweaks("/tweaks?tab=core");
+    const heading = await screen.findByRole("heading", { name: "Power" });
     expect(within(heading.parentElement!).getByText("1 of 2 applied")).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual([
+      "Core",
+      "Power",
+    ]);
   });
 
   it("searches the whole page from any tab, by name or by what a tweak changes", async () => {

@@ -11,7 +11,6 @@ import {
   TWEAK_SECTIONS,
   tweakHref,
   tweakPlacement,
-  UNAVAILABLE_SECTION,
   VISUALS_SECTION_TAB,
   VISUALS_SETTINGS_PAGE,
 } from "./tweak-presentation";
@@ -73,57 +72,49 @@ describe("tweak presentation", () => {
     const ids = (groups: ReturnType<typeof groupTweaks<ReturnType<typeof tweak>>>) =>
       groups.map((g) => [g.title, g.tweaks.map((t) => t.meta.id)]);
 
-    it("follows the section's written order", () => {
+    it("draws a tab as one grid, as EXM does", () => {
       const tweaks = [tweak("gaming.game-dvr-off"), tweak("gaming.mmcss-games-priority")];
-      expect(ids(groupTweaks(tweaks, { ...options, tab: "gaming", catalogue: true }))).toEqual([
-        ["Essentials", ["gaming.mmcss-games-priority", "gaming.game-dvr-off"]],
+      expect(ids(groupTweaks(tweaks, { ...options, tab: "gaming" }))).toEqual([
+        [null, ["gaming.game-dvr-off", "gaming.mmcss-games-priority"]],
       ]);
     });
 
-    it("drops sections with nothing in them", () => {
-      const id = TWEAK_SECTIONS.privacy[1]!.ids[0]!;
+    it("gives Core its two headings, and only those", () => {
+      const tweaks = [
+        tweak("power.hibernate"),
+        tweak("performance.a"),
+        { ...tweak("windows.b"), meta: { ...tweak("windows.b").meta, section: "Notifications" } },
+      ];
+      expect(ids(groupTweaks(tweaks, { ...options, tab: "core" }))).toEqual([
+        ["Core", ["performance.a", "windows.b"]],
+        ["Power", ["power.hibernate"]],
+      ]);
+    });
+
+    it("keeps adapters apart, because their cards read the same", () => {
+      const adapter = (id: string, section: string) => ({
+        ...tweak(id),
+        meta: { ...tweak(id).meta, section },
+      });
+      const tweaks = [
+        adapter("network.adapter-wifi-wake-magic", "Wi-Fi adapter"),
+        adapter("network.adapter-eth-wake-magic", "Ethernet adapter"),
+      ];
+      expect(ids(groupTweaks(tweaks, { ...options, tab: "adapters" }))).toEqual([
+        ["Ethernet adapter", ["network.adapter-eth-wake-magic"]],
+        ["Wi-Fi adapter", ["network.adapter-wifi-wake-magic"]],
+      ]);
+    });
+
+    it("loses nothing on a tab with headings", () => {
       expect(
-        ids(groupTweaks([tweak(id)], { ...options, tab: "privacy", catalogue: true })),
-      ).toEqual([[TWEAK_SECTIONS.privacy[1]!.title, [id]]]);
+        ids(groupTweaks([tweak("windows.new-one")], { ...options, tab: "peripherals" })),
+      ).toEqual([["Keyboard and mouse", ["windows.new-one"]]]);
     });
 
-    it("never pads a section with a setting for one game", () => {
-      const listed = (id: string, section: string) => ({
-        ...tweak(id),
-        meta: { ...tweak(id).meta, name: "Short", section },
-      });
-      const tweaks = [
-        tweak("gaming.mmcss-games-priority"),
-        listed("gaming.a", "Per-game priority"),
-        listed("gaming.b", "Other"),
-      ];
-      expect(ids(groupTweaks(tweaks, { ...options, tab: "gaming", catalogue: true }))).toEqual([
-        ["Essentials", ["gaming.mmcss-games-priority", "gaming.b"]],
-        ["Per-game priority", ["gaming.a"]],
-      ]);
-    });
-
-    it("tops a section up to a full row of cards from the library", () => {
-      const listed = (id: string, name: string, section: string) => ({
-        ...tweak(id),
-        meta: { ...tweak(id).meta, name, section },
-      });
-      const tweaks = [
-        tweak("gaming.mmcss-games-priority"),
-        listed("gaming.a", "A name far too long to fit on the card it would sit on", "Other"),
-        listed("gaming.b", "Short", "Other"),
-        listed("gaming.c", "Also short", "Other"),
-      ];
-      expect(ids(groupTweaks(tweaks, { ...options, tab: "gaming", catalogue: true }))).toEqual([
-        ["Essentials", ["gaming.mmcss-games-priority", "gaming.b", "gaming.c"]],
-        ["Other", ["gaming.a"]],
-      ]);
-    });
-
-    it("keeps the user's sort inside a section", () => {
-      const tweaks = [tweak("gaming.game-dvr-off"), tweak("gaming.mmcss-games-priority")];
-      expect(ids(groupTweaks(tweaks, { ...options, tab: "gaming", catalogue: false }))).toEqual([
-        ["Essentials", ["gaming.game-dvr-off", "gaming.mmcss-games-priority"]],
+    it("drops a heading with nothing under it", () => {
+      expect(ids(groupTweaks([tweak("power.sleep")], { ...options, tab: "core" }))).toEqual([
+        ["Power", ["power.sleep"]],
       ]);
     });
 
@@ -132,8 +123,7 @@ describe("tweak presentation", () => {
         tweak("performance.last-access-off", true),
         tweak("performance.short-names-off"),
       ];
-      const last = (tab: "core" | null) =>
-        groupTweaks(tweaks, { ...options, tab, catalogue: false }).at(-1);
+      const last = (tab: "core" | null) => groupTweaks(tweaks, { ...options, tab }).at(-1);
       expect(last("core")?.title).toBe("Unavailable");
       expect(last(null)?.title).toBe("Unavailable");
       expect(last(null)?.tweaks.map((t) => t.meta.id)).toEqual(["performance.last-access-off"]);
@@ -163,23 +153,14 @@ describe("tweak presentation", () => {
       );
     });
 
-    it("lists the sections of a tab in the written order, not alphabetically", () => {
+    it("draws no headings on a Visuals tab", () => {
       const tweaks = ["Open and save", "View", "Context menu", "Navigation pane"].map(
         (section) => ({
           meta: visual(`windows.${section.length}`, section),
         }),
       );
-      const groups = groupTweaks(tweaks, {
-        tab: "explorer",
-        catalogue: true,
-        unavailable: () => false,
-      });
-      expect(groups.map((g) => g.title)).toEqual([
-        "View",
-        "Navigation pane",
-        "Context menu",
-        "Open and save",
-      ]);
+      const groups = groupTweaks(tweaks, { tab: "explorer", unavailable: () => false });
+      expect(groups.map((g) => g.title)).toEqual([null]);
     });
 
     it("gives every section an icon of its own", () => {
@@ -210,7 +191,6 @@ describe("tweak presentation", () => {
       tab: "services",
       section: "More",
       route: "/cleaner",
-      listed: false,
     });
   });
 });
@@ -227,7 +207,6 @@ describe("long lists", () => {
       tab: "privacy",
       section: "Telemetry",
       route: "/tweaks",
-      listed: true,
     });
     expect(tweakPlacement({ id: "gpu.a", category: "gpu", section: "NVIDIA" }).route).toBe(
       "/hardware",
@@ -247,35 +226,8 @@ describe("long lists", () => {
     expect(tweakHref(meta("Telemetry"))).toBe("/tweaks?tab=privacy&tweak=privacy.a");
   });
 
-  it("groups by the tweaks' own sections, unavailable last", () => {
-    const tweaks = [
-      { meta: meta("Speech", "privacy.c") },
-      { meta: meta("Ads", "privacy.d") },
-      { meta: meta("Speech", "privacy.e") },
-    ];
-    const groups = groupTweaks(tweaks, {
-      tab: "privacy",
-      catalogue: true,
-      unavailable: (t) => t.meta.id === "privacy.e",
-    });
-    expect(groups.map((g) => g.title)).toEqual(["Ads", "Speech", UNAVAILABLE_SECTION]);
-  });
-
-  it("puts hand-placed sections first, and a library section of the same name joins its own", () => {
-    const hand = TWEAK_SECTIONS.privacy[1]!;
-    const groups = groupTweaks(
-      [
-        { meta: meta(hand.title, "privacy.x") },
-        { meta: meta(hand.title, "privacy.y") },
-        { meta: meta("Ads", "privacy.z") },
-        { meta: { id: hand.ids[0]!, category: "privacy" as const, section: null } },
-      ],
-      { tab: "privacy", catalogue: true, unavailable: () => false },
-    );
-    expect(groups.map((g) => [g.title, g.tweaks.map((t) => t.meta.id)])).toEqual([
-      [hand.title, [hand.ids[0], "privacy.x", "privacy.y"]],
-      ["Ads", ["privacy.z"]],
-    ]);
+  it("keeps a tweak's topic after its heading is gone", () => {
+    expect(tweakPlacement(meta("Telemetry")).section).toBe("Telemetry");
   });
 
   it("searches what a tweak changes as well as what it's called", () => {

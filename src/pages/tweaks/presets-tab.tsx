@@ -9,6 +9,7 @@ import { restartNote } from "@/lib/engine-text";
 import { presetProgress, presetStatus, TWEAK_PRESETS, type TweakPreset } from "@/lib/tweak-presets";
 import { backend, toBackendError } from "@/services/backend";
 import type { TweakStatus } from "@/types/engine";
+import { PowerProfiles } from "../hardware/gpu-profiles";
 
 const ICONS: Record<string, LucideIcon> = {
   general: Layers,
@@ -39,6 +40,7 @@ export function PresetsTab({
           disabled={disabled}
         />
       ))}
+      <PowerProfiles />
     </div>
   );
 }

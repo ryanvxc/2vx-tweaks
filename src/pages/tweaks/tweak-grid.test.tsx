@@ -317,7 +317,7 @@ describe("TweakGrid", () => {
     expect(screen.getByText(ADMIN_TWEAK.name)).toBeInTheDocument();
 
     await user.clear(screen.getByRole("searchbox", { name: "Search" }));
-    await user.click(screen.getByRole("tab", { name: /Power/ }));
+    await user.click(screen.getByRole("tab", { name: /Apps/ }));
     expect(await screen.findByText("No tweaks match")).toBeInTheDocument();
   });
 

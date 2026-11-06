@@ -90,6 +90,10 @@ Stages 1 (foundation) and 2 (safety engine) are done; **stage 3 (first real opti
 of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_BACKLOG.md` (P0–P3) and stages in
 `docs/DEVELOPMENT_ROADMAP.md`. Use those stage and task IDs, not the older "Phase N" labels.
 
+In short (0.6.1): a tab is one grid of cards, as on EXM, which has only two headings on Core (Core, Power) and none on most tabs. `TAB_HEADINGS` in `lib/tweak-presentation.ts` is the short list of
+tabs with headings; don't add one to sort a tab into topics. `section` stays on a tweak as its topic, for its icon and Visuals' tab and filter. The Power tab joined Core, and Power profiles are on Presets. The default order is
+`mostUsefulFirst` in `lib/tweak-order.ts`: `KNOWN_FIRST` is written by hand per tab, best known first, so put a tweak there if people will come looking for it. The rest follow with anything risky last, like EXM's Advanced scripts.
+
 In short (0.6): a full read of EXM 2.2.1's files (`docs/research/EXM_2.2.1_DELTA.md`) gave the Restore Centre tabs (Changes, Restore Points, Fixes),
 Undo everything, Optimize Drives (Hardware > Storage), Restart now (`announceRestart`), Timer hold, a read-only BIOS page (`lib/bios-guide.ts`, `/bios`), Downloads on Resources (`lib/downloads.ts`,
 links only from `links.rs`), Reinstall all, `lib/known-games.ts` for Game Mode, Power profiles and the first-run dialog. The BIOS page never writes firmware (`firmware_is_never_written`): no kernel driver, ever.
@@ -105,9 +109,9 @@ Two exceptions were added and have guard tests: `ALLOWED_VALUES` (two values und
 A card's name must be true when its switch is on ("Turn off X", "Block X", "No X"). A setting Windows ignores on some builds gets `.builds(n)` or `.until(n)`. Tweak presets are
 hand-written lists (`PRESET_TWEAKS`), not category rules. There's no Tasks tab: scheduled tasks sit with their topic (Privacy or GPU).
 
-In short (0.4): the app was redesigned to EXM's layout, and there is no Library or Monitoring page. A tweak's page, tab and
-section come from `category` and `section` (`CATEGORY_TAB`, `tweakPlacement` in `lib/tweak-presentation.ts`); a short hand-placed
-set comes first (`TWEAK_SECTIONS`), and every tweak is a card. Every tweak page is `TweakGrid` with a `TweakView`: one search across the
+In short (0.4): the app was redesigned to EXM's layout, and there is no Library or Monitoring page. A tweak's page and tab
+come from `category` and `section` (`CATEGORY_TAB`, `tweakPlacement` in `lib/tweak-presentation.ts`), with a short hand-placed
+set in `TWEAK_SECTIONS`, and every tweak is a card. Every tweak page is `TweakGrid` with a `TweakView`: one search across the
 page's tabs, the same filters and sorts, Unavailable last. Every page title is `PageHero`; the title bar is only the window
 controls. The top-right action is only ever `RecommendedAction`. Presets, service presets and GPU profiles are all `PresetCard`, and
 their facts are counts of real tweaks, never ratings. Services have one home, PC Cleaner. `docs/MODEL_CONTRIBUTIONS.md` records

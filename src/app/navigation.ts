@@ -66,7 +66,7 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-export type TweakTab = "core" | "privacy" | "gaming" | "apps" | "power" | "presets";
+export type TweakTab = "core" | "privacy" | "gaming" | "apps" | "presets";
 export type CleanerTab = "system" | "services" | "uninstall" | "autoruns";
 export type HardwareTab = "gpu" | "cpu" | "ram" | "peripherals" | "storage";
 export type NetworkTab = "tweaks" | "priority" | "adapters" | "bufferbloat";
@@ -81,7 +81,6 @@ export const TWEAK_TABS: NavTab<TweakTab>[] = [
   { value: "privacy", label: "Privacy", icon: HatGlasses },
   { value: "gaming", label: "Gaming", icon: Gamepad2 },
   { value: "apps", label: "Apps", icon: AppWindow },
-  { value: "power", label: "Power", icon: Zap },
   { value: "presets", label: "Presets", icon: Layers },
 ];
 
