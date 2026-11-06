@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   AppWindow,
   Cpu,
@@ -20,9 +20,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useLiveMetrics } from "@/hooks/use-live-metrics";
 import { useRunningPrograms } from "@/hooks/use-running-programs";
 import { refreshEngineState, useEngineStatus, useSnapshots } from "@/hooks/use-system";
+import { burst } from "@/lib/dot-burst";
 import { describeError, describeOutcome, isBlocked } from "@/lib/engine-text";
 import { formatPercent, formatUptime } from "@/lib/format";
 import { detectGame } from "@/lib/game-mode";
+import { play } from "@/lib/motion";
 import { DEFAULT_GAME_MODE_TWEAKS } from "@/lib/profiles";
 import { cn } from "@/lib/utils";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
@@ -195,10 +197,40 @@ export function GameModeMain({
 function Orb({ state, onClick }: { state: OrbState; onClick: () => void }) {
   const { label, hint } = ORB[state];
   const inert = state !== "ready" && state !== "on";
+  const ring = useRef<HTMLDivElement>(null);
+  const was = useRef(state);
+
+  // The biggest moment in the app: two waves leave the ring and the dots go with them.
+  useEffect(() => {
+    if (state === "on" && was.current !== "on") {
+      ring.current?.querySelectorAll(".game-orb-wave").forEach((wave, i) => {
+        play(
+          wave,
+          [
+            { opacity: 0.9, scale: 1 },
+            { opacity: 0, scale: 1.7 },
+          ],
+          {
+            duration: 760,
+            delay: i * 130,
+            fill: "backwards",
+          },
+        );
+      });
+      burst(ring.current, { tone: "success", count: 80, reach: 240 });
+    }
+    was.current = state;
+  }, [state]);
 
   return (
-    <div className="relative isolate flex items-center justify-center justify-self-center">
+    <div
+      ref={ring}
+      className="relative isolate flex items-center justify-center justify-self-center"
+    >
       <span aria-hidden data-orb={state} className="game-orb-glow" />
+      <span aria-hidden data-orb={state} className="game-orb-orbit" />
+      <span aria-hidden className="game-orb-wave" />
+      <span aria-hidden className="game-orb-wave" />
       <Tooltip>
         <TooltipTrigger asChild>
           <button

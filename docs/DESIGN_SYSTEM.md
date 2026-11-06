@@ -90,9 +90,21 @@ Monospace: Cascadia Mono, then Consolas. Numbers that update use `tabular`.
 
 ## Motion
 
-Motion answers something the user just did or shows that something is live. It never decorates, never loops except
-the live dot, the newest point on Home's chart and the loading shimmer, and never makes anyone wait. Home's cards are the
-one hover flourish: `DotField` rises and twinkles only while a card is hovered or focused, and draws nothing at rest.
+The app should feel alive, but motion still answers something the user just did or shows that something is live, and it
+never makes anyone wait. The only loops are the live dot, the newest point on Home's chart, the loading shimmer, the
+recommended action's border while hovered, and Game Mode's comet while a game is ready or Game Mode is on. Home's cards
+keep their own hover flourish: `DotField` rises and twinkles only while a card is hovered or focused, and draws nothing at rest.
+
+**Celebrations match the moment.** The app's dots (`burst` in `lib/dot-burst.ts`) are its signature, and how many fly says how
+much happened: 7 for a selection, 22 for a tweak that applied, 70 to 90 for the last recommended tweak, a finished clean or
+Game Mode turning on. Dots mean something happened, so nothing idle sprays them, except the sidebar logo, which sends them out
+when clicked, as the loading screen does. `--success` dots mean a real result. Their speed is scaled to time, not frames,
+because this app is used on 144 and 240 Hz screens, and the canvas only exists while dots are in the air.
+
+**Light means you can act on it.** `.spot` cards light up near the pointer, including the edges of their neighbours
+(`useSpotlight`, one listener on the page, writing only to cards in reach). Read-only panels and muted cards don't, so don't add it
+to them. The aurora behind each page's title is the one static decoration: a section tint (`AURORA` in `app-shell.tsx`, never a
+status colour) over the app's dots, and cards are opaque, so it never sits behind text you read.
 
 **One switch.** Settings › Reduce motion (`.reduce-motion` on `<html>`) is the only control. The Windows animation setting
 is deliberately ignored: it's often off for speed on the PCs this app is for, and following it would remove all motion
@@ -107,11 +119,19 @@ the real app, because the browser preview can't show this difference.
 | Dropdown | 140 ms in, 100 out | `ease-arrive` |
 | Dialog | 200 ms in, 130 out | rises slightly; exits faster than it enters |
 | Command palette | 100 ms in, 75 out | no slide, because it's opened from the keyboard all day |
-| Page, tab content, notices | 220 ms | `animate-rise` |
-| Sidebar pill, tab underline, chart filter, selection outline | ~200 ms | one shared element slides (`useSlidingIndicator`) |
-| List entry | 240 ms | `useStaggerIn`: 24 ms apart, capped at 6 steps and 24 items, once per tab, never while filtering |
-| Figures | 450–600 ms | `AnimatedNumber` counts up once, then ticks |
-| Apply succeeded | 1.1 s | the card's border and background pulse `--success` |
+| Page | 220 ms | `animate-rise`, from the direction you moved down the sidebar (`--rise`) |
+| Page title | 420 ms | `animate-title` |
+| Tab content, notices | 220 ms | `animate-rise` |
+| Sidebar pill, tab underline, chart filter, selection outline | ~200 ms | one shared element slides and stretches along its way (`useSlidingIndicator`) |
+| List entry | 280 ms | `useStaggerIn`: a wave from the top-left, 30 ms per row or column, capped at 6 steps and 24 items, once per tab or sort, never while filtering. After a tab change, cards slide from that tab's side (`noteTabStep`) |
+| Scrolling | with the scroll | `scroll-in`, a scroll-driven CSS animation on `[data-stagger]`: no handler, run by the compositor |
+| Hover icon | 460 ms | `animate-nudge`, one tilt on the way in |
+| Switch | 260 ms | the thumb overshoots slightly (`ease-spring`). The only spring in the app, because a switch is flicked |
+| Card selected | 620 ms | `.card-trace` runs once round the edge in `--primary`, with 7 dots from the switch |
+| Primary button hover | 720 ms | `.sheen`, one streak, `ease-in-out` so it's seen |
+| Figures | 450–900 ms | `AnimatedNumber` counts up once, then ticks |
+| Apply succeeded | 1.1 s | the card's border and background pulse `--success`, with 22 dots |
+| Game Mode on | ~800 ms | two waves leave the ring (`.game-orb-wave`) with 80 dots. The biggest moment in the app |
 
 Keep routine UI under 300 ms and ease out (`--ease-arrive`, the default timing function). Use the `--animate-*` tokens in
 `globals.css`. Tailwind 4's `translate-*` and `scale-*` use the CSS `translate` and `scale` properties, so transitions

@@ -13,7 +13,7 @@ export function PageHero({
   return (
     <div className="flex items-center justify-between gap-6 pb-1">
       <div className="min-w-0">
-        <h1 className="truncate text-[1.75rem] leading-tight font-semibold tracking-tight">
+        <h1 className="animate-title truncate text-[1.75rem] leading-tight font-semibold tracking-tight">
           {title}
         </h1>
         <p data-selectable className="truncate text-[14px] text-muted-foreground">

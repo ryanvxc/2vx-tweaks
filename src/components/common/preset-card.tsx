@@ -31,9 +31,17 @@ export function PresetCard({
   children?: ReactNode;
 }) {
   return (
-    <article data-stagger className="flex flex-col gap-3 panel p-5">
+    <article
+      data-stagger
+      data-spot=""
+      className="group spot relative flex flex-col gap-3 panel p-5"
+    >
       <header className="flex items-center gap-3">
-        <Icon className="size-[22px] shrink-0 text-brand" strokeWidth={1.75} aria-hidden />
+        <Icon
+          className="size-[22px] shrink-0 text-brand group-hover:animate-nudge"
+          strokeWidth={1.75}
+          aria-hidden
+        />
         <h2 className="min-w-0 flex-1 truncate text-[15px] font-semibold">{title}</h2>
         <StatusLabel tone={status.tone}>{status.label}</StatusLabel>
       </header>

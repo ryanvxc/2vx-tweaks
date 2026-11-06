@@ -71,6 +71,7 @@ import {
   VISUALS_SETTINGS_PAGE,
 } from "@/lib/tweak-presentation";
 import { mostUsefulFirst } from "@/lib/tweak-order";
+import { burst } from "@/lib/dot-burst";
 import { play } from "@/lib/motion";
 import { backend, isDesktop, toBackendError } from "@/services/backend";
 import type {
@@ -153,7 +154,8 @@ export function TweakGrid({
   const [reviewing, setReviewing] = useState(false);
   const [undoing, setUndoing] = useState<TweakStatus | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const root = useStaggerIn<HTMLDivElement>(data ? tab : null);
+  // Again for a new sort, which is a choice to see the list differently. Never for search or filters.
+  const root = useStaggerIn<HTMLDivElement>(data ? `${tab}:${sort}` : null);
 
   const snapshots = useSnapshots();
   const uptime = useSystemSnapshot().data?.uptimeSecs ?? null;
@@ -684,6 +686,8 @@ function TweakCard({
 
   // The switch alone confirms an apply, so the card marks the moment it takes.
   const card = useRef<HTMLDivElement>(null);
+  const spark = (options: Parameters<typeof burst>[1]) =>
+    burst(card.current?.querySelector("[data-slot=switch]"), options);
   const wasApplied = useRef(applied);
   useEffect(() => {
     if (applied && !wasApplied.current) {
@@ -698,6 +702,7 @@ function TweakCard({
         ],
         { duration: 1100 },
       );
+      spark({ tone: "success", count: 22, reach: 90 });
     }
     wasApplied.current = applied;
   }, [applied]);
@@ -707,7 +712,10 @@ function TweakCard({
       size="lg"
       checked={applied || staged}
       disabled={disabled || unread || busy}
-      onCheckedChange={onSwitch}
+      onCheckedChange={(on) => {
+        if (on) spark({ tone: "primary", count: 7, reach: 32 });
+        onSwitch(on);
+      }}
       aria-label={`${applied ? "Undo" : staged ? "Deselect" : "Turn on"} ${meta.name}`}
       className={staged ? "ring-2 ring-primary/30 ring-offset-2 ring-offset-card" : undefined}
     />

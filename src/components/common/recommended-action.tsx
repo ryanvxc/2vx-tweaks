@@ -1,6 +1,9 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { useTweakStatuses } from "@/hooks/use-system";
+import { burstAt } from "@/lib/dot-burst";
 import { openRecommended } from "@/lib/quickstart";
 import { tweakHref } from "@/lib/tweak-presentation";
 
@@ -20,6 +23,24 @@ export function RecommendedAction({
   disabled?: boolean;
 }) {
   const { data } = useTweakStatuses();
+  const left = data && openRecommended(data).length;
+  const box = useRef<HTMLDivElement>(null);
+  // Where the button was: it goes the moment the last one lands.
+  const spot = useRef({ x: 0, y: 0 });
+  const was = useRef(left);
+
+  useEffect(() => {
+    if (box.current) {
+      const b = box.current.getBoundingClientRect();
+      spot.current = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+    }
+    if (left === 0 && was.current) {
+      burstAt(spot.current.x, spot.current.y, { tone: "success", count: 90, reach: 240 });
+      toast.success("All recommended tweaks are on");
+    }
+    was.current = left;
+  });
+
   if (!data) return null;
   const open = openRecommended(data);
   const count = select ? select.count : open.length;
@@ -37,7 +58,7 @@ export function RecommendedAction({
   );
 
   return (
-    <div className="group relative isolate shrink-0">
+    <div ref={box} className="group relative isolate shrink-0">
       <span
         aria-hidden
         className="absolute -inset-1 -z-10 rounded-xl bg-linear-to-r from-brand to-primary opacity-35 blur-md transition-opacity duration-300 group-hover:opacity-60"

@@ -3,6 +3,20 @@ import { useUiStore } from "@/stores/ui-store";
 // Matches --ease-arrive in globals.css. Web Animations can't read it from a theme token.
 const ARRIVE = "cubic-bezier(0.16, 1, 0.3, 1)";
 
+let tabStep = 0;
+
+/** A tab row says which way you moved, for the next list to come in from that side. */
+export function noteTabStep(step: number) {
+  tabStep = Math.sign(step);
+}
+
+/** Read once, so that only the list the tab opened slides. */
+export function takeTabStep() {
+  const step = tabStep;
+  tabStep = 0;
+  return step;
+}
+
 /**
  * A one-shot animation started from code, for moments CSS can't key off: the CSS kill switch
  * in globals.css doesn't reach these, so Reduce motion is checked here.

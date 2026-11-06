@@ -3,6 +3,7 @@ import logo from "@/assets/logo.svg";
 import { NAV_GROUPS, type NavItem } from "@/app/navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSlidingIndicator } from "@/hooks/use-motion";
+import { burst } from "@/lib/dot-burst";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
 import { AccountMenu } from "./account-menu";
@@ -34,7 +35,14 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
           collapsed ? "justify-center" : "px-5",
         )}
       >
-        <img src={logo} alt="" className="pointer-events-none size-8" draggable={false} />
+        {/* A click sends the dots out, as it does on the loading screen. */}
+        <img
+          src={logo}
+          alt=""
+          className="size-8 transition-[scale] duration-150 active:scale-90"
+          draggable={false}
+          onClick={(e) => burst(e.currentTarget, { count: 36, reach: 110 })}
+        />
         {!collapsed && (
           <span data-tauri-drag-region className="text-[17px] font-semibold tracking-tight">
             2VX <span className="font-normal text-muted-foreground">Tweaks</span>
@@ -50,7 +58,7 @@ export function Sidebar({ onSearch }: { onSearch: () => void }) {
         <span
           ref={navPill}
           aria-hidden
-          className="absolute top-0 left-0 -z-10 h-(--h) w-(--w) translate-x-(--x) translate-y-(--y) rounded-[10px] bg-sidebar-accent transition-[translate,width,height,opacity] duration-220"
+          className="absolute top-0 left-0 -z-10 h-(--h) w-(--w) translate-x-(--x) translate-y-(--y) rounded-[10px] bg-linear-to-r from-brand/18 to-sidebar-accent to-70% transition-[translate,width,height,opacity] duration-220"
         />
         {NAV_GROUPS.map((group, i) => {
           const head = collapsed ? (i > 0 ? GROUP_LINE_PX : 0) : GROUP_HEAD_PX;
@@ -109,7 +117,10 @@ function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean })
       )}
     >
       <Icon
-        className="size-5 shrink-0 transition-[scale] duration-200 group-hover:scale-110"
+        className={cn(
+          "size-5 shrink-0 transition-[scale,color] duration-200 group-hover:scale-110 group-hover:animate-nudge",
+          isActive && !item.highlight && "text-brand",
+        )}
         strokeWidth={1.75}
       />
       {!collapsed && <span className="truncate">{label}</span>}

@@ -90,6 +90,10 @@ Stages 1 (foundation) and 2 (safety engine) are done; **stage 3 (first real opti
 of truth for state is `docs/PROJECT_STATUS.md`; work items are in `docs/FEATURE_BACKLOG.md` (P0–P3) and stages in
 `docs/DEVELOPMENT_ROADMAP.md`. Use those stage and task IDs, not the older "Phase N" labels.
 
+In short (0.6.2): the motion pass (`docs/DESIGN_SYSTEM.md`, Motion). `.spot` and `useSpotlight` light what you can act on, so never add them to read-only panels. `burst` in `lib/dot-burst.ts` is the
+signature: how many dots fly says how much happened, and its speed is time-based for high refresh rates. `useStaggerIn` is a wave and slides from the tab's side (`noteTabStep`). `scroll-in` is a CSS scroll-driven animation on `[data-stagger]`.
+Each section's tint is `AURORA` in `app-shell.tsx`, never a status colour. All of it follows Settings › Reduce motion, and no new motion library was added.
+
 In short (0.6.1): a tab is one grid of cards, as on EXM, which has only two headings on Core (Core, Power) and none on most tabs. `TAB_HEADINGS` in `lib/tweak-presentation.ts` is the short list of
 tabs with headings; don't add one to sort a tab into topics. `section` stays on a tweak as its topic, for its icon and Visuals' tab and filter. The Power tab joined Core, and Power profiles are on Presets. The default order is
 `mostUsefulFirst` in `lib/tweak-order.ts`: `KNOWN_FIRST` is written by hand per tab, best known first, so put a tweak there if people will come looking for it. The rest follow with anything risky last, like EXM's Advanced scripts.

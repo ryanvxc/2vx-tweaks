@@ -51,19 +51,22 @@ export function OptimisationCard({
     <div
       ref={ref}
       data-stagger
+      data-spot={muted ? undefined : ""}
       className={cn(
         "group relative flex h-44 flex-col panel px-5 pt-5 pb-3.5 transition-colors",
         "hover:bg-raised",
+        !muted && "spot",
         highlighted && "border-primary/50",
         muted && "opacity-60",
         className,
       )}
     >
+      {highlighted && <span aria-hidden className="card-trace" />}
       <div className={cn("flex items-center gap-3", badge && "pr-10")}>
         {leading ??
           (Icon && (
             <Icon
-              className="size-[22px] shrink-0 text-brand transition-transform duration-200 group-hover:scale-110"
+              className="size-[22px] shrink-0 text-brand transition-transform duration-200 group-hover:scale-110 group-hover:animate-nudge"
               strokeWidth={1.75}
               aria-hidden
             />
@@ -140,9 +143,11 @@ export function OptimisationRow({
     <div
       ref={ref}
       data-stagger
+      data-spot={muted || flat ? undefined : ""}
       className={cn(
         "group relative flex items-center transition-colors hover:bg-raised",
         flat ? "h-14 gap-3 px-4" : "h-[68px] gap-4 panel px-5",
+        !muted && !flat && "spot",
         highlighted && (flat ? "bg-primary/8" : "border-primary/50"),
         muted && "opacity-60",
       )}

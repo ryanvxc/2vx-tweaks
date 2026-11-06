@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { useSlidingIndicator } from "@/hooks/use-motion";
+import { noteTabStep } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 export interface PageTab<T extends string> {
@@ -45,7 +46,7 @@ export function PageTabs<T extends string>({
         aria-label={label}
         className={cn("relative flex items-center", filled && "gap-1 py-3")}
       >
-        {tabs.map((t) => {
+        {tabs.map((t, i) => {
           const active = t.value === value;
           const Icon = t.icon;
           return (
@@ -54,9 +55,12 @@ export function PageTabs<T extends string>({
               type="button"
               role="tab"
               aria-selected={active}
-              onClick={() => onChange(t.value)}
+              onClick={() => {
+                noteTabStep(i - tabs.findIndex((tab) => tab.value === value));
+                onChange(t.value);
+              }}
               className={cn(
-                "relative flex h-9 items-center gap-2 rounded-t-md px-3 text-[13px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "group relative flex h-9 items-center gap-2 rounded-t-md px-3 text-[13px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 filled && "rounded-b-md px-4",
                 filled && active && "border border-hairline bg-raised",
                 active
@@ -67,7 +71,13 @@ export function PageTabs<T extends string>({
               )}
             >
               {Icon && (
-                <Icon className={cn("size-4", active && !filled && "text-brand")} aria-hidden />
+                <Icon
+                  className={cn(
+                    "size-4 group-hover:animate-nudge",
+                    active && !filled && "text-brand",
+                  )}
+                  aria-hidden
+                />
               )}
               {t.label}
               {t.count !== undefined && (

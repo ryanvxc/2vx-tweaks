@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   Bug,
   ChevronDown,
@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AnimatedNumber } from "@/components/common/animated-number";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataSourceBadge } from "@/components/common/data-source-badge";
 import { StatusLabel } from "@/components/common/notice";
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useStaggerIn } from "@/hooks/use-motion";
 import { useCleanupScan } from "@/hooks/use-system";
+import { burst } from "@/lib/dot-burst";
 import {
   cleanableLocations,
   didClean,
@@ -104,6 +106,7 @@ export function SystemCleanerTab() {
   const [total, setTotal] = useState(0);
   const [summary, setSummary] = useState<CleanupSummary | null>(null);
   const list = useStaggerIn<HTMLUListElement>(data ? "scanned" : null);
+  const start = useRef<HTMLButtonElement>(null);
 
   const rows = cleanableLocations(data ?? []);
   const selected = rows.filter((l) => picked.includes(l.id));
@@ -150,6 +153,7 @@ export function SystemCleanerTab() {
       if (didClean(done)) {
         markCleaned();
         refetch();
+        burst(start.current, { tone: "success", count: 70, reach: 260 });
       }
     } catch (err) {
       setRun({});
@@ -213,6 +217,7 @@ export function SystemCleanerTab() {
             className="flex-1"
             value={runIds.length > 0 ? (doneCount / runIds.length) * 100 : 0}
             aria-label="Locations done"
+            indicatorClassName="animate-shimmer bg-linear-to-r from-primary via-brand to-primary bg-size-[200%_100%]"
           />
           <span className="shrink-0 text-[12.5px] text-muted-foreground tabular">
             {doneCount} of {runIds.length} done · {formatBytes(total)} freed
@@ -264,6 +269,7 @@ export function SystemCleanerTab() {
       {/* Runs to the window's edge, so rows scrolling behind don't show under the button. */}
       <div className="sticky bottom-0 mt-auto -mb-5 bg-background pt-1 pb-5">
         <Button
+          ref={start}
           className="h-12 w-full"
           disabled={selected.length === 0 || cleaning}
           onClick={() => setConfirming(true)}
@@ -292,7 +298,7 @@ function RunState({ state }: { state: RowRun }) {
   return (
     <span className="flex shrink-0 items-center gap-3 text-[13px] tabular">
       {showSize && <span className="text-muted-foreground">{formatBytes(state.freedBytes)}</span>}
-      <StatusLabel tone={tone} title={state.reason}>
+      <StatusLabel key={state.phase} tone={tone} title={state.reason} className="animate-rise">
         {label}
       </StatusLabel>
     </span>
@@ -311,11 +317,15 @@ function CleanupReport({
 }) {
   const { freed, skipped, cleared, declined, failures } = summary;
   const onlyDeclined = cleared === 0 && declined.length > 0 && failures.length === 0;
-  const headline = onlyDeclined
-    ? "Permission prompt declined, nothing was cleared"
-    : cleared === 0
-      ? "Nothing was cleared"
-      : `Freed ${formatBytes(freed)}`;
+  const headline: ReactNode = onlyDeclined ? (
+    "Permission prompt declined, nothing was cleared"
+  ) : cleared === 0 ? (
+    "Nothing was cleared"
+  ) : (
+    <>
+      Freed <AnimatedNumber value={freed} format={formatBytes} duration={900} />
+    </>
+  );
   const tone: Tone = onlyDeclined
     ? "warning"
     : cleared === 0

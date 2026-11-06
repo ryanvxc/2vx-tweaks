@@ -119,8 +119,12 @@
 
   /* Motion (docs/DESIGN_SYSTEM.md): quick to start, soft to settle. */
   --ease-arrive: cubic-bezier(0.16, 1, 0.3, 1);
+  /* A slight overshoot, for things that are physically flicked: switch thumbs. */
+  --ease-spring: cubic-bezier(0.34, 1.5, 0.64, 1);
   --default-transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   --animate-rise: rise 220ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-title: title-in 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  --animate-nudge: nudge 460ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-pop: pop 220ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-sheet-up: sheet-up 260ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   --animate-grow-x: grow-x 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
@@ -226,7 +230,27 @@
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    /* App shell sets --rise: pages come from the direction you moved down the sidebar. */
+    transform: translateY(var(--rise, 6px));
+  }
+}
+@keyframes title-in {
+  from {
+    opacity: 0;
+    clip-path: inset(-20% 40% -20% 0);
+    translate: -8px 0;
+  }
+  to {
+    clip-path: inset(-20% -5% -20% 0);
+  }
+}
+@keyframes nudge {
+  30% {
+    rotate: -12deg;
+    scale: 1.14;
+  }
+  65% {
+    rotate: 7deg;
   }
 }
 @keyframes pop {
@@ -297,6 +321,166 @@
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+.reduce-motion .game-orb-orbit {
+  display: none;
+}
+
+/* The two angles and the colour are registered so that they can animate. */
+@property --trace {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@property --spin {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@property --aurora {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+::selection {
+  background-color: color-mix(in oklch, var(--brand) 38%, transparent);
+}
+
+/*
+ * The light at the top of every page: one tint per section, over the app's dots. Static, so it
+ * costs nothing at rest. Cards are opaque and scroll over it.
+ */
+.aurora {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: 15rem;
+  background:
+    radial-gradient(
+      58% 120% at 90% -35%,
+      color-mix(in oklch, var(--aurora) 24%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      42% 90% at 42% -45%,
+      color-mix(in oklch, var(--brand) 9%, transparent),
+      transparent 72%
+    );
+  pointer-events: none;
+  transition: --aurora 700ms;
+}
+.aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--foreground) 15%, transparent) 1px,
+    transparent 1.4px
+  );
+  background-size: 16px 16px;
+  mask-image: radial-gradient(62% 100% at 92% 0%, black, transparent 74%);
+}
+
+/*
+ * Light that follows the pointer over anything you can act on. `useSpotlight` sets --mx and --my
+ * and marks the cards near the pointer `data-lit`, so a card's edge lights up before you reach it.
+ */
+.spot::before,
+.spot::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 260ms;
+}
+.spot::before {
+  background: radial-gradient(
+    260px circle at var(--mx) var(--my),
+    color-mix(in oklch, var(--brand) 13%, transparent),
+    transparent 72%
+  );
+}
+.spot::after {
+  padding: 1px;
+  background: radial-gradient(
+    300px circle at var(--mx) var(--my),
+    color-mix(in oklch, var(--brand) 90%, transparent),
+    transparent 72%
+  );
+  mask:
+    linear-gradient(black 0 0) content-box exclude,
+    linear-gradient(black 0 0);
+}
+.spot[data-lit]::after,
+.spot[data-lit]:hover::before {
+  opacity: 1;
+}
+
+/* Runs once round the edge when a card is selected for review. */
+.card-trace {
+  position: absolute;
+  inset: -1px;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--trace), transparent 66%, var(--primary));
+  opacity: 0;
+  pointer-events: none;
+  mask:
+    linear-gradient(black 0 0) content-box exclude,
+    linear-gradient(black 0 0);
+  animation: trace 620ms ease-out;
+}
+@keyframes trace {
+  from {
+    --trace: 0deg;
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  to {
+    --trace: 360deg;
+    opacity: 0;
+  }
+}
+
+/* Cards settle into place as they scroll in. Done by the compositor, with no scroll handler. */
+@supports (animation-timeline: view()) {
+  html:not(.reduce-motion) main [data-stagger] {
+    animation: scroll-in linear backwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 60%;
+  }
+}
+@keyframes scroll-in {
+  from {
+    opacity: 0.2;
+    transform: translateY(18px) scale(0.98);
+  }
+}
+
+/* A streak of light across a primary button, once per hover. It resets instantly when you leave. */
+.sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 36%,
+    color-mix(in oklch, var(--primary-foreground) 24%, transparent) 50%,
+    transparent 64%
+  );
+  translate: -110% 0;
+  pointer-events: none;
+}
+.sheen:hover:not(:disabled)::after {
+  translate: 110% 0;
+  /* Not ease-out: a fast start would be gone before you saw it. */
+  transition: translate 720ms ease-in-out;
+}
 
 /* Game Mode's ring. A gradient rather than a shadow, so the glow can fade with the ring's state. */
 .game-orb-glow {
@@ -324,11 +508,59 @@
   opacity: 0;
 }
 
+/* A comet round the ring: slow when a game is ready, faster while Game Mode is on. */
+.game-orb-orbit {
+  position: absolute;
+  inset: -11px;
+  border-radius: 50%;
+  background: conic-gradient(transparent 62%, var(--success));
+  opacity: 0;
+  pointer-events: none;
+  mask: radial-gradient(closest-side, transparent calc(100% - 2.5px), black calc(100% - 2px));
+  transition: opacity 400ms;
+  animation: orbit 6s linear infinite paused;
+}
+.game-orb-orbit[data-orb="ready"] {
+  opacity: 0.6;
+  animation-play-state: running;
+}
+.game-orb-orbit[data-orb="on"] {
+  opacity: 1;
+  animation-duration: 3.2s;
+  animation-play-state: running;
+}
+@keyframes orbit {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* The shockwave when Game Mode turns on. Played from code, so it starts invisible. */
+.game-orb-wave {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--success);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .glow-action {
   border: 1px solid transparent;
   background:
     linear-gradient(var(--card), var(--card)) padding-box,
     linear-gradient(95deg, var(--brand), var(--primary)) border-box;
+}
+.glow-action:hover:not(:disabled) {
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    conic-gradient(from var(--spin), var(--brand), var(--primary), var(--brand)) border-box;
+  animation: spin-border 2.8s linear infinite;
+}
+@keyframes spin-border {
+  to {
+    --spin: 360deg;
+  }
 }
 
 /* Traces a stroke from its start. The element needs pathLength={1}. */

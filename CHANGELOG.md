@@ -3,6 +3,17 @@
 Main-channel builds are released automatically from `main` (see `docs/GITHUB_RELEASE_PIPELINE.md`); their
 notes come from commit subjects. This file records the larger milestones.
 
+## 0.6.2
+
+### The app feels more alive
+- Cards now light up around your pointer, and the edges of the ones nearby catch the glow.
+- Pages and tabs slide in from the direction you moved, and cards arrive in a wave and settle in as you scroll.
+- Switches flick over with a little spring, and a selected card gets a quick streak of light round its edge.
+- A tweak that applies sends out a burst of dots. Finishing your recommended tweaks, a clean or turning on Game Mode gets a bigger one.
+- Game Mode's ring has a comet circling it, and turning it on sends a wave out from the ring.
+- Each section has its own soft glow at the top of the page.
+- Settings > Reduce motion turns all of it off.
+
 ## 0.6.1
 
 ### Tweaks are easier to scan
